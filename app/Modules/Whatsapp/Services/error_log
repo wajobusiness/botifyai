@@ -1,0 +1,4 @@
+[16-Aug-2026 21:47:32 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Modules\Shared\Contracts\ChannelDriverInterface" not found in /home/botifyai/public_html/app/Modules/Whatsapp/Services/WhatsappDriver.php:20
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Whatsapp/Services/WhatsappDriver.php on line 20

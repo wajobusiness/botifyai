@@ -1,0 +1,28 @@
+[14-Aug-2026 16:21:50 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Inbox/CannedReplyCrudTest.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Inbox/CannedReplyCrudTest.php on line 9
+[14-Aug-2026 16:21:52 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Inbox/ConversationActivityTest.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Inbox/ConversationActivityTest.php on line 13
+[14-Aug-2026 16:21:54 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Inbox/HandoverTest.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Inbox/HandoverTest.php on line 17
+[14-Aug-2026 16:21:56 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Inbox/LabelCrudTest.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Inbox/LabelCrudTest.php on line 12
+[14-Aug-2026 16:21:57 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Inbox/ManualChannelConnectTest.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Inbox/ManualChannelConnectTest.php on line 12
+[14-Aug-2026 16:21:59 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Inbox/MetaWebhookHealthTest.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Inbox/MetaWebhookHealthTest.php on line 12
+[14-Aug-2026 16:22:03 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Inbox/SlaTrackingTest.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Inbox/SlaTrackingTest.php on line 11

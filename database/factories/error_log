@@ -1,0 +1,160 @@
+[13-Aug-2026 05:12:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/ContactFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/ContactFactory.php on line 8
+[13-Aug-2026 06:17:49 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/PlanFactory.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/PlanFactory.php on line 10
+[13-Aug-2026 06:26:55 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/CouponFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/CouponFactory.php on line 8
+[13-Aug-2026 06:37:58 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/CampaignFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/CampaignFactory.php on line 8
+[13-Aug-2026 16:45:58 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/SupportTicketFactory.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/SupportTicketFactory.php on line 9
+[14-Aug-2026 10:53:40 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/AdminUserFactory.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/AdminUserFactory.php on line 13
+[14-Aug-2026 11:31:39 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/UserFactory.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/UserFactory.php on line 12
+[14-Aug-2026 11:39:08 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/CmsPageFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/CmsPageFactory.php on line 8
+[15-Aug-2026 09:44:22 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/AdminUserFactory.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/AdminUserFactory.php on line 13
+[15-Aug-2026 09:44:22 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/AiChatbotFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/AiChatbotFactory.php on line 8
+[15-Aug-2026 09:44:22 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/AiKnowledgeBaseFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/AiKnowledgeBaseFactory.php on line 8
+[15-Aug-2026 09:44:23 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/ContactFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/ContactFactory.php on line 8
+[15-Aug-2026 09:44:23 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/CampaignFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/CampaignFactory.php on line 8
+[15-Aug-2026 09:44:23 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/CampaignRecipientFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/CampaignRecipientFactory.php on line 8
+[15-Aug-2026 09:44:23 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/CmsPageFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/CmsPageFactory.php on line 8
+[15-Aug-2026 09:44:23 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/CouponFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/CouponFactory.php on line 8
+[15-Aug-2026 09:44:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/LeadFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/LeadFactory.php on line 8
+[15-Aug-2026 09:44:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/MediaFactory.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/MediaFactory.php on line 9
+[15-Aug-2026 09:44:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/PlanFactory.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/PlanFactory.php on line 10
+[15-Aug-2026 09:44:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/SupportTicketFactory.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/SupportTicketFactory.php on line 9
+[15-Aug-2026 09:44:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/UserFactory.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/UserFactory.php on line 12
+[15-Aug-2026 09:44:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/WebhookEndpointFactory.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/WebhookEndpointFactory.php on line 9
+[15-Aug-2026 09:44:25 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/WhatsappBusinessAccountFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/WhatsappBusinessAccountFactory.php on line 8
+[15-Aug-2026 09:44:25 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/WorkspaceFactory.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/WorkspaceFactory.php on line 12
+[15-Aug-2026 13:23:07 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/AiKnowledgeBaseFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/AiKnowledgeBaseFactory.php on line 8
+[15-Aug-2026 13:23:49 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/WebhookEndpointFactory.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/WebhookEndpointFactory.php on line 9
+[15-Aug-2026 13:24:53 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/WhatsappBusinessAccountFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/WhatsappBusinessAccountFactory.php on line 8
+[15-Aug-2026 13:25:53 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/CouponFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/CouponFactory.php on line 8
+[15-Aug-2026 13:26:56 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/SupportTicketFactory.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/SupportTicketFactory.php on line 9
+[15-Aug-2026 13:27:58 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/CampaignRecipientFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/CampaignRecipientFactory.php on line 8
+[15-Aug-2026 13:29:02 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/AdminUserFactory.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/AdminUserFactory.php on line 13
+[15-Aug-2026 13:31:14 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/CampaignFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/CampaignFactory.php on line 8
+[15-Aug-2026 13:32:16 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/ContactFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/ContactFactory.php on line 8
+[15-Aug-2026 13:33:16 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/CmsPageFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/CmsPageFactory.php on line 8
+[15-Aug-2026 13:34:17 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/AiChatbotFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/AiChatbotFactory.php on line 8
+[15-Aug-2026 13:35:22 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/WorkspaceFactory.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/WorkspaceFactory.php on line 12
+[15-Aug-2026 13:36:22 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/MediaFactory.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/MediaFactory.php on line 9
+[15-Aug-2026 13:37:27 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/PlanFactory.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/PlanFactory.php on line 10
+[17-Aug-2026 20:28:37 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/UserFactory.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/UserFactory.php on line 12
+[17-Aug-2026 20:29:17 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Factories\Factory" not found in /home/botifyai/public_html/database/factories/LeadFactory.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/factories/LeadFactory.php on line 8

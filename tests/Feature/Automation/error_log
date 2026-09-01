@@ -1,0 +1,16 @@
+[14-Aug-2026 00:25:39 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Automation/AutomationNodeBehaviourTest.php:29
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Automation/AutomationNodeBehaviourTest.php on line 29
+[14-Aug-2026 16:21:14 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Automation/AutomationSendNodesTest.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Automation/AutomationSendNodesTest.php on line 16
+[14-Aug-2026 16:21:17 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Automation/AutomationTestSimulationTest.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Automation/AutomationTestSimulationTest.php on line 17
+[14-Aug-2026 16:21:19 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Automation/AutomationWebhookTriggerTest.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Automation/AutomationWebhookTriggerTest.php on line 14

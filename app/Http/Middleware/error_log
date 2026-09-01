@@ -1,0 +1,8 @@
+[14-Aug-2026 16:16:22 UTC] PHP Fatal error:  Uncaught Error: Class "Inertia\Middleware" not found in /home/botifyai/public_html/app/Http/Middleware/HandleInertiaRequests.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Middleware/HandleInertiaRequests.php on line 21
+[16-Aug-2026 22:13:14 UTC] PHP Fatal error:  Uncaught Error: Class "Inertia\Middleware" not found in /home/botifyai/public_html/app/Http/Middleware/HandleInertiaRequests.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Middleware/HandleInertiaRequests.php on line 21

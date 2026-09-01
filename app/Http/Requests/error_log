@@ -1,0 +1,4 @@
+[14-Aug-2026 16:16:44 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Http\FormRequest" not found in /home/botifyai/public_html/app/Http/Requests/ProfileUpdateRequest.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Requests/ProfileUpdateRequest.php on line 10

@@ -1,0 +1,24 @@
+[16-Aug-2026 20:23:10 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/AI/Models/AiChatbot.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/AI/Models/AiChatbot.php on line 10
+[16-Aug-2026 20:23:12 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/AI/Models/AiKbChunk.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/AI/Models/AiKbChunk.php on line 8
+[16-Aug-2026 20:23:13 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/AI/Models/AiKbDocument.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/AI/Models/AiKbDocument.php on line 10
+[16-Aug-2026 20:23:15 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/AI/Models/AiKnowledgeBase.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/AI/Models/AiKnowledgeBase.php on line 11
+[16-Aug-2026 20:23:16 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/AI/Models/AiProviderConfig.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/AI/Models/AiProviderConfig.php on line 7
+[16-Aug-2026 20:23:18 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/AI/Models/AiRun.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/AI/Models/AiRun.php on line 7

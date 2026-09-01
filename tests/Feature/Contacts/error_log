@@ -1,0 +1,8 @@
+[13-Aug-2026 23:21:54 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Contacts/ContactBulkActionsTest.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Contacts/ContactBulkActionsTest.php on line 11
+[13-Aug-2026 23:21:56 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Contacts/ContactImportTest.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Contacts/ContactImportTest.php on line 12

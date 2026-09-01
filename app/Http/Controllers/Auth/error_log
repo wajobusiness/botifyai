@@ -1,0 +1,328 @@
+[14-Aug-2026 12:20:46 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php on line 9
+[14-Aug-2026 12:21:11 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php on line 16
+[14-Aug-2026 15:33:11 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php on line 11
+[16-Aug-2026 19:22:33 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php on line 16
+[16-Aug-2026 19:22:33 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php on line 16
+[16-Aug-2026 19:22:33 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php on line 16
+[16-Aug-2026 19:22:33 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php on line 16
+[16-Aug-2026 19:22:33 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/AuthenticatedSessionController.php on line 16
+[16-Aug-2026 19:22:35 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/ConfirmablePasswordController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/ConfirmablePasswordController.php on line 13
+[16-Aug-2026 19:22:35 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/ConfirmablePasswordController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/ConfirmablePasswordController.php on line 13
+[16-Aug-2026 19:22:35 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/ConfirmablePasswordController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/ConfirmablePasswordController.php on line 13
+[16-Aug-2026 19:22:35 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/ConfirmablePasswordController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/ConfirmablePasswordController.php on line 13
+[16-Aug-2026 19:22:35 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/ConfirmablePasswordController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/ConfirmablePasswordController.php on line 13
+[16-Aug-2026 19:22:36 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php on line 9
+[16-Aug-2026 19:22:37 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php on line 9
+[16-Aug-2026 19:22:37 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php on line 9
+[16-Aug-2026 19:22:37 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php on line 9
+[16-Aug-2026 19:22:37 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationNotificationController.php on line 9
+[16-Aug-2026 19:22:38 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php on line 11
+[16-Aug-2026 19:22:38 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php on line 11
+[16-Aug-2026 19:22:38 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php on line 11
+[16-Aug-2026 19:22:38 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php on line 11
+[16-Aug-2026 19:22:38 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/EmailVerificationPromptController.php on line 11
+[16-Aug-2026 19:22:40 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/FirebaseLoginController.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/FirebaseLoginController.php on line 18
+[16-Aug-2026 19:22:40 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/FirebaseLoginController.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/FirebaseLoginController.php on line 18
+[16-Aug-2026 19:22:40 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/FirebaseLoginController.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/FirebaseLoginController.php on line 18
+[16-Aug-2026 19:22:40 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/FirebaseLoginController.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/FirebaseLoginController.php on line 18
+[16-Aug-2026 19:22:40 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/FirebaseLoginController.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/FirebaseLoginController.php on line 18
+[16-Aug-2026 19:22:41 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php on line 16
+[16-Aug-2026 19:22:41 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php on line 16
+[16-Aug-2026 19:22:42 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php on line 16
+[16-Aug-2026 19:22:42 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php on line 16
+[16-Aug-2026 19:22:42 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php on line 16
+[16-Aug-2026 19:22:43 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/MagicLinkController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/MagicLinkController.php on line 15
+[16-Aug-2026 19:22:43 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/MagicLinkController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/MagicLinkController.php on line 15
+[16-Aug-2026 19:22:43 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/MagicLinkController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/MagicLinkController.php on line 15
+[16-Aug-2026 19:22:43 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/MagicLinkController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/MagicLinkController.php on line 15
+[16-Aug-2026 19:22:43 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/MagicLinkController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/MagicLinkController.php on line 15
+[16-Aug-2026 19:22:45 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php on line 17
+[16-Aug-2026 19:22:45 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php on line 17
+[16-Aug-2026 19:22:45 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php on line 17
+[16-Aug-2026 19:22:45 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php on line 17
+[16-Aug-2026 19:22:45 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php on line 17
+[16-Aug-2026 19:22:46 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordController.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordController.php on line 11
+[16-Aug-2026 19:22:46 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordController.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordController.php on line 11
+[16-Aug-2026 19:22:47 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordController.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordController.php on line 11
+[16-Aug-2026 19:22:47 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordController.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordController.php on line 11
+[16-Aug-2026 19:22:47 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordController.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordController.php on line 11
+[16-Aug-2026 19:22:48 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordResetLinkController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordResetLinkController.php on line 13
+[16-Aug-2026 19:22:48 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordResetLinkController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordResetLinkController.php on line 13
+[16-Aug-2026 19:22:48 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordResetLinkController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordResetLinkController.php on line 13
+[16-Aug-2026 19:22:48 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordResetLinkController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordResetLinkController.php on line 13
+[16-Aug-2026 19:22:48 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordResetLinkController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/PasswordResetLinkController.php on line 13
+[16-Aug-2026 19:22:49 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php on line 21
+[16-Aug-2026 19:22:50 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php on line 21
+[16-Aug-2026 19:22:50 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php on line 21
+[16-Aug-2026 19:22:50 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php on line 21
+[16-Aug-2026 19:22:50 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php on line 21
+[16-Aug-2026 19:22:51 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/SessionController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/SessionController.php on line 12
+[16-Aug-2026 19:22:51 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/SessionController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/SessionController.php on line 12
+[16-Aug-2026 19:22:52 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/SessionController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/SessionController.php on line 12
+[16-Aug-2026 19:22:52 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/SessionController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/SessionController.php on line 12
+[16-Aug-2026 19:22:52 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/SessionController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/SessionController.php on line 12
+[16-Aug-2026 19:22:53 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php on line 15
+[16-Aug-2026 19:22:53 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php on line 15
+[16-Aug-2026 19:22:53 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php on line 15
+[16-Aug-2026 19:22:53 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php on line 15
+[16-Aug-2026 19:22:53 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php on line 15
+[16-Aug-2026 19:22:55 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/TwoFactorController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/TwoFactorController.php on line 14
+[16-Aug-2026 19:22:55 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/TwoFactorController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/TwoFactorController.php on line 14
+[16-Aug-2026 19:22:55 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/TwoFactorController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/TwoFactorController.php on line 14
+[16-Aug-2026 19:22:55 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/TwoFactorController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/TwoFactorController.php on line 14
+[16-Aug-2026 19:22:55 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/TwoFactorController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/TwoFactorController.php on line 14
+[16-Aug-2026 19:22:56 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/VerifyEmailController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/VerifyEmailController.php on line 10
+[16-Aug-2026 19:22:56 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/VerifyEmailController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/VerifyEmailController.php on line 10
+[16-Aug-2026 19:22:56 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/VerifyEmailController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/VerifyEmailController.php on line 10
+[16-Aug-2026 19:22:57 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/VerifyEmailController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/VerifyEmailController.php on line 10
+[16-Aug-2026 19:22:57 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/VerifyEmailController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/VerifyEmailController.php on line 10
+[16-Aug-2026 21:58:18 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/RegisteredUserController.php on line 21
+[17-Aug-2026 11:42:19 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/SocialLoginController.php on line 15
+[17-Aug-2026 11:43:18 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/NewPasswordController.php on line 17
+[17-Aug-2026 13:06:40 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Auth/InvitationController.php on line 16

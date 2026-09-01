@@ -1,0 +1,24 @@
+[13-Aug-2026 22:38:00 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Billing/StripeWebhookRenewalTest.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Billing/StripeWebhookRenewalTest.php on line 24
+[13-Aug-2026 22:38:14 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Billing/PlatformDefaultCurrencyTest.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Billing/PlatformDefaultCurrencyTest.php on line 10
+[13-Aug-2026 22:44:06 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Billing/IyzicoGatewayTest.php:26
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Billing/IyzicoGatewayTest.php on line 26
+[14-Aug-2026 16:21:27 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Billing/IyzicoGatewayTest.php:26
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Billing/IyzicoGatewayTest.php on line 26
+[14-Aug-2026 16:21:29 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Billing/PlatformDefaultCurrencyTest.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Billing/PlatformDefaultCurrencyTest.php on line 10
+[14-Aug-2026 16:21:30 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Billing/StripeWebhookRenewalTest.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Billing/StripeWebhookRenewalTest.php on line 24

@@ -1,0 +1,1 @@
+import{h as e}from"./app-COVLUxDC.js";function t(){let{branding:t}=e().props;return{appName:t?.app_name||``,tagline:t?.app_tagline||``,supportEmail:t?.support_email||``,primaryColor:t?.primary_color||``,secondaryColor:t?.secondary_color||``,fontFamily:t?.font_family||``,logoUrl:t?.logo_url||null,faviconUrl:t?.favicon_url||null}}export{t};

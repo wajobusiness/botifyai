@@ -1,0 +1,16 @@
+[16-Aug-2026 20:25:34 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Ecommerce/Models/EcommerceCart.php:20
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Ecommerce/Models/EcommerceCart.php on line 20
+[16-Aug-2026 20:25:35 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Ecommerce/Models/EcommerceOrder.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Ecommerce/Models/EcommerceOrder.php on line 21
+[16-Aug-2026 20:25:37 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Ecommerce/Models/EcommerceProduct.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Ecommerce/Models/EcommerceProduct.php on line 21
+[16-Aug-2026 20:25:38 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Ecommerce/Models/EcommerceStore.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Ecommerce/Models/EcommerceStore.php on line 21

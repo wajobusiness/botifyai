@@ -1,0 +1,4 @@
+[15-Aug-2026 14:23:27 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Http\FormRequest" not found in /home/botifyai/public_html/app/Http/Requests/Admin/AdminLoginRequest.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Requests/Admin/AdminLoginRequest.php on line 11

@@ -1,0 +1,80 @@
+[13-Aug-2026 16:09:13 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/ModuleRoutesMiddlewareTest.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/ModuleRoutesMiddlewareTest.php on line 9
+[13-Aug-2026 16:10:06 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/OnboardingMilestonesTest.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/OnboardingMilestonesTest.php on line 12
+[13-Aug-2026 16:11:08 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/WebhookHardeningTest.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/WebhookHardeningTest.php on line 8
+[13-Aug-2026 16:12:12 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/SmsStatusWebhookTest.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/SmsStatusWebhookTest.php on line 10
+[13-Aug-2026 16:14:20 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/WorkspaceExportTest.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/WorkspaceExportTest.php on line 10
+[13-Aug-2026 16:16:17 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/UpgradeModalTest.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/UpgradeModalTest.php on line 10
+[13-Aug-2026 16:17:20 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/TeamInviteUiTest.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/TeamInviteUiTest.php on line 9
+[13-Aug-2026 16:18:24 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/PlanLimitAlignmentTest.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/PlanLimitAlignmentTest.php on line 10
+[14-Aug-2026 00:26:02 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/BillingFixesTest.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/BillingFixesTest.php on line 9
+[14-Aug-2026 00:26:03 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/ErrorPagesTest.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/ErrorPagesTest.php on line 8
+[14-Aug-2026 00:26:05 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/ModuleRoutesMiddlewareTest.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/ModuleRoutesMiddlewareTest.php on line 9
+[14-Aug-2026 00:26:06 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/OnboardingMilestonesTest.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/OnboardingMilestonesTest.php on line 12
+[14-Aug-2026 00:26:08 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/PlanLimitAlignmentTest.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/PlanLimitAlignmentTest.php on line 10
+[14-Aug-2026 00:26:10 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/PublicPricingTest.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/PublicPricingTest.php on line 9
+[14-Aug-2026 00:26:11 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/SmsStatusWebhookTest.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/SmsStatusWebhookTest.php on line 10
+[14-Aug-2026 00:26:13 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/TeamInviteUiTest.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/TeamInviteUiTest.php on line 9
+[14-Aug-2026 00:26:14 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/UpgradeModalTest.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/UpgradeModalTest.php on line 10
+[14-Aug-2026 00:26:16 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/WebhookHardeningTest.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/WebhookHardeningTest.php on line 8
+[14-Aug-2026 00:26:18 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/WorkspaceExportTest.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/WorkspaceExportTest.php on line 10
+[16-Aug-2026 06:23:18 UTC] PHP Fatal error:  Uncaught Error: Class "Tests\TestCase" not found in /home/botifyai/public_html/tests/Feature/Polish/ErrorPagesTest.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/Feature/Polish/ErrorPagesTest.php on line 8

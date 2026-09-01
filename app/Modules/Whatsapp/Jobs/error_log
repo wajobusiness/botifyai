@@ -1,0 +1,2 @@
+[16-Aug-2026 21:47:11 UTC] PHP Fatal error:  Trait "Illuminate\Foundation\Bus\Dispatchable" not found in /home/botifyai/public_html/app/Modules/Whatsapp/Jobs/ProcessInboundMessageJob.php on line 13
+[16-Aug-2026 21:47:13 UTC] PHP Fatal error:  Trait "Illuminate\Foundation\Bus\Dispatchable" not found in /home/botifyai/public_html/app/Modules/Whatsapp/Jobs/TemplateSyncJob.php on line 15

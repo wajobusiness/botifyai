@@ -1,0 +1,4 @@
+[16-Aug-2026 21:45:21 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\Facades\Route" not found in /home/botifyai/public_html/app/Modules/Leads/routes/web.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Leads/routes/web.php on line 7

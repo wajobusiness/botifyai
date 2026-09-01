@@ -1,0 +1,12 @@
+[16-Aug-2026 20:23:56 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Automation/Models/Automation.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Automation/Models/Automation.php on line 8
+[16-Aug-2026 20:23:58 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Automation/Models/AutomationRun.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Automation/Models/AutomationRun.php on line 7
+[16-Aug-2026 20:23:59 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Automation/Models/AutomationRunLog.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Automation/Models/AutomationRunLog.php on line 7

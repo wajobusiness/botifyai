@@ -1,0 +1,3 @@
+[16-Aug-2026 21:46:29 UTC] PHP Fatal error:  Trait "Illuminate\Foundation\Queue\Queueable" not found in /home/botifyai/public_html/app/Modules/Social/Jobs/DispatchScheduledPostsJob.php on line 10
+[16-Aug-2026 21:46:30 UTC] PHP Fatal error:  Trait "Illuminate\Foundation\Queue\Queueable" not found in /home/botifyai/public_html/app/Modules/Social/Jobs/PublishSocialPostJob.php on line 11
+[16-Aug-2026 21:46:32 UTC] PHP Fatal error:  Trait "Illuminate\Foundation\Bus\Dispatchable" not found in /home/botifyai/public_html/app/Modules/Social/Jobs/RefreshSocialTokensJob.php on line 14

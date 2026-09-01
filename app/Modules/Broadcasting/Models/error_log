@@ -1,0 +1,20 @@
+[16-Aug-2026 20:24:44 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Broadcasting/Models/Campaign.php:27
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Broadcasting/Models/Campaign.php on line 27
+[16-Aug-2026 20:24:46 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Broadcasting/Models/CampaignRecipient.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Broadcasting/Models/CampaignRecipient.php on line 11
+[16-Aug-2026 20:24:47 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Broadcasting/Models/SmsProviderConfig.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Broadcasting/Models/SmsProviderConfig.php on line 7
+[16-Aug-2026 20:24:49 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Broadcasting/Models/UsageMeter.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Broadcasting/Models/UsageMeter.php on line 7
+[16-Aug-2026 20:24:50 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Broadcasting/Models/WorkspaceSmtpConfig.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Broadcasting/Models/WorkspaceSmtpConfig.php on line 8

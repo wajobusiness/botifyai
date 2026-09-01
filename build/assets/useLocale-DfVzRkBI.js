@@ -1,0 +1,1 @@
+import{h as e,i as t,p as n}from"./app-COVLUxDC.js";function r(){let r=e().props,i=r.i18n?.locale??r.locale??`en`,a=r.i18n?.isRtl??!1,o=r.i18n?.locales??[],s=r.rtlLocales??[`ar`];return{locale:i,isRtl:a,locales:o,setLocale:e=>{e!==i&&(t(e,s),n.put(route(`locale.update`),{locale:e},{preserveScroll:!0}))}}}export{r as t};

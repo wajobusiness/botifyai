@@ -1,0 +1,24 @@
+[15-Aug-2026 08:35:12 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Testing\TestCase" not found in /home/botifyai/public_html/tests/TestCase.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/TestCase.php on line 14
+[15-Aug-2026 09:43:55 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Testing\TestCase" not found in /home/botifyai/public_html/tests/TestCase.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/TestCase.php on line 14
+[17-Aug-2026 17:58:18 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Testing\TestCase" not found in /home/botifyai/public_html/tests/TestCase.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/TestCase.php on line 14
+[23-Aug-2026 18:13:23 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Testing\TestCase" not found in /home/botifyai/public_html/tests/TestCase.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/TestCase.php on line 14
+[24-Aug-2026 05:16:32 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Testing\TestCase" not found in /home/botifyai/public_html/tests/TestCase.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/TestCase.php on line 14
+[30-Aug-2026 00:19:56 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Testing\TestCase" not found in /home/botifyai/public_html/tests/TestCase.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/tests/TestCase.php on line 14

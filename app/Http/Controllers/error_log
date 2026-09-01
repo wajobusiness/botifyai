@@ -1,0 +1,109 @@
+[13-Aug-2026 16:03:53 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/IyzicoCheckoutController.php:20
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/IyzicoCheckoutController.php on line 20
+[14-Aug-2026 00:07:56 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/PricingController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/PricingController.php on line 13
+[14-Aug-2026 00:08:51 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/LandingController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/LandingController.php on line 13
+[14-Aug-2026 00:09:55 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/CmsPageController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/CmsPageController.php on line 10
+[14-Aug-2026 00:21:57 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/CheckoutController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/CheckoutController.php on line 13
+[14-Aug-2026 00:21:59 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/CmsPageController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/CmsPageController.php on line 10
+[14-Aug-2026 00:22:01 UTC] PHP Fatal error:  Trait "Illuminate\Foundation\Auth\Access\AuthorizesRequests" not found in /home/botifyai/public_html/app/Http/Controllers/Controller.php on line 7
+[14-Aug-2026 00:22:03 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/CurrencyController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/CurrencyController.php on line 10
+[14-Aug-2026 00:22:05 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/I18nController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/I18nController.php on line 10
+[14-Aug-2026 00:22:06 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/IyzicoCheckoutController.php:20
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/IyzicoCheckoutController.php on line 20
+[14-Aug-2026 00:22:08 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/LandingController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/LandingController.php on line 13
+[14-Aug-2026 00:22:10 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/LicenseController.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/LicenseController.php on line 18
+[14-Aug-2026 02:32:45 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/ProfileController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/ProfileController.php on line 14
+[14-Aug-2026 02:32:59 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/WebhookController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/WebhookController.php on line 10
+[14-Aug-2026 02:33:43 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/WorkspaceController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/WorkspaceController.php on line 12
+[14-Aug-2026 02:34:45 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/LicenseController.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/LicenseController.php on line 18
+[14-Aug-2026 02:35:49 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/CheckoutController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/CheckoutController.php on line 13
+[14-Aug-2026 02:36:55 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/CurrencyController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/CurrencyController.php on line 10
+[14-Aug-2026 09:28:53 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/LocaleController.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/LocaleController.php on line 9
+[14-Aug-2026 11:57:05 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/ThemeController.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/ThemeController.php on line 8
+[14-Aug-2026 16:15:39 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/ContactController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/ContactController.php on line 13
+[14-Aug-2026 16:15:43 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/LocaleController.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/LocaleController.php on line 9
+[14-Aug-2026 16:15:44 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/PricingController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/PricingController.php on line 13
+[14-Aug-2026 16:15:46 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/ProfileController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/ProfileController.php on line 14
+[14-Aug-2026 16:15:48 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/ThemeController.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/ThemeController.php on line 8
+[14-Aug-2026 16:15:51 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/WebhookController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/WebhookController.php on line 10
+[14-Aug-2026 16:15:55 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/WorkspaceController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/WorkspaceController.php on line 12
+[16-Aug-2026 21:42:38 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/I18nController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/I18nController.php on line 10

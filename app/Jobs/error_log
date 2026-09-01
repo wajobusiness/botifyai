@@ -1,0 +1,2 @@
+[15-Aug-2026 09:44:05 UTC] PHP Fatal error:  Trait "Illuminate\Foundation\Bus\Dispatchable" not found in /home/botifyai/public_html/app/Jobs/DispatchWebhookJob.php on line 15
+[15-Aug-2026 09:44:05 UTC] PHP Fatal error:  Trait "Illuminate\Foundation\Bus\Dispatchable" not found in /home/botifyai/public_html/app/Jobs/GenerateWorkspaceExportJob.php on line 15

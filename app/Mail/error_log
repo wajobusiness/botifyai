@@ -1,0 +1,16 @@
+[15-Aug-2026 09:44:07 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Mail\Mailable" not found in /home/botifyai/public_html/app/Mail/AutomationEmail.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Mail/AutomationEmail.php on line 11
+[15-Aug-2026 09:44:07 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Mail\Mailable" not found in /home/botifyai/public_html/app/Mail/WeeklyDigestMail.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Mail/WeeklyDigestMail.php on line 12
+[29-Aug-2026 19:19:19 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Mail\Mailable" not found in /home/botifyai/public_html/app/Mail/AutomationEmail.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Mail/AutomationEmail.php on line 11
+[01-Sep-2026 02:11:06 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Mail\Mailable" not found in /home/botifyai/public_html/app/Mail/WeeklyDigestMail.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Mail/WeeklyDigestMail.php on line 12

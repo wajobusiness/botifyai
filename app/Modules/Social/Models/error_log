@@ -1,0 +1,12 @@
+[16-Aug-2026 21:46:38 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Social/Models/SocialAccount.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Social/Models/SocialAccount.php on line 7
+[16-Aug-2026 21:46:39 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Social/Models/SocialPost.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Social/Models/SocialPost.php on line 7
+[16-Aug-2026 21:46:41 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Social/Models/SocialPostAccount.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Social/Models/SocialPostAccount.php on line 7

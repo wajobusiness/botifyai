@@ -1,0 +1,56 @@
+[13-Aug-2026 23:17:55 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/CashfreeGateway.php:35
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/CashfreeGateway.php on line 35
+[13-Aug-2026 23:17:59 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/IyzicoGateway.php:49
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/IyzicoGateway.php on line 49
+[13-Aug-2026 23:18:02 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/MercadoPagoGateway.php:39
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/MercadoPagoGateway.php on line 39
+[13-Aug-2026 23:18:04 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/MollieGateway.php:43
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/MollieGateway.php on line 43
+[13-Aug-2026 23:18:06 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/MyFatoorahGateway.php:40
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/MyFatoorahGateway.php on line 40
+[13-Aug-2026 23:18:08 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/PaddleGateway.php:19
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/PaddleGateway.php on line 19
+[13-Aug-2026 23:18:10 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/PayPalGateway.php:19
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/PayPalGateway.php on line 19
+[13-Aug-2026 23:18:12 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/PaymobGateway.php:42
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/PaymobGateway.php on line 42
+[13-Aug-2026 23:18:14 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/PaystackGateway.php:37
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/PaystackGateway.php on line 37
+[13-Aug-2026 23:18:16 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/RazorpayGateway.php:32
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/RazorpayGateway.php on line 32
+[13-Aug-2026 23:18:18 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/SquareGateway.php:47
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/SquareGateway.php on line 47
+[13-Aug-2026 23:18:21 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/StripeGateway.php:29
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/StripeGateway.php on line 29
+[13-Aug-2026 23:18:23 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/TapGateway.php:42
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/TapGateway.php on line 42
+[13-Aug-2026 23:18:25 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Contracts\BillingGatewayInterface" not found in /home/botifyai/public_html/app/Services/Billing/XenditGateway.php:41
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/Billing/XenditGateway.php on line 41

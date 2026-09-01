@@ -1,0 +1,20 @@
+[16-Aug-2026 21:47:18 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Whatsapp/Models/WhatsappAutoReply.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Whatsapp/Models/WhatsappAutoReply.php on line 7
+[16-Aug-2026 21:47:20 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Whatsapp/Models/WhatsappBusinessAccount.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Whatsapp/Models/WhatsappBusinessAccount.php on line 12
+[16-Aug-2026 21:47:21 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Whatsapp/Models/WhatsappPhoneNumber.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Whatsapp/Models/WhatsappPhoneNumber.php on line 9
+[16-Aug-2026 21:47:23 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Whatsapp/Models/WhatsappTemplate.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Whatsapp/Models/WhatsappTemplate.php on line 7
+[16-Aug-2026 21:47:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Whatsapp/Models/WhatsappWidget.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Whatsapp/Models/WhatsappWidget.php on line 8

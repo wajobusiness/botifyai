@@ -1,0 +1,2 @@
+[16-Aug-2026 20:27:40 UTC] PHP Fatal error:  Trait "Illuminate\Foundation\Queue\Queueable" not found in /home/botifyai/public_html/app/Modules/Leads/Jobs/RescoreWorkspaceLeadsJob.php on line 18
+[16-Aug-2026 20:27:41 UTC] PHP Fatal error:  Trait "Illuminate\Foundation\Queue\Queueable" not found in /home/botifyai/public_html/app/Modules/Leads/Jobs/ScrapeLeadsJob.php on line 10

@@ -1,0 +1,20 @@
+[15-Aug-2026 09:44:21 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\ServiceProvider" not found in /home/botifyai/public_html/app/Providers/AppServiceProvider.php:55
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Providers/AppServiceProvider.php on line 55
+[15-Aug-2026 09:44:21 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\ServiceProvider" not found in /home/botifyai/public_html/app/Providers/BrandingServiceProvider.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Providers/BrandingServiceProvider.php on line 18
+[15-Aug-2026 09:44:21 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\ServiceProvider" not found in /home/botifyai/public_html/app/Providers/BroadcastChannelsServiceProvider.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Providers/BroadcastChannelsServiceProvider.php on line 24
+[15-Aug-2026 09:44:21 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\ServiceProvider" not found in /home/botifyai/public_html/app/Providers/ModuleServiceProvider.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Providers/ModuleServiceProvider.php on line 15
+[15-Aug-2026 09:44:22 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\ServiceProvider" not found in /home/botifyai/public_html/app/Providers/PusherSettingsServiceProvider.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Providers/PusherSettingsServiceProvider.php on line 8

@@ -1,0 +1,4 @@
+[14-Aug-2026 00:22:17 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\ServiceProvider" not found in /home/botifyai/public_html/app/Modules/Broadcasting/BroadcastingServiceProvider.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Broadcasting/BroadcastingServiceProvider.php on line 7

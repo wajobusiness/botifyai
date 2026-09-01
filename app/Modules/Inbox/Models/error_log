@@ -1,0 +1,12 @@
+[16-Aug-2026 20:26:22 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Inbox/Models/CannedReply.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Inbox/Models/CannedReply.php on line 9
+[16-Aug-2026 20:26:23 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Inbox/Models/ConversationActivity.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Inbox/Models/ConversationActivity.php on line 10
+[16-Aug-2026 20:26:25 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Inbox/Models/InboxLabel.php:11
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Inbox/Models/InboxLabel.php on line 11

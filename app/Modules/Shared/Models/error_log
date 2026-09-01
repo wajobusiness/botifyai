@@ -1,0 +1,24 @@
+[16-Aug-2026 21:45:41 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Shared/Models/ChannelAccount.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Shared/Models/ChannelAccount.php on line 8
+[16-Aug-2026 21:45:42 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Shared/Models/Contact.php:37
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Shared/Models/Contact.php on line 37
+[16-Aug-2026 21:45:44 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Shared/Models/ContactTag.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Shared/Models/ContactTag.php on line 8
+[16-Aug-2026 21:45:46 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Shared/Models/Conversation.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Shared/Models/Conversation.php on line 15
+[16-Aug-2026 21:45:47 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Shared/Models/Message.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Shared/Models/Message.php on line 9
+[16-Aug-2026 21:45:49 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Eloquent\Model" not found in /home/botifyai/public_html/app/Modules/Shared/Models/Segment.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Shared/Models/Segment.php on line 8

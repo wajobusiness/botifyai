@@ -1,0 +1,628 @@
+[13-Aug-2026 17:15:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_053918_create_client_settings_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_053918_create_client_settings_table.php on line 7
+[14-Aug-2026 04:11:33 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000030_create_notifications_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000030_create_notifications_table.php on line 7
+[14-Aug-2026 05:25:17 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_15_000001_create_workspace_smtp_configs_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_15_000001_create_workspace_smtp_configs_table.php on line 7
+[14-Aug-2026 05:43:20 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_06_06_120000_widen_provider_message_id_on_messages.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_06_06_120000_widen_provider_message_id_on_messages.php on line 7
+[14-Aug-2026 05:57:31 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000032_create_webhook_endpoints_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000032_create_webhook_endpoints_table.php on line 7
+[14-Aug-2026 06:04:31 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_062732_create_push_subscriptions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_062732_create_push_subscriptions_table.php on line 7
+[14-Aug-2026 06:54:58 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000001_create_admin_users_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000001_create_admin_users_table.php on line 7
+[14-Aug-2026 07:25:49 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_06_11_120000_harden_subscription_billing_integrity.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_06_11_120000_harden_subscription_billing_integrity.php on line 23
+[14-Aug-2026 08:14:27 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_06_000001_create_smtp_configurations_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_06_000001_create_smtp_configurations_table.php on line 7
+[14-Aug-2026 08:33:04 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_07_15_140000_make_tenant_currency_inherit_platform_default.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_07_15_140000_make_tenant_currency_inherit_platform_default.php on line 8
+[14-Aug-2026 08:53:25 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000031_create_notification_preferences_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000031_create_notification_preferences_table.php on line 7
+[14-Aug-2026 08:56:55 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_200001_create_workspace_user_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_200001_create_workspace_user_table.php on line 7
+[14-Aug-2026 09:04:25 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_06_29_120000_add_avatar_to_users_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_06_29_120000_add_avatar_to_users_table.php on line 7
+[14-Aug-2026 09:50:16 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000004_create_role_permission_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000004_create_role_permission_table.php on line 7
+[14-Aug-2026 09:57:55 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_062500_create_internal_notes_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_062500_create_internal_notes_table.php on line 7
+[14-Aug-2026 10:05:42 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000002_create_roles_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000002_create_roles_table.php on line 7
+[14-Aug-2026 10:15:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600003_create_templates_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600003_create_templates_table.php on line 7
+[14-Aug-2026 10:27:34 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000013_create_magic_links_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000013_create_magic_links_table.php on line 7
+[14-Aug-2026 10:27:42 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_03_05_000001_create_payment_gateway_configs_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_03_05_000001_create_payment_gateway_configs_table.php on line 7
+[14-Aug-2026 10:29:18 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000003_create_permissions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000003_create_permissions_table.php on line 7
+[14-Aug-2026 10:29:56 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000042_create_onboarding_steps_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000042_create_onboarding_steps_table.php on line 7
+[14-Aug-2026 10:30:33 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000033_create_webhook_deliveries_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000033_create_webhook_deliveries_table.php on line 7
+[14-Aug-2026 10:32:09 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_05_000002_create_translations_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_05_000002_create_translations_table.php on line 7
+[14-Aug-2026 10:33:35 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_053918_create_client_settings_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_053918_create_client_settings_table.php on line 7
+[14-Aug-2026 10:34:14 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_100003_create_client_subscriptions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_100003_create_client_subscriptions_table.php on line 7
+[14-Aug-2026 10:34:46 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000041_create_media_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000041_create_media_table.php on line 7
+[14-Aug-2026 10:38:44 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000051_create_support_tickets_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000051_create_support_tickets_table.php on line 7
+[14-Aug-2026 10:38:49 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000050_create_pages_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000050_create_pages_table.php on line 7
+[14-Aug-2026 10:39:48 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_06_25_120000_add_gateway_metadata_to_subscriptions_table.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_06_25_120000_add_gateway_metadata_to_subscriptions_table.php on line 15
+[14-Aug-2026 10:41:14 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000020_create_coupons_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000020_create_coupons_table.php on line 7
+[14-Aug-2026 10:43:46 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_000004_create_workspaces_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_000004_create_workspaces_table.php on line 7
+[14-Aug-2026 10:45:23 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/0001_01_01_000001_create_cache_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/0001_01_01_000001_create_cache_table.php on line 7
+[14-Aug-2026 10:51:25 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000005_create_admin_role_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000005_create_admin_role_table.php on line 7
+[14-Aug-2026 10:56:22 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000011_create_social_accounts_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000011_create_social_accounts_table.php on line 7
+[14-Aug-2026 10:59:15 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_20_193126_change_picture_url_to_text_in_social_media_accounts.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_20_193126_change_picture_url_to_text_in_social_media_accounts.php on line 7
+[14-Aug-2026 11:00:41 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000012_create_invitations_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000012_create_invitations_table.php on line 7
+[14-Aug-2026 11:02:14 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_100001_create_subscriptions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_100001_create_subscriptions_table.php on line 7
+[14-Aug-2026 11:04:28 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600002_create_system_settings_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600002_create_system_settings_table.php on line 7
+[14-Aug-2026 11:06:42 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_100001_create_clients_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_100001_create_clients_table.php on line 7
+[14-Aug-2026 11:07:30 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600004_create_locales_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600004_create_locales_table.php on line 7
+[14-Aug-2026 11:09:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/0001_01_01_000002_create_jobs_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/0001_01_01_000002_create_jobs_table.php on line 7
+[14-Aug-2026 11:10:22 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000022_create_billing_events_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000022_create_billing_events_table.php on line 7
+[14-Aug-2026 11:12:47 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000052_create_contact_messages_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000052_create_contact_messages_table.php on line 7
+[14-Aug-2026 11:16:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_07_16_000200_create_iyzico_billing_tables.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_07_16_000200_create_iyzico_billing_tables.php on line 7
+[14-Aug-2026 11:18:47 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_000008_create_plans_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_000008_create_plans_table.php on line 7
+[14-Aug-2026 11:18:56 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_29_130355_create_personal_access_tokens_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_29_130355_create_personal_access_tokens_table.php on line 7
+[14-Aug-2026 11:22:09 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_034554_create_inbound_webhook_events_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_034554_create_inbound_webhook_events_table.php on line 7
+[14-Aug-2026 11:34:59 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/0001_01_01_000000_create_users_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/0001_01_01_000000_create_users_table.php on line 7
+[14-Aug-2026 11:42:37 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600001_create_audit_logs_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600001_create_audit_logs_table.php on line 7
+[14-Aug-2026 14:42:28 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000021_create_tax_rates_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000021_create_tax_rates_table.php on line 7
+[14-Aug-2026 16:15:40 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_000006_create_currencies_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_000006_create_currencies_table.php on line 7
+[15-Aug-2026 08:42:04 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_07_15_130000_tokenize_brand_name_in_cms_pages.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_07_15_130000_tokenize_brand_name_in_cms_pages.php on line 17
+[15-Aug-2026 08:42:51 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_100002_create_payment_transactions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_100002_create_payment_transactions_table.php on line 7
+[15-Aug-2026 09:44:25 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/0001_01_01_000000_create_users_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/0001_01_01_000000_create_users_table.php on line 7
+[15-Aug-2026 09:44:25 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/0001_01_01_000001_create_cache_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/0001_01_01_000001_create_cache_table.php on line 7
+[15-Aug-2026 09:44:26 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/0001_01_01_000002_create_jobs_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/0001_01_01_000002_create_jobs_table.php on line 7
+[15-Aug-2026 09:44:26 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_000004_create_workspaces_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_000004_create_workspaces_table.php on line 7
+[15-Aug-2026 09:44:26 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_000006_create_currencies_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_000006_create_currencies_table.php on line 7
+[15-Aug-2026 09:44:26 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_000008_create_plans_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_000008_create_plans_table.php on line 7
+[15-Aug-2026 09:44:26 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_100001_create_subscriptions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_100001_create_subscriptions_table.php on line 7
+[15-Aug-2026 09:44:26 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_100002_create_payment_transactions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_100002_create_payment_transactions_table.php on line 7
+[15-Aug-2026 09:44:26 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_200001_create_workspace_user_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_200001_create_workspace_user_table.php on line 7
+[15-Aug-2026 09:44:27 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600001_create_audit_logs_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600001_create_audit_logs_table.php on line 7
+[15-Aug-2026 09:44:27 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600002_create_system_settings_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600002_create_system_settings_table.php on line 7
+[15-Aug-2026 09:44:27 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600003_create_templates_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600003_create_templates_table.php on line 7
+[15-Aug-2026 09:44:27 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600004_create_locales_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600004_create_locales_table.php on line 7
+[15-Aug-2026 09:44:27 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_03_05_000001_create_payment_gateway_configs_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_03_05_000001_create_payment_gateway_configs_table.php on line 7
+[15-Aug-2026 09:44:28 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000001_create_admin_users_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000001_create_admin_users_table.php on line 7
+[15-Aug-2026 09:44:28 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000002_create_roles_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000002_create_roles_table.php on line 7
+[15-Aug-2026 09:44:28 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000003_create_permissions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000003_create_permissions_table.php on line 7
+[15-Aug-2026 09:44:28 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000004_create_role_permission_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000004_create_role_permission_table.php on line 7
+[15-Aug-2026 09:44:28 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000005_create_admin_role_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000005_create_admin_role_table.php on line 7
+[15-Aug-2026 09:44:28 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_100001_create_clients_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_100001_create_clients_table.php on line 7
+[15-Aug-2026 09:44:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_100003_create_client_subscriptions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_100003_create_client_subscriptions_table.php on line 7
+[15-Aug-2026 09:44:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_05_000002_create_translations_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_05_000002_create_translations_table.php on line 7
+[15-Aug-2026 09:44:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_06_000001_create_smtp_configurations_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_06_000001_create_smtp_configurations_table.php on line 7
+[15-Aug-2026 09:44:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_29_130355_create_personal_access_tokens_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_29_130355_create_personal_access_tokens_table.php on line 7
+[15-Aug-2026 09:44:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_034554_create_inbound_webhook_events_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_034554_create_inbound_webhook_events_table.php on line 7
+[15-Aug-2026 09:44:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_053918_create_client_settings_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_053918_create_client_settings_table.php on line 7
+[15-Aug-2026 09:44:30 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_062500_create_internal_notes_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_062500_create_internal_notes_table.php on line 7
+[15-Aug-2026 09:44:30 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_062732_create_push_subscriptions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_062732_create_push_subscriptions_table.php on line 7
+[15-Aug-2026 09:44:30 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000011_create_social_accounts_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000011_create_social_accounts_table.php on line 7
+[15-Aug-2026 09:44:30 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000012_create_invitations_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000012_create_invitations_table.php on line 7
+[15-Aug-2026 09:44:31 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000013_create_magic_links_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000013_create_magic_links_table.php on line 7
+[15-Aug-2026 09:44:31 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000020_create_coupons_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000020_create_coupons_table.php on line 7
+[15-Aug-2026 09:44:31 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000021_create_tax_rates_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000021_create_tax_rates_table.php on line 7
+[15-Aug-2026 09:44:31 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000022_create_billing_events_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000022_create_billing_events_table.php on line 7
+[15-Aug-2026 09:44:31 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000030_create_notifications_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000030_create_notifications_table.php on line 7
+[15-Aug-2026 09:44:32 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000032_create_webhook_endpoints_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000032_create_webhook_endpoints_table.php on line 7
+[15-Aug-2026 09:44:32 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000031_create_notification_preferences_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000031_create_notification_preferences_table.php on line 7
+[15-Aug-2026 09:44:32 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000033_create_webhook_deliveries_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000033_create_webhook_deliveries_table.php on line 7
+[15-Aug-2026 09:44:32 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000041_create_media_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000041_create_media_table.php on line 7
+[15-Aug-2026 09:44:32 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000042_create_onboarding_steps_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000042_create_onboarding_steps_table.php on line 7
+[15-Aug-2026 09:44:32 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000050_create_pages_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000050_create_pages_table.php on line 7
+[15-Aug-2026 09:44:32 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000051_create_support_tickets_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000051_create_support_tickets_table.php on line 7
+[15-Aug-2026 09:44:33 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000052_create_contact_messages_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000052_create_contact_messages_table.php on line 7
+[15-Aug-2026 09:44:33 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_15_000001_create_workspace_smtp_configs_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_15_000001_create_workspace_smtp_configs_table.php on line 7
+[15-Aug-2026 09:44:33 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_20_193126_change_picture_url_to_text_in_social_media_accounts.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_20_193126_change_picture_url_to_text_in_social_media_accounts.php on line 7
+[15-Aug-2026 09:44:33 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_06_06_120000_widen_provider_message_id_on_messages.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_06_06_120000_widen_provider_message_id_on_messages.php on line 7
+[15-Aug-2026 09:44:34 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_06_11_120000_harden_subscription_billing_integrity.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_06_11_120000_harden_subscription_billing_integrity.php on line 23
+[15-Aug-2026 09:44:34 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_06_25_120000_add_gateway_metadata_to_subscriptions_table.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_06_25_120000_add_gateway_metadata_to_subscriptions_table.php on line 15
+[15-Aug-2026 09:44:34 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_06_29_120000_add_avatar_to_users_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_06_29_120000_add_avatar_to_users_table.php on line 7
+[15-Aug-2026 09:44:34 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_07_15_120000_tokenize_brand_name_in_landing_content.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_07_15_120000_tokenize_brand_name_in_landing_content.php on line 15
+[15-Aug-2026 09:44:34 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_07_15_130000_tokenize_brand_name_in_cms_pages.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_07_15_130000_tokenize_brand_name_in_cms_pages.php on line 17
+[15-Aug-2026 09:44:34 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_07_15_140000_make_tenant_currency_inherit_platform_default.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_07_15_140000_make_tenant_currency_inherit_platform_default.php on line 8
+[15-Aug-2026 09:44:34 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_07_15_140100_normalize_currency_exchange_rates.php:6
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_07_15_140100_normalize_currency_exchange_rates.php on line 6
+[15-Aug-2026 09:44:35 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_07_16_000200_create_iyzico_billing_tables.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_07_16_000200_create_iyzico_billing_tables.php on line 7
+[16-Aug-2026 23:59:59 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600001_create_audit_logs_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600001_create_audit_logs_table.php on line 7
+[17-Aug-2026 00:00:09 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_06_29_120000_add_avatar_to_users_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_06_29_120000_add_avatar_to_users_table.php on line 7
+[17-Aug-2026 00:00:42 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000031_create_notification_preferences_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000031_create_notification_preferences_table.php on line 7
+[17-Aug-2026 00:01:46 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_062500_create_internal_notes_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_062500_create_internal_notes_table.php on line 7
+[17-Aug-2026 00:02:52 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000021_create_tax_rates_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000021_create_tax_rates_table.php on line 7
+[17-Aug-2026 00:03:55 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000050_create_pages_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000050_create_pages_table.php on line 7
+[17-Aug-2026 00:04:59 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000002_create_roles_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000002_create_roles_table.php on line 7
+[17-Aug-2026 00:06:02 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_000008_create_plans_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_000008_create_plans_table.php on line 7
+[17-Aug-2026 00:07:03 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000005_create_admin_role_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000005_create_admin_role_table.php on line 7
+[17-Aug-2026 00:08:07 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000041_create_media_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000041_create_media_table.php on line 7
+[17-Aug-2026 00:09:10 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_06_25_120000_add_gateway_metadata_to_subscriptions_table.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_06_25_120000_add_gateway_metadata_to_subscriptions_table.php on line 15
+[17-Aug-2026 00:10:15 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000001_create_admin_users_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000001_create_admin_users_table.php on line 7
+[17-Aug-2026 00:11:15 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_100001_create_clients_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_100001_create_clients_table.php on line 7
+[17-Aug-2026 00:12:17 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000020_create_coupons_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000020_create_coupons_table.php on line 7
+[17-Aug-2026 00:13:19 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000022_create_billing_events_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000022_create_billing_events_table.php on line 7
+[17-Aug-2026 00:14:20 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600004_create_locales_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600004_create_locales_table.php on line 7
+[17-Aug-2026 00:15:24 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000052_create_contact_messages_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000052_create_contact_messages_table.php on line 7
+[17-Aug-2026 00:16:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600002_create_system_settings_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600002_create_system_settings_table.php on line 7
+[17-Aug-2026 00:17:35 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_600003_create_templates_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_600003_create_templates_table.php on line 7
+[17-Aug-2026 00:18:37 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_07_15_120000_tokenize_brand_name_in_landing_content.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_07_15_120000_tokenize_brand_name_in_landing_content.php on line 15
+[17-Aug-2026 00:19:42 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000011_create_social_accounts_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000011_create_social_accounts_table.php on line 7
+[17-Aug-2026 00:20:43 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000042_create_onboarding_steps_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000042_create_onboarding_steps_table.php on line 7
+[17-Aug-2026 00:21:45 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000003_create_permissions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000003_create_permissions_table.php on line 7
+[17-Aug-2026 00:22:46 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_000006_create_currencies_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_000006_create_currencies_table.php on line 7
+[17-Aug-2026 00:23:51 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_000004_create_role_permission_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_000004_create_role_permission_table.php on line 7
+[17-Aug-2026 00:24:53 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_000004_create_workspaces_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_000004_create_workspaces_table.php on line 7
+[17-Aug-2026 00:25:55 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_200001_create_workspace_user_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_200001_create_workspace_user_table.php on line 7
+[17-Aug-2026 00:26:55 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000051_create_support_tickets_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000051_create_support_tickets_table.php on line 7
+[17-Aug-2026 00:27:56 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_20_193126_change_picture_url_to_text_in_social_media_accounts.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_20_193126_change_picture_url_to_text_in_social_media_accounts.php on line 7
+[17-Aug-2026 00:28:57 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000013_create_magic_links_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000013_create_magic_links_table.php on line 7
+[17-Aug-2026 00:29:57 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_100001_create_subscriptions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_100001_create_subscriptions_table.php on line 7
+[17-Aug-2026 00:30:58 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2025_02_25_100002_create_payment_transactions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2025_02_25_100002_create_payment_transactions_table.php on line 7
+[17-Aug-2026 00:33:08 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_06_11_120000_harden_subscription_billing_integrity.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_06_11_120000_harden_subscription_billing_integrity.php on line 23
+[17-Aug-2026 00:34:14 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/0001_01_01_000000_create_users_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/0001_01_01_000000_create_users_table.php on line 7
+[17-Aug-2026 00:35:15 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/0001_01_01_000001_create_cache_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/0001_01_01_000001_create_cache_table.php on line 7
+[17-Aug-2026 00:36:16 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/0001_01_01_000002_create_jobs_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/0001_01_01_000002_create_jobs_table.php on line 7
+[17-Aug-2026 00:37:20 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_04_100003_create_client_subscriptions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_04_100003_create_client_subscriptions_table.php on line 7
+[17-Aug-2026 00:38:26 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_29_130355_create_personal_access_tokens_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_29_130355_create_personal_access_tokens_table.php on line 7
+[17-Aug-2026 00:39:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_053918_create_client_settings_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_053918_create_client_settings_table.php on line 7
+[17-Aug-2026 00:40:29 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000012_create_invitations_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000012_create_invitations_table.php on line 7
+[17-Aug-2026 00:43:39 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_05_000002_create_translations_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_05_000002_create_translations_table.php on line 7
+[17-Aug-2026 00:44:42 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000030_create_notifications_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000030_create_notifications_table.php on line 7
+[17-Aug-2026 00:45:45 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000032_create_webhook_endpoints_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000032_create_webhook_endpoints_table.php on line 7
+[17-Aug-2026 00:46:47 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_07_16_000200_create_iyzico_billing_tables.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_07_16_000200_create_iyzico_billing_tables.php on line 7
+[17-Aug-2026 00:47:52 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_15_000001_create_workspace_smtp_configs_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_15_000001_create_workspace_smtp_configs_table.php on line 7
+[17-Aug-2026 00:48:57 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_07_15_140000_make_tenant_currency_inherit_platform_default.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_07_15_140000_make_tenant_currency_inherit_platform_default.php on line 8
+[17-Aug-2026 00:49:58 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_062732_create_push_subscriptions_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_062732_create_push_subscriptions_table.php on line 7
+[17-Aug-2026 00:50:59 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_04_30_034554_create_inbound_webhook_events_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_04_30_034554_create_inbound_webhook_events_table.php on line 7
+[17-Aug-2026 00:52:03 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_05_01_000033_create_webhook_deliveries_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_05_01_000033_create_webhook_deliveries_table.php on line 7
+[17-Aug-2026 00:54:10 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Database\Migrations\Migration" not found in /home/botifyai/public_html/database/migrations/2026_03_06_000001_create_smtp_configurations_table.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/database/migrations/2026_03_06_000001_create_smtp_configurations_table.php on line 7

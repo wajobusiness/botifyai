@@ -1,0 +1,4 @@
+[14-Aug-2026 16:19:15 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Support\ServiceProvider" not found in /home/botifyai/public_html/app/Modules/Shared/SharedServiceProvider.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Modules/Shared/SharedServiceProvider.php on line 7

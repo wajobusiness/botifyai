@@ -1,0 +1,100 @@
+[14-Aug-2026 09:19:51 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/NotificationController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/NotificationController.php on line 13
+[14-Aug-2026 14:46:58 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/InvitationController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/InvitationController.php on line 12
+[15-Aug-2026 00:09:57 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/WebhookEndpointController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/WebhookEndpointController.php on line 14
+[15-Aug-2026 20:41:01 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/SupportTicketController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/SupportTicketController.php on line 16
+[16-Aug-2026 20:22:00 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/ApiTokenController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/ApiTokenController.php on line 10
+[16-Aug-2026 20:22:02 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/AuditLogController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/AuditLogController.php on line 12
+[16-Aug-2026 20:22:04 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/BillingController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/BillingController.php on line 14
+[16-Aug-2026 20:22:05 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/DashboardController.php:20
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/DashboardController.php on line 20
+[16-Aug-2026 20:22:07 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/InvitationController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/InvitationController.php on line 12
+[16-Aug-2026 20:22:09 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/MediaController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/MediaController.php on line 14
+[16-Aug-2026 20:22:10 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/NotificationController.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/NotificationController.php on line 13
+[16-Aug-2026 20:22:11 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/SettingsController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/SettingsController.php on line 15
+[16-Aug-2026 20:22:13 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/SubscriptionController.php:20
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/SubscriptionController.php on line 20
+[16-Aug-2026 20:22:14 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/SupportTicketController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/SupportTicketController.php on line 16
+[16-Aug-2026 20:22:16 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/TeamController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/TeamController.php on line 14
+[16-Aug-2026 20:22:17 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/WebPushController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/WebPushController.php on line 10
+[16-Aug-2026 20:22:18 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/WebhookEndpointController.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/WebhookEndpointController.php on line 14
+[16-Aug-2026 21:58:34 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/SubscriptionController.php:20
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/SubscriptionController.php on line 20
+[17-Aug-2026 00:27:37 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/OnboardingController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/OnboardingController.php on line 12
+[17-Aug-2026 00:27:38 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/SearchController.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/SearchController.php on line 9
+[17-Aug-2026 06:40:50 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/DashboardController.php:20
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/DashboardController.php on line 20
+[17-Aug-2026 06:43:58 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/OnboardingController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/OnboardingController.php on line 12
+[17-Aug-2026 13:08:40 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/ApiTokenController.php:10
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/ApiTokenController.php on line 10
+[17-Aug-2026 13:09:36 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/AuditLogController.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/AuditLogController.php on line 12
+[17-Aug-2026 18:25:05 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Client/SettingsController.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Client/SettingsController.php on line 15

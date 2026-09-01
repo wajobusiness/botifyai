@@ -1,0 +1,4 @@
+[14-Aug-2026 16:19:52 UTC] PHP Fatal error:  Uncaught Error: Interface "App\Services\I18n\TranslationProviderInterface" not found in /home/botifyai/public_html/app/Services/I18n/FallbackTranslationProvider.php:8
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Services/I18n/FallbackTranslationProvider.php on line 8

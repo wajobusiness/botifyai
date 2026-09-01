@@ -1,0 +1,8 @@
+[14-Aug-2026 13:16:32 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Install/InstallController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Install/InstallController.php on line 16
+[16-Aug-2026 20:22:32 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/botifyai/public_html/app/Http/Controllers/Install/InstallController.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/botifyai/public_html/app/Http/Controllers/Install/InstallController.php on line 16

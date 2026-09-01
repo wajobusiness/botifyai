@@ -1,0 +1,1 @@
+[16-Aug-2026 20:26:16 UTC] PHP Fatal error:  Trait "Illuminate\Foundation\Bus\Dispatchable" not found in /home/botifyai/public_html/app/Modules/Inbox/Jobs/ProcessInboundInboxMessageJob.php on line 13
