@@ -122,6 +122,7 @@ class SecureHeaders
             $sources[] = 'https://graph.facebook.com';
             $sources[] = 'https://www.facebook.com';
             $sources[] = 'https://web.facebook.com';
+            $sources[] = 'https://connect.facebook.net';
         }
 
         return implode(' ', array_unique($sources));
