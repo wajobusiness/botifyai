@@ -220,7 +220,7 @@
         <!-- Scripts -->
         @routes
         @viteReactRefresh
-        @vite(['resources/js/app.jsx', 'resources/js/Pages/' . (isset($page['component']) ? $page['component'] : 'Dashboard') . '.jsx'])
+        @vite(['resources/js/app.jsx'])
 
         {{-- Overrides the :root defaults in resources/css/app.css. Only emitted when
              the admin actually configured something, so a stock install keeps the
