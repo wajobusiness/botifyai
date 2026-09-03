@@ -2,7 +2,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "vite build && cp -r public/build .",
         "dev": "vite",
         "lint": "eslint resources/js --ext .js,.jsx",
         "lint:fix": "eslint resources/js --ext .js,.jsx --fix",
