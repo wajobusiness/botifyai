@@ -2,7 +2,9 @@
 
 namespace App\Modules\Integrations\Models;
 
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class IntegrationConfig extends Model
 {
@@ -205,6 +207,27 @@ class IntegrationConfig extends Model
         return static::where('provider', $provider)->where('mode', $mode)->first();
     }
 
+    /**
+     * Safely decrypt an encrypted string attribute.
+     * Prevents fatal 500 DecryptException crashes if APP_KEY was rotated or ciphertext MAC is invalid.
+     *
+     * @param  string  $value
+     * @return mixed
+     */
+    protected function fromEncryptedString($value)
+    {
+        try {
+            return parent::fromEncryptedString($value);
+        } catch (DecryptException $e) {
+            Log::warning("Failed to decrypt IntegrationConfig attribute: {$e->getMessage()}", [
+                'provider' => $this->attributes['provider'] ?? null,
+                'id' => $this->attributes['id'] ?? null,
+            ]);
+
+            return null;
+        }
+    }
+
     public function isConfigured(): bool
     {
         // Local storage needs no credentials — it is always considered configured
@@ -212,7 +235,11 @@ class IntegrationConfig extends Model
             return true;
         }
 
-        $creds = $this->credentials ?? [];
+        try {
+            $creds = $this->credentials ?? [];
+        } catch (\Throwable) {
+            return false;
+        }
 
         return ! empty($creds) && collect($creds)->filter()->isNotEmpty();
     }
@@ -220,7 +247,12 @@ class IntegrationConfig extends Model
     /** Returns a fixed-length masked preview — never reveals actual credential content. */
     public function maskedCredentials(): array
     {
-        $creds = $this->credentials ?? [];
+        try {
+            $creds = $this->credentials ?? [];
+        } catch (\Throwable) {
+            return [];
+        }
+
         $result = [];
         foreach ($creds as $k => $v) {
             $result[$k] = (string) $v === '' ? '' : '••••••••••••';

@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class PaymentGatewayConfig extends Model
 {
@@ -18,11 +20,41 @@ class PaymentGatewayConfig extends Model
     }
 
     /**
+     * Safely decrypt an encrypted string attribute.
+     * Prevents fatal 500 DecryptException crashes if APP_KEY was rotated or ciphertext MAC is invalid.
+     *
+     * @param  string  $value
+     * @return mixed
+     */
+    protected function fromEncryptedString($value)
+    {
+        try {
+            return parent::fromEncryptedString($value);
+        } catch (DecryptException $e) {
+            Log::warning("Failed to decrypt PaymentGatewayConfig attribute: {$e->getMessage()}", [
+                'gateway' => $this->attributes['gateway'] ?? null,
+                'id' => $this->attributes['id'] ?? null,
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
      * Get credentials for the current mode (test or live).
      */
     public function getActiveCredentials(): array
     {
-        $creds = $this->credentials ?? [];
+        try {
+            $creds = $this->credentials ?? [];
+        } catch (\Throwable) {
+            return [];
+        }
+
+        if (! is_array($creds)) {
+            return [];
+        }
+
         $mode = $this->test_mode ? 'test' : 'live';
 
         return $creds[$mode] ?? [];
@@ -33,9 +65,13 @@ class PaymentGatewayConfig extends Model
      */
     public function hasActiveCredentials(): bool
     {
-        $c = $this->getActiveCredentials();
+        try {
+            $c = $this->getActiveCredentials();
 
-        return ! empty($c['secret_key'] ?? null);
+            return ! empty($c['secret_key'] ?? null);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public static function getByGateway(string $gateway): ?self
