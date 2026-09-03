@@ -214,7 +214,7 @@ class IntegrationConfig extends Model
      * @param  string  $value
      * @return mixed
      */
-    protected function fromEncryptedString($value)
+    public function fromEncryptedString($value)
     {
         try {
             return parent::fromEncryptedString($value);
