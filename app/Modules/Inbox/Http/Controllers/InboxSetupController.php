@@ -91,6 +91,7 @@ class InboxSetupController extends Controller
     {
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:2048'],
+            'redirect_uri' => ['nullable', 'string', 'max:500'],
         ]);
 
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
@@ -101,7 +102,7 @@ class InboxSetupController extends Controller
 
         $warnings = [];
 
-        [$accessToken, $exchangeError] = $this->exchangeCodeForToken($validated['code']);
+        [$accessToken, $exchangeError] = $this->exchangeCodeForToken($validated['code'], $validated['redirect_uri'] ?? null);
         if (! $accessToken) {
             return response()->json([
                 'message' => 'Failed to exchange authorization code with Meta: '.($exchangeError ?? 'The code may have expired or Meta app credentials are invalid.'),
@@ -230,6 +231,7 @@ class InboxSetupController extends Controller
     {
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:2048'],
+            'redirect_uri' => ['nullable', 'string', 'max:500'],
         ]);
 
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
@@ -240,7 +242,7 @@ class InboxSetupController extends Controller
 
         $warnings = [];
 
-        [$accessToken, $exchangeError] = $this->exchangeCodeForToken($validated['code']);
+        [$accessToken, $exchangeError] = $this->exchangeCodeForToken($validated['code'], $validated['redirect_uri'] ?? null);
         if (! $accessToken) {
             return response()->json([
                 'message' => 'Failed to exchange authorization code with Meta: '.($exchangeError ?? 'The code may have expired or Meta app credentials are invalid.'),
@@ -594,48 +596,77 @@ class InboxSetupController extends Controller
     /**
      * @return array{0: ?string, 1: ?string} [accessToken, errorMessage]
      */
-    private function exchangeCodeForToken(string $code): array
+    private function exchangeCodeForToken(string $code, ?string $clientRedirectUri = null): array
     {
         $meta = CredentialResolver::system()->meta();
         if (! $meta?->appId() || ! $meta?->appSecret()) {
             return [null, 'Meta App ID or App Secret is not configured in Admin → Integrations → Meta App.'];
         }
 
-        $tokenParams = [
-            'client_id'     => $meta->appId(),
-            'client_secret' => $meta->appSecret(),
-            'code'          => $code,
-        ];
+        $candidates = [];
 
-        // Try 1: without redirect_uri (standard for FB.login JS SDK embedded signup)
-        $res = Http::timeout(15)->connectTimeout(5)->get('https://graph.facebook.com/v20.0/oauth/access_token', $tokenParams);
+        // 1. Client's exact URI from window.location.origin + window.location.pathname
+        if (! empty($clientRedirectUri)) {
+            $candidates[] = trim($clientRedirectUri);
+        }
 
-        // Try 2: with app.url as redirect_uri
-        if (! $res->successful() || ! $res->json('access_token')) {
-            $redirectUri = rtrim((string) config('app.url'), '/');
-            if ($redirectUri !== '') {
-                $tokenParams['redirect_uri'] = $redirectUri;
-                $res = Http::timeout(15)->connectTimeout(5)->get('https://graph.facebook.com/v20.0/oauth/access_token', $tokenParams);
+        // 2. Server's resolved inbox setup route
+        try {
+            $candidates[] = route('client.inbox.setup');
+        } catch (\Throwable) {
+            // ignore
+        }
+
+        // 3. Fallbacks based on app.url
+        $appUrl = rtrim((string) config('app.url'), '/');
+        if ($appUrl !== '') {
+            $candidates[] = $appUrl . '/app/inbox/setup';
+            $candidates[] = $appUrl . '/inbox/setup';
+            $candidates[] = $appUrl;
+        }
+
+        // 4. Omit redirect_uri or send empty string
+        $candidates[] = '__OMIT__';
+        $candidates[] = '';
+
+        $candidates = array_values(array_unique($candidates));
+
+        $lastError = null;
+        $lastResponse = null;
+
+        foreach ($candidates as $uri) {
+            $tokenParams = [
+                'client_id'     => $meta->appId(),
+                'client_secret' => $meta->appSecret(),
+                'code'          => $code,
+            ];
+
+            if ($uri !== '__OMIT__') {
+                $tokenParams['redirect_uri'] = $uri;
             }
-        }
 
-        // Try 3: with empty string
-        if (! $res->successful() || ! $res->json('access_token')) {
-            $tokenParams['redirect_uri'] = '';
             $res = Http::timeout(15)->connectTimeout(5)->get('https://graph.facebook.com/v20.0/oauth/access_token', $tokenParams);
-        }
 
-        if (! $res->successful() || ! $res->json('access_token')) {
-            $errorMsg = $res->json('error.message') ?? $res->json('message') ?? 'Unknown error';
-            Log::warning('Meta embedded signup: code exchange failed', [
-                'error' => $errorMsg,
-                'response' => $res->json(),
+            if ($res->successful() && $res->json('access_token')) {
+                return [$res->json('access_token'), null];
+            }
+
+            $lastResponse = $res->json();
+            $lastError = $res->json('error.message') ?? $res->json('message') ?? 'Unknown error';
+
+            Log::debug('Meta embedded signup: code exchange attempt failed', [
+                'candidate_uri' => $uri,
+                'error' => $lastError,
             ]);
-
-            return [null, $errorMsg];
         }
 
-        return [$res->json('access_token'), null];
+        Log::warning('Meta embedded signup: code exchange failed for all candidates', [
+            'error' => $lastError,
+            'response' => $lastResponse,
+            'candidates_tried' => $candidates,
+        ]);
+
+        return [null, $lastError];
     }
 
     private function exchangeForLongLivedToken(string $shortToken): string

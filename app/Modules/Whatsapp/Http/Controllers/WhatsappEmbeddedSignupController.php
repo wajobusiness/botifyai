@@ -22,6 +22,7 @@ class WhatsappEmbeddedSignupController extends Controller
             'code'             => ['required', 'string', 'max:2048'],
             'waba_id'          => ['required', 'string', 'max:64'],
             'phone_number_id'  => ['nullable', 'string', 'max:64'],
+            'redirect_uri'     => ['nullable', 'string', 'max:500'],
         ]);
 
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
@@ -31,34 +32,47 @@ class WhatsappEmbeddedSignupController extends Controller
             return response()->json(['message' => 'Meta App credentials are not configured. Please ask your administrator to configure them in Admin → Integrations → Meta App.'], 422);
         }
 
-        $redirectUri = rtrim((string) config('app.url'), '/');
+        $candidates = [];
+        if (! empty($validated['redirect_uri'])) {
+            $candidates[] = trim($validated['redirect_uri']);
+        }
+        $appUrl = rtrim((string) config('app.url'), '/');
+        if ($appUrl !== '') {
+            $candidates[] = $appUrl;
+            $candidates[] = $appUrl . '/app/inbox/setup';
+        }
+        $candidates[] = '__OMIT__';
+        $candidates[] = '';
+        $candidates = array_values(array_unique($candidates));
 
-        // Exchange the short-lived auth code for an access token
-        $tokenParams = [
-            'client_id'     => $meta->appId(),
-            'client_secret' => $meta->appSecret(),
-            'code'          => $validated['code'],
-        ];
-        if ($redirectUri !== '') {
-            $tokenParams['redirect_uri'] = $redirectUri;
+        $tokenRes = null;
+        foreach ($candidates as $uri) {
+            $tokenParams = [
+                'client_id'     => $meta->appId(),
+                'client_secret' => $meta->appSecret(),
+                'code'          => $validated['code'],
+            ];
+            if ($uri !== '__OMIT__') {
+                $tokenParams['redirect_uri'] = $uri;
+            }
+
+            $tokenRes = Http::timeout(15)->connectTimeout(5)
+                ->get('https://graph.facebook.com/v20.0/oauth/access_token', $tokenParams);
+
+            if ($tokenRes->successful() && ! empty($tokenRes->json('access_token'))) {
+                break;
+            }
         }
 
-        $tokenRes = Http::get('https://graph.facebook.com/v20.0/oauth/access_token', $tokenParams);
-
-        // Some Meta app configs reject redirect_uri on embedded-signup codes — retry without it.
-        if ((! $tokenRes->successful() || empty($tokenRes->json('access_token'))) && isset($tokenParams['redirect_uri'])) {
-            unset($tokenParams['redirect_uri']);
-            $tokenRes = Http::get('https://graph.facebook.com/v20.0/oauth/access_token', $tokenParams);
-        }
-
-        if (! $tokenRes->successful() || empty($tokenRes->json('access_token'))) {
+        if (! $tokenRes?->successful() || empty($tokenRes->json('access_token'))) {
             Log::warning('WhatsApp embedded signup: code exchange failed', [
                 'workspace_id' => $workspaceId,
-                'response'     => $tokenRes->json(),
+                'response'     => $tokenRes?->json(),
+                'candidates_tried' => $candidates,
             ]);
 
             return response()->json([
-                'message' => 'Failed to exchange authorization code: ' . ($tokenRes->json('error.message') ?? 'unknown error'),
+                'message' => 'Failed to exchange authorization code: ' . ($tokenRes?->json('error.message') ?? 'unknown error'),
             ], 422);
         }
 

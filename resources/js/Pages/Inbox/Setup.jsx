@@ -571,7 +571,12 @@ function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookToken
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ code, waba_id: wabaId, phone_number_id: phoneNumberId }),
+                body: JSON.stringify({
+                    code,
+                    waba_id: wabaId,
+                    phone_number_id: phoneNumberId,
+                    redirect_uri: window.location.origin + window.location.pathname,
+                }),
             });
             const json = await res.json();
             if (!res.ok) {
@@ -1232,7 +1237,10 @@ function AddInstagramForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ code }),
+                body: JSON.stringify({
+                    code,
+                    redirect_uri: window.location.origin + window.location.pathname,
+                }),
                 signal: controller.signal,
             });
             clearTimeout(timeoutId);
@@ -1335,7 +1343,10 @@ function AddMessengerForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ code }),
+                body: JSON.stringify({
+                    code,
+                    redirect_uri: window.location.origin + window.location.pathname,
+                }),
                 signal: controller.signal,
             });
             clearTimeout(timeoutId);
