@@ -181,8 +181,15 @@ function PostCard({ post, accountMap, userTz, onView, onDelete }) {
         <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 flex flex-col overflow-hidden hover:shadow-md transition-shadow">
             {/* Media thumbnail / accent bar */}
             {mediaUrls.length > 0 ? (
-                <div className="relative h-40 bg-neutral-100 dark:bg-neutral-800 shrink-0">
-                    <img src={mediaUrls[0]} alt="" className="w-full h-full object-cover" />
+                <div className="relative h-40 bg-neutral-100 dark:bg-neutral-800 shrink-0 overflow-hidden">
+                    <img
+                        src={mediaUrls[0]}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                        }}
+                    />
                     {mediaUrls.length > 1 && (
                         <span className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
                             <Image className="h-3 w-3" /> {mediaUrls.length}

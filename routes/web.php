@@ -157,3 +157,15 @@ Route::middleware('throttle:30,1')->group(function () {
         }
     })->name('healthz.queue');
 });
+
+// Fallback route to serve uploaded public storage assets in non-symlinked environments
+Route::get('/storage/{path}', function (string $path) {
+    if (str_contains($path, '..')) {
+        abort(403);
+    }
+
+    $fullPath = storage_path('app/public/'.$path);
+    abort_unless(file_exists($fullPath) && is_file($fullPath), 404);
+
+    return response()->file($fullPath);
+})->where('path', '.*')->name('storage.local');
