@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card } from '@/Components/ui';
 import { Head } from '@inertiajs/react';
@@ -13,6 +14,17 @@ export default function AdminCurrenciesIndex({ currencies = [], flash = {} }) {
                 <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{t('admin.nav.currencies')}</h2>
                 {flash?.success && <div className="rounded-soft-lg bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-4 py-2 text-sm">{flash.success}</div>}
                 <p className="text-sm text-neutral-500 dark:text-neutral-400">{t('admin.exchange_rate_hint')}</p>
+                <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-sm text-blue-800 dark:text-blue-200">
+                    <p className="font-semibold mb-1">How Exchange Rates Work:</p>
+                    <p>Exchange rate is how much <strong>1 unit</strong> of the currency is worth in USD (the reference currency with rate = 1.0):</p>
+                    <ul className="list-disc list-inside mt-1 space-y-0.5 text-xs">
+                        <li><strong>USD</strong>: 1.00</li>
+                        <li><strong>EUR</strong>: ~1.087 (1 EUR = $1.087 USD)</li>
+                        <li><strong>GBP</strong>: ~1.266 (1 GBP = $1.266 USD)</li>
+                        <li><strong>NGN</strong>: ~0.00067 (1 NGN = 1/1500 USD = $0.00066667)</li>
+                        <li><strong>BDT</strong>: ~0.0091 (1 BDT = 1/110 USD)</li>
+                    </ul>
+                </div>
                 <Card>
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-sm">
@@ -57,6 +69,16 @@ function CurrencyRow({ currency }) {
         is_default: currency.is_default ?? false,
         enabled: currency.enabled ?? true,
     });
+
+    useEffect(() => {
+        setData({
+            symbol: currency.symbol ?? '',
+            decimals: currency.decimals ?? 2,
+            exchange_rate: currency.exchange_rate ?? '',
+            is_default: currency.is_default ?? false,
+            enabled: currency.enabled ?? true,
+        });
+    }, [currency]);
     return (
         <tr className="border-b border-neutral-100 dark:border-neutral-800">
             <td className="py-3 pr-4 font-medium text-neutral-900 dark:text-neutral-100">{currency.code}</td>

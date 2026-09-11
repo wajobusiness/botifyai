@@ -91,8 +91,9 @@ class SocialPublisher
                     'network' => $account->network,
                     'error' => $e->getMessage(),
                 ]);
-                $link->update(['status' => 'failed', 'error' => 'Publish failed. See application logs for details.']);
-                $results[$account->id] = ['status' => 'failed'];
+                $errorMsg = $e->getMessage() ?: 'Publish failed. See application logs for details.';
+                $link->update(['status' => 'failed', 'error' => $errorMsg]);
+                $results[$account->id] = ['status' => 'failed', 'error' => $errorMsg];
                 $retryableFailures++;
             }
         }

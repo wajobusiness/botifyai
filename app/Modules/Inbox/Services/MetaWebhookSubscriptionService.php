@@ -5,6 +5,7 @@ namespace App\Modules\Inbox\Services;
 use App\Modules\Integrations\Services\CredentialResolver;
 use App\Modules\Shared\Models\ChannelAccount;
 use App\Modules\Shared\Models\Message;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -63,10 +64,16 @@ class MetaWebhookSubscriptionService
             return ['ok' => false, 'error' => 'Meta App ID, App Secret or Verify Token is not configured in Admin → Integrations → Meta App.'];
         }
 
+        // Cache successful app subscription for 12 hours to avoid redundant roundtrip webhook handshakes on every connect
+        $cacheKey = "meta_app_sub_{$object}";
+        if (Cache::get($cacheKey) === true) {
+            return ['ok' => true, 'error' => null];
+        }
+
         $callbackUrl = route('webhooks.meta.receive', ['token' => $verifyToken]);
 
         try {
-            $res = Http::post(self::BASE."/{$appId}/subscriptions", [
+            $res = Http::timeout(10)->connectTimeout(5)->post(self::BASE."/{$appId}/subscriptions", [
                 'access_token' => $appId.'|'.$appSecret,
                 'object' => $object,
                 'callback_url' => $callbackUrl,
@@ -84,6 +91,8 @@ class MetaWebhookSubscriptionService
 
                 return ['ok' => false, 'error' => (string) ($res->json('error.message') ?? 'Meta rejected the webhook registration. Make sure the app URL is public HTTPS.')];
             }
+
+            Cache::put($cacheKey, true, now()->addHours(12));
 
             Log::info('Meta webhook: app subscription registered', [
                 'object' => $object,
@@ -117,7 +126,7 @@ class MetaWebhookSubscriptionService
         }
 
         try {
-            $res = Http::withToken($pageToken)
+            $res = Http::timeout(10)->connectTimeout(5)->withToken($pageToken)
                 ->post(self::BASE."/{$pageId}/subscribed_apps", [
                     'subscribed_fields' => self::PAGE_FIELDS[$object] ?? 'messages',
                 ]);
@@ -254,7 +263,7 @@ class MetaWebhookSubscriptionService
         $expectedUrl = route('webhooks.meta.receive', ['token' => $verifyToken]);
 
         try {
-            $res = Http::get(self::BASE."/{$appId}/subscriptions", [
+            $res = Http::timeout(10)->connectTimeout(5)->get(self::BASE."/{$appId}/subscriptions", [
                 'access_token' => $appId.'|'.$appSecret,
             ]);
 
@@ -327,7 +336,7 @@ class MetaWebhookSubscriptionService
     private function checkPageSubscription(string $pageId, string $pageToken, string $appId): array
     {
         try {
-            $res = Http::withToken($pageToken)->get(self::BASE."/{$pageId}/subscribed_apps");
+            $res = Http::timeout(10)->connectTimeout(5)->withToken($pageToken)->get(self::BASE."/{$pageId}/subscribed_apps");
 
             if (! $res->successful()) {
                 $code = (int) $res->json('error.code');
@@ -449,7 +458,7 @@ class MetaWebhookSubscriptionService
         // Legacy connect: only the IG account id was stored. The stored token is
         // the Page token, so /me resolves to the page itself.
         try {
-            $res = Http::withToken($token)->get(self::BASE.'/me', ['fields' => 'id']);
+            $res = Http::timeout(10)->connectTimeout(5)->withToken($token)->get(self::BASE.'/me', ['fields' => 'id']);
             $pageId = (string) ($res->json('id') ?? '');
 
             if ($res->successful() && $pageId !== '' && $pageId !== (string) ($meta['instagram_page_id'] ?? '')) {

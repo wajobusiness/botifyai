@@ -170,7 +170,7 @@ class SocialAccountController extends Controller
             ? 'id,name,access_token,picture,instagram_business_account{id,name,username,profile_picture_url}'
             : 'id,name,access_token,picture';
 
-        $res = Http::get("https://graph.facebook.com/v19.0/{$pageId}", [
+        $res = Http::timeout(15)->connectTimeout(5)->get("https://graph.facebook.com/v19.0/{$pageId}", [
             'access_token' => $token,
             'fields'       => $fields,
         ])->json();
@@ -283,7 +283,7 @@ class SocialAccountController extends Controller
             ]);
 
             for ($i = 0; $i < 5 && $url; $i++) {
-                $pagesResp = Http::get($url, $query)->json();
+                $pagesResp = Http::timeout(15)->connectTimeout(5)->get($url, $query)->json();
 
                 // Graph API returned an error — surface it to the user.
                 if (isset($pagesResp['error'])) {
@@ -385,7 +385,7 @@ class SocialAccountController extends Controller
             ? ['pages_show_list', 'instagram_basic', 'instagram_content_publish']
             : ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'];
 
-        $perms = Http::get('https://graph.facebook.com/v19.0/me/permissions', array_filter([
+        $perms = Http::timeout(10)->connectTimeout(5)->get('https://graph.facebook.com/v19.0/me/permissions', array_filter([
             'access_token' => $accessToken,
             'appsecret_proof' => $proof,
         ]))->json('data') ?? [];

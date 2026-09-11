@@ -119,7 +119,7 @@ class OAuthManager
 
     private function facebookExchange($creds, string $code, string $redirect): array
     {
-        $res = Http::get('https://graph.facebook.com/v19.0/oauth/access_token', [
+        $res = Http::timeout(15)->connectTimeout(5)->get('https://graph.facebook.com/v19.0/oauth/access_token', [
             'client_id' => $creds->clientId() ?? '',
             'client_secret' => $creds->clientSecret() ?? '',
             'redirect_uri' => $redirect,
@@ -133,7 +133,7 @@ class OAuthManager
         // short-lived user token expire within 1-2 hours, which would silently break
         // scheduled publishing shortly after connecting.
         if ($token) {
-            $long = Http::get('https://graph.facebook.com/v19.0/oauth/access_token', [
+            $long = Http::timeout(15)->connectTimeout(5)->get('https://graph.facebook.com/v19.0/oauth/access_token', [
                 'grant_type' => 'fb_exchange_token',
                 'client_id' => $creds->clientId() ?? '',
                 'client_secret' => $creds->clientSecret() ?? '',

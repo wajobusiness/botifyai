@@ -99,24 +99,17 @@ class InboxSetupController extends Controller
             return response()->json(['message' => 'Meta App credentials are not configured. Please ask your administrator to configure them in Admin → Integrations → Meta App.'], 422);
         }
 
-        // Ensure the Meta App delivers `instagram` webhook events to our endpoint.
-        // Without this app-level subscription Meta has no callback URL for the
-        // instagram object, so inbound Instagram messages never reach the server.
         $warnings = [];
-        $appSub = $this->webhooks->registerAppWebhook('instagram');
-        if (! $appSub['ok']) {
-            $warnings[] = 'Webhook registration with Meta failed — inbound messages will NOT arrive until it succeeds: '.$appSub['error'];
-        }
 
         $accessToken = $this->exchangeCodeForToken($validated['code']);
         if (! $accessToken) {
-            return response()->json(['message' => 'Failed to exchange authorization code with Meta.'], 422);
+            return response()->json(['message' => 'Failed to exchange authorization code with Meta. The code may have expired or Meta app credentials are invalid.'], 422);
         }
 
         $longToken = $this->exchangeForLongLivedToken($accessToken);
 
         // Fetch pages the user manages with Instagram accounts connected
-        $pagesRes = Http::withToken($longToken)
+        $pagesRes = Http::timeout(15)->connectTimeout(5)->withToken($longToken)
             ->get('https://graph.facebook.com/v20.0/me/accounts', [
                 'fields' => 'id,name,access_token,instagram_business_account{id,name,username}',
                 'limit' => 50,
@@ -129,6 +122,12 @@ class InboxSetupController extends Controller
             ]);
 
             return response()->json(['message' => 'Could not fetch your Facebook pages: '.($pagesRes->json('error.message') ?? 'unknown error')], 422);
+        }
+
+        // Ensure the Meta App delivers `instagram` webhook events to our endpoint.
+        $appSub = $this->webhooks->registerAppWebhook('instagram');
+        if (! $appSub['ok']) {
+            $warnings[] = 'Webhook registration with Meta warning: '.$appSub['error'];
         }
 
         $pages = $pagesRes->json('data', []);
@@ -237,23 +236,16 @@ class InboxSetupController extends Controller
             return response()->json(['message' => 'Meta App credentials are not configured. Please ask your administrator to configure them in Admin → Integrations → Meta App.'], 422);
         }
 
-        // Ensure the Meta App delivers `page` (Messenger) webhook events to our
-        // endpoint. Without this app-level subscription Meta has no callback URL for
-        // the page object, so inbound Messenger messages never reach the server.
         $warnings = [];
-        $appSub = $this->webhooks->registerAppWebhook('page');
-        if (! $appSub['ok']) {
-            $warnings[] = 'Webhook registration with Meta failed — inbound messages will NOT arrive until it succeeds: '.$appSub['error'];
-        }
 
         $accessToken = $this->exchangeCodeForToken($validated['code']);
         if (! $accessToken) {
-            return response()->json(['message' => 'Failed to exchange authorization code with Meta.'], 422);
+            return response()->json(['message' => 'Failed to exchange authorization code with Meta. The code may have expired or Meta app credentials are invalid.'], 422);
         }
 
         $longToken = $this->exchangeForLongLivedToken($accessToken);
 
-        $pagesRes = Http::withToken($longToken)
+        $pagesRes = Http::timeout(15)->connectTimeout(5)->withToken($longToken)
             ->get('https://graph.facebook.com/v20.0/me/accounts', [
                 'fields' => 'id,name,access_token',
                 'limit' => 50,
@@ -266,6 +258,12 @@ class InboxSetupController extends Controller
             ]);
 
             return response()->json(['message' => 'Could not fetch your Facebook pages: '.($pagesRes->json('error.message') ?? 'unknown error')], 422);
+        }
+
+        // Ensure the Meta App delivers `page` (Messenger) webhook events to our endpoint.
+        $appSub = $this->webhooks->registerAppWebhook('page');
+        if (! $appSub['ok']) {
+            $warnings[] = 'Webhook registration with Meta warning: '.$appSub['error'];
         }
 
         $pages = $pagesRes->json('data', []);
@@ -294,7 +292,7 @@ class InboxSetupController extends Controller
             // fetch it explicitly. Never fall back to the user token — a user token
             // cannot resolve page-scoped PSIDs and yields Graph error 100.
             if (! $pageToken) {
-                $tokenRes = Http::withToken($longToken)
+                $tokenRes = Http::timeout(10)->connectTimeout(5)->withToken($longToken)
                     ->get("https://graph.facebook.com/v20.0/{$pageId}", ['fields' => 'access_token']);
                 $pageToken = $tokenRes->json('access_token');
             }
@@ -378,7 +376,7 @@ class InboxSetupController extends Controller
         $pageId = trim($validated['page_id']);
         $token = $this->exchangeForLongLivedToken(trim($validated['access_token']));
 
-        $pageRes = Http::withToken($token)
+        $pageRes = Http::timeout(15)->connectTimeout(5)->withToken($token)
             ->get("https://graph.facebook.com/v20.0/{$pageId}", [
                 'fields' => 'id,name,access_token,instagram_business_account{id,name,username}',
             ]);
@@ -477,7 +475,7 @@ class InboxSetupController extends Controller
         $pageId = trim($validated['page_id']);
         $token = $this->exchangeForLongLivedToken(trim($validated['access_token']));
 
-        $pageRes = Http::withToken($token)
+        $pageRes = Http::timeout(15)->connectTimeout(5)->withToken($token)
             ->get("https://graph.facebook.com/v20.0/{$pageId}", [
                 'fields' => 'id,name,access_token',
             ]);
@@ -503,7 +501,7 @@ class InboxSetupController extends Controller
         // If the page node didn't expose one, the pasted token may itself be a
         // Page token — accept it only when /me resolves to this page.
         if (! $pageToken) {
-            $meRes = Http::withToken($token)
+            $meRes = Http::timeout(10)->connectTimeout(5)->withToken($token)
                 ->get('https://graph.facebook.com/v20.0/me', ['fields' => 'id']);
             if ($meRes->successful() && (string) $meRes->json('id') === $pageId) {
                 $pageToken = $token;
@@ -596,7 +594,7 @@ class InboxSetupController extends Controller
             return null;
         }
 
-        $res = Http::get('https://graph.facebook.com/v20.0/oauth/access_token', [
+        $res = Http::timeout(15)->connectTimeout(5)->get('https://graph.facebook.com/v20.0/oauth/access_token', [
             'client_id' => $meta->appId(),
             'client_secret' => $meta->appSecret(),
             'code' => $code,
@@ -621,7 +619,7 @@ class InboxSetupController extends Controller
             return $shortToken;
         }
 
-        $res = Http::get('https://graph.facebook.com/v20.0/oauth/access_token', [
+        $res = Http::timeout(15)->connectTimeout(5)->get('https://graph.facebook.com/v20.0/oauth/access_token', [
             'grant_type' => 'fb_exchange_token',
             'client_id' => $meta->appId(),
             'client_secret' => $meta->appSecret(),

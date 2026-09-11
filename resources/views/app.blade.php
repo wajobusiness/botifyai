@@ -207,7 +207,7 @@
                 FB.init({
                     appId: '{{ e($metaAppId) }}',
                     autoLogAppEvents: true,
-                    xfbml: false,
+                     xfbml: false,
                     version: 'v20.0',
                 });
                 window.__fbSdkReady = true;

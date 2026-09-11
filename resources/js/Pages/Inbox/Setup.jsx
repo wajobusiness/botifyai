@@ -1,4 +1,4 @@
-﻿import { Head, router, usePage, Link } from '@inertiajs/react';
+import { Head, router, usePage, Link } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import {
     Check, Copy, Link2, AlertTriangle,
@@ -1222,6 +1222,8 @@ function AddInstagramForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
         setApiError(null);
         setApiWarnings([]);
         setSubmitting(true);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
         try {
             const res = await fetch(route('client.inbox.setup.embedded-signup.instagram'), {
                 method: 'POST',
@@ -1231,7 +1233,9 @@ function AddInstagramForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ code }),
+                signal: controller.signal,
             });
+            clearTimeout(timeoutId);
             const json = await res.json();
             if (!res.ok) {
                 setApiError(json.message ?? t('inbox.connection_failed'));
@@ -1244,8 +1248,13 @@ function AddInstagramForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                 router.reload({ preserveScroll: true });
                 onSuccess?.();
             }
-        } catch {
-            setApiError(t('inbox.network_error_retry'));
+        } catch (err) {
+            clearTimeout(timeoutId);
+            if (err?.name === 'AbortError') {
+                setApiError('The request to Meta timed out. You can try again or use the "Manual setup" tab above with your Page ID and Page Access Token.');
+            } else {
+                setApiError(t('inbox.network_error_retry'));
+            }
         } finally {
             setSubmitting(false);
         }
@@ -1316,6 +1325,8 @@ function AddMessengerForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
         setApiError(null);
         setApiWarnings([]);
         setSubmitting(true);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
         try {
             const res = await fetch(route('client.inbox.setup.embedded-signup.messenger'), {
                 method: 'POST',
@@ -1325,7 +1336,9 @@ function AddMessengerForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ code }),
+                signal: controller.signal,
             });
+            clearTimeout(timeoutId);
             const json = await res.json();
             if (!res.ok) {
                 setApiError(json.message ?? t('inbox.connection_failed'));
@@ -1338,8 +1351,13 @@ function AddMessengerForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                 router.reload({ preserveScroll: true });
                 onSuccess?.();
             }
-        } catch {
-            setApiError(t('inbox.network_error_retry'));
+        } catch (err) {
+            clearTimeout(timeoutId);
+            if (err?.name === 'AbortError') {
+                setApiError('The request to Meta timed out. You can try again or use the "Manual setup" tab above with your Page ID and Page Access Token.');
+            } else {
+                setApiError(t('inbox.network_error_retry'));
+            }
         } finally {
             setSubmitting(false);
         }
