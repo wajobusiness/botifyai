@@ -101,9 +101,11 @@ class InboxSetupController extends Controller
 
         $warnings = [];
 
-        $accessToken = $this->exchangeCodeForToken($validated['code']);
+        [$accessToken, $exchangeError] = $this->exchangeCodeForToken($validated['code']);
         if (! $accessToken) {
-            return response()->json(['message' => 'Failed to exchange authorization code with Meta. The code may have expired or Meta app credentials are invalid.'], 422);
+            return response()->json([
+                'message' => 'Failed to exchange authorization code with Meta: '.($exchangeError ?? 'The code may have expired or Meta app credentials are invalid.'),
+            ], 422);
         }
 
         $longToken = $this->exchangeForLongLivedToken($accessToken);
@@ -238,9 +240,11 @@ class InboxSetupController extends Controller
 
         $warnings = [];
 
-        $accessToken = $this->exchangeCodeForToken($validated['code']);
+        [$accessToken, $exchangeError] = $this->exchangeCodeForToken($validated['code']);
         if (! $accessToken) {
-            return response()->json(['message' => 'Failed to exchange authorization code with Meta. The code may have expired or Meta app credentials are invalid.'], 422);
+            return response()->json([
+                'message' => 'Failed to exchange authorization code with Meta: '.($exchangeError ?? 'The code may have expired or Meta app credentials are invalid.'),
+            ], 422);
         }
 
         $longToken = $this->exchangeForLongLivedToken($accessToken);
@@ -587,29 +591,51 @@ class InboxSetupController extends Controller
         return response()->json($this->webhooks->resubscribe($channelAccount));
     }
 
-    private function exchangeCodeForToken(string $code): ?string
+    /**
+     * @return array{0: ?string, 1: ?string} [accessToken, errorMessage]
+     */
+    private function exchangeCodeForToken(string $code): array
     {
         $meta = CredentialResolver::system()->meta();
         if (! $meta?->appId() || ! $meta?->appSecret()) {
-            return null;
+            return [null, 'Meta App ID or App Secret is not configured in Admin → Integrations → Meta App.'];
         }
 
-        $res = Http::timeout(15)->connectTimeout(5)->get('https://graph.facebook.com/v20.0/oauth/access_token', [
-            'client_id' => $meta->appId(),
+        $tokenParams = [
+            'client_id'     => $meta->appId(),
             'client_secret' => $meta->appSecret(),
-            'code' => $code,
-            'redirect_uri' => '',
-        ]);
+            'code'          => $code,
+        ];
+
+        // Try 1: without redirect_uri (standard for FB.login JS SDK embedded signup)
+        $res = Http::timeout(15)->connectTimeout(5)->get('https://graph.facebook.com/v20.0/oauth/access_token', $tokenParams);
+
+        // Try 2: with app.url as redirect_uri
+        if (! $res->successful() || ! $res->json('access_token')) {
+            $redirectUri = rtrim((string) config('app.url'), '/');
+            if ($redirectUri !== '') {
+                $tokenParams['redirect_uri'] = $redirectUri;
+                $res = Http::timeout(15)->connectTimeout(5)->get('https://graph.facebook.com/v20.0/oauth/access_token', $tokenParams);
+            }
+        }
+
+        // Try 3: with empty string
+        if (! $res->successful() || ! $res->json('access_token')) {
+            $tokenParams['redirect_uri'] = '';
+            $res = Http::timeout(15)->connectTimeout(5)->get('https://graph.facebook.com/v20.0/oauth/access_token', $tokenParams);
+        }
 
         if (! $res->successful() || ! $res->json('access_token')) {
+            $errorMsg = $res->json('error.message') ?? $res->json('message') ?? 'Unknown error';
             Log::warning('Meta embedded signup: code exchange failed', [
+                'error' => $errorMsg,
                 'response' => $res->json(),
             ]);
 
-            return null;
+            return [null, $errorMsg];
         }
 
-        return $res->json('access_token');
+        return [$res->json('access_token'), null];
     }
 
     private function exchangeForLongLivedToken(string $shortToken): string
