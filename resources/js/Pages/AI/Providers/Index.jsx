@@ -103,7 +103,7 @@ const GeminiLogo = () => (
 const PROVIDER_INFO = {
     openai:    { label: 'OpenAI',    Icon: OpenAILogo,    models: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'] },
     anthropic: { label: 'Anthropic', Icon: AnthropicLogo, models: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'] },
-    gemini:    { label: 'Gemini',    Icon: GeminiLogo,    models: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro'] },
+    gemini:    { label: 'Gemini',    Icon: GeminiLogo,    models: ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-latest'] },
 };
 
 function ProviderCard({ provider }) {
@@ -113,7 +113,7 @@ function ProviderCard({ provider }) {
 
     const { data, setData, put, processing, errors } = useForm({
         api_key:             '',
-        default_model_chat:  provider.default_model_chat || info.models?.[1] || '',
+        default_model_chat:  provider.default_model_chat || (info.models?.includes('gemini-1.5-flash') ? 'gemini-1.5-flash' : info.models?.[1]) || info.models?.[0] || '',
         enabled:             provider.enabled,
     });
 
