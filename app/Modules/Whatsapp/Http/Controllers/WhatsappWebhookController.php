@@ -32,142 +32,185 @@ class WhatsappWebhookController extends Controller
     /** GET /webhooks/whatsapp/global — Meta challenge verification for the global endpoint */
     public function verifyGlobal(Request $request): Response
     {
-        $expectedToken = $this->globalVerifyToken();
-
-        if (! $expectedToken) {
-            abort(403, 'Meta credentials not configured');
-        }
-
-        if ($request->input('hub_mode') === 'subscribe'
-            && hash_equals($expectedToken, (string) $request->input('hub_verify_token', ''))) {
-            return response($request->input('hub_challenge', ''), 200);
-        }
-
-        abort(400);
+        return $this->verify($request, 'global');
     }
 
     /** POST /webhooks/whatsapp/global — receives events for all embedded-signup WABAs */
     public function receiveGlobal(Request $request): JsonResponse
     {
-        $meta      = CredentialResolver::system()->meta();
-        $appSecret = $meta?->appSecret();
+        return $this->receive($request, 'global');
+    }
 
-        if ($appSecret) {
-            $this->verifyHmacSignature($request, $appSecret);
-        } elseif (app()->environment('production')) {
-            Log::critical('whatsapp.webhook.global.no_secret', ['ip' => $request->ip()]);
-            abort(401, 'App secret not configured');
-        } else {
-            Log::warning('whatsapp.webhook.global.unsigned', ['ip' => $request->ip()]);
+    /**
+     * GET /webhooks/whatsapp/{token?}
+     * Meta challenge verification for WhatsApp Cloud API.
+     */
+    public function verify(Request $request, ?string $token = null): Response
+    {
+        // Read hub parameters (supporting PHP $_GET dot-to-underscore normalization and literal dots)
+        $hubMode = $request->query('hub_mode', $request->query('hub.mode', $request->input('hub_mode', $request->input('hub.mode'))));
+        $hubVerifyToken = $request->query('hub_verify_token', $request->query('hub.verify_token', $request->input('hub_verify_token', $request->input('hub.verify_token'))));
+        $hubChallenge = $request->query('hub_challenge', $request->query('hub.challenge', $request->input('hub_challenge', $request->input('hub.challenge'))));
+
+        if ($hubMode !== 'subscribe') {
+            Log::warning('whatsapp.webhook.verify_invalid_mode', [
+                'hub_mode' => $hubMode,
+                'ip'       => $request->ip(),
+            ]);
+            abort(400, 'Invalid hub.mode');
         }
 
-        $idempotency = app(WebhookIdempotencyService::class);
-        $newEntries  = [];
-        foreach ($request->input('entry', []) as $entry) {
-            $eventKey = $this->entryEventKey($entry);
-            if ($eventKey === null || $idempotency->isNewEvent('whatsapp_global', $eventKey)) {
-                $newEntries[] = $entry;
+        $envToken = (string) (config('services.whatsapp.verify_token') ?: env('WHATSAPP_VERIFY_TOKEN', ''));
+        $metaVerifyToken = (string) (CredentialResolver::system()->meta()?->verifyToken() ?? '');
+        $globalToken = (string) ($this->globalVerifyToken() ?? '');
+
+        $tokenVerified = false;
+
+        // 1. Compare token against WHATSAPP_VERIFY_TOKEN from environment / config
+        if ($envToken !== '') {
+            if (($token !== null && hash_equals($envToken, $token)) ||
+                ($hubVerifyToken !== null && hash_equals($envToken, (string) $hubVerifyToken))) {
+                $tokenVerified = true;
             }
         }
 
-        if (empty($newEntries)) {
-            return response()->json(['status' => 'ok']);
+        // 2. Compare URL token directly with hub_verify_token
+        if (! $tokenVerified && $token !== null && $token !== '' && $token !== 'global' && $hubVerifyToken !== null && (string) $hubVerifyToken !== '') {
+            if (hash_equals($token, (string) $hubVerifyToken)) {
+                $tokenVerified = true;
+            }
         }
 
-        $payload = array_merge($request->all(), ['entry' => $newEntries]);
+        // 3. Compare against system Meta credentials verify_token
+        if (! $tokenVerified && $metaVerifyToken !== '') {
+            if (($token !== null && hash_equals($metaVerifyToken, $token)) ||
+                ($hubVerifyToken !== null && hash_equals($metaVerifyToken, (string) $hubVerifyToken))) {
+                $tokenVerified = true;
+            }
+        }
 
-        Log::info('whatsapp.webhook.global.received', [
-            'entry_count'  => count($newEntries),
-            'waba_ids'     => collect($newEntries)->pluck('id')->all(),
-            'has_messages' => collect($newEntries)->contains(
-                fn ($e) => collect($e['changes'] ?? [])->contains(
-                    fn ($c) => ! empty($c['value']['messages'] ?? [])
-                )
-            ),
-            'has_statuses' => collect($newEntries)->contains(
-                fn ($e) => collect($e['changes'] ?? [])->contains(
-                    fn ($c) => ! empty($c['value']['statuses'] ?? [])
-                )
-            ),
+        // 4. Compare against global verify token
+        if (! $tokenVerified && $globalToken !== '') {
+            if (($token !== null && hash_equals($globalToken, $token)) ||
+                ($hubVerifyToken !== null && hash_equals($globalToken, (string) $hubVerifyToken))) {
+                $tokenVerified = true;
+            }
+        }
+
+        // 5. Compare against database per-WABA verify token
+        if (! $tokenVerified && $token !== null && $token !== '' && $token !== 'global') {
+            $waba = WhatsappBusinessAccount::findByWebhookToken($token);
+            if ($waba && $hubVerifyToken !== null && hash_equals($token, (string) $hubVerifyToken)) {
+                $tokenVerified = true;
+            }
+        }
+
+        if ($tokenVerified && $hubChallenge !== null) {
+            Log::info('whatsapp.webhook.verified', [
+                'token' => $token ? substr($token, 0, 8).'…' : null,
+                'ip'    => $request->ip(),
+            ]);
+
+            return response((string) $hubChallenge, 200)
+                ->header('Content-Type', 'text/plain');
+        }
+
+        Log::warning('whatsapp.webhook.verify_failed', [
+            'url_token'        => $token ? substr($token, 0, 8).'…' : null,
+            'hub_verify_token' => $hubVerifyToken ? substr((string) $hubVerifyToken, 0, 8).'…' : null,
+            'env_configured'   => $envToken !== '',
+            'ip'               => $request->ip(),
         ]);
 
-        return $this->flushWebhookOkThen(
-            fn () => ProcessInboundMessageJob::dispatch($payload, '')->onQueue('whatsapp')
+        abort(403, 'Invalid verify token');
+    }
+
+    /**
+     * POST /webhooks/whatsapp/{token?}
+     * Inbound WhatsApp Cloud API messages and status updates.
+     */
+    public function receive(Request $request, ?string $token = null): JsonResponse
+    {
+        $payload = $request->all();
+
+        // Accept and log incoming payload and message details
+        $entries = $request->input('entry', []);
+        $hasMessages = collect($entries)->contains(
+            fn ($e) => collect($e['changes'] ?? [])->contains(
+                fn ($c) => ! empty($c['value']['messages'] ?? [])
+            )
         );
-    }
-
-    public function verify(Request $request, string $token): Response
-    {
-        $waba = WhatsappBusinessAccount::findByWebhookToken($token);
-
-        if (! $waba) {
-            abort(403, 'Invalid verify token');
-        }
-
-        if ($request->input('hub_mode') === 'subscribe'
-            && hash_equals($token, (string) $request->input('hub_verify_token', ''))) {
-            return response($request->input('hub_challenge', ''), 200);
-        }
-
-        abort(400);
-    }
-
-    public function receive(Request $request, string $token): JsonResponse
-    {
-        $waba = WhatsappBusinessAccount::findByWebhookToken($token);
-
-        if (! $waba) {
-            Log::warning('whatsapp.webhook.unknown_token', [
-                'ip'             => $request->ip(),
-                'received_token' => substr($token, 0, 12) . '…',
-                'token_hash'     => hash('sha256', $token),
-                'hint'           => 'Token hash does not match any webhook_verify_token_hash in whatsapp_business_accounts. Run: php artisan tinker --execute="DB::table(\'whatsapp_business_accounts\')->get([\'waba_id\',\'webhook_verify_token_hash\',\'status\'])->each(fn(\$r)=>print_r((array)\$r));"',
-            ]);
-            abort(403, 'Invalid verify token');
-        }
-
-        // Resolve app secret: WABA-level override first, then system credential.
-        $appSecret = ($waba->credentials ?? [])['app_secret_override'] ?? null;
-        if (! $appSecret) {
-            $appSecret = CredentialResolver::system()->meta()?->appSecret();
-        }
-
-        if ($appSecret) {
-            $this->verifyHmacSignature($request, $appSecret);
-        } elseif (app()->environment('production')) {
-            Log::critical('whatsapp.webhook.no_secret', ['workspace_id' => $waba->workspace_id]);
-            abort(401, 'App secret not configured');
-        } else {
-            Log::warning('whatsapp.webhook.unsigned', ['workspace_id' => $waba->workspace_id]);
-        }
-
-        // Deduplicate at the entry level before dispatching any jobs.
-        // insertOrIgnore is atomic — only one concurrent request gets affected=1 per event key.
-        $idempotency = app(WebhookIdempotencyService::class);
-        $newEntries  = [];
-        foreach ($request->input('entry', []) as $entry) {
-            $eventKey = $this->entryEventKey($entry);
-            if ($eventKey === null || $idempotency->isNewEvent('whatsapp', $eventKey)) {
-                $newEntries[] = $entry;
-            }
-        }
-
-        if (empty($newEntries)) {
-            return response()->json(['status' => 'ok']);
-        }
-
-        $payload = array_merge($request->all(), ['entry' => $newEntries]);
+        $hasStatuses = collect($entries)->contains(
+            fn ($e) => collect($e['changes'] ?? [])->contains(
+                fn ($c) => ! empty($c['value']['statuses'] ?? [])
+            )
+        );
 
         Log::info('whatsapp.webhook.received', [
-            'workspace_id' => $waba->workspace_id,
-            'waba_id'      => $waba->waba_id,
-            'entry_count'  => count($newEntries),
-            'has_messages' => collect($newEntries)->contains(fn ($e) => ! empty(data_get($e, 'changes.0.value.messages'))),
-            'has_statuses' => collect($newEntries)->contains(fn ($e) => ! empty(data_get($e, 'changes.0.value.statuses'))),
+            'token'        => $token ? substr($token, 0, 8).'…' : null,
+            'entry_count'  => count($entries),
+            'has_messages' => $hasMessages,
+            'has_statuses' => $hasStatuses,
+            'ip'           => $request->ip(),
+            'payload'      => $payload,
         ]);
 
+        // Validate token if provided (and not 'global' or empty)
+        $waba = null;
+        if ($token !== null && $token !== '' && $token !== 'global') {
+            $waba = WhatsappBusinessAccount::findByWebhookToken($token);
+            $envToken = (string) (config('services.whatsapp.verify_token') ?: env('WHATSAPP_VERIFY_TOKEN', ''));
+            $metaVerifyToken = (string) (CredentialResolver::system()->meta()?->verifyToken() ?? '');
+            $globalToken = (string) ($this->globalVerifyToken() ?? '');
+
+            $isTokenValid = $waba !== null
+                || ($envToken !== '' && hash_equals($envToken, $token))
+                || ($metaVerifyToken !== '' && hash_equals($metaVerifyToken, $token))
+                || ($globalToken !== '' && hash_equals($globalToken, $token));
+
+            if (! $isTokenValid) {
+                Log::warning('whatsapp.webhook.unknown_token', [
+                    'ip'             => $request->ip(),
+                    'received_token' => substr($token, 0, 12).'…',
+                ]);
+                abort(403, 'Invalid verify token');
+            }
+        }
+
+        // Resolve app secret: WABA-level override first, then system credential, then META_APP_SECRET env
+        $appSecret = ($waba->credentials ?? [])['app_secret_override'] ?? null;
+        if (! $appSecret) {
+            $appSecret = CredentialResolver::system()->meta()?->appSecret() ?: env('META_APP_SECRET');
+        }
+
+        if ($appSecret) {
+            $this->verifyHmacSignature($request, $appSecret);
+        } elseif ($request->hasHeader('X-Hub-Signature-256') && app()->environment('production')) {
+            Log::critical('whatsapp.webhook.no_secret', ['ip' => $request->ip()]);
+            abort(401, 'App secret not configured');
+        }
+
+        // Deduplicate at the entry level before dispatching
+        $idempotencyNamespace = ($token === 'global') ? 'whatsapp_global' : 'whatsapp';
+        $idempotency = app(WebhookIdempotencyService::class);
+        $newEntries  = [];
+        foreach ($entries as $entry) {
+            $eventKey = $this->entryEventKey($entry);
+            if ($eventKey === null || $idempotency->isNewEvent($idempotencyNamespace, $eventKey)) {
+                $newEntries[] = $entry;
+            }
+        }
+
+        if (empty($newEntries)) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        $filteredPayload = array_merge($payload, ['entry' => $newEntries]);
+        $dispatchToken = ($token === 'global') ? '' : (string) ($token ?? '');
+
+        // Return HTTP 200 immediately to Meta and process inbound messages asynchronously
         return $this->flushWebhookOkThen(
-            fn () => ProcessInboundMessageJob::dispatch($payload, $token)->onQueue('whatsapp')
+            fn () => ProcessInboundMessageJob::dispatch($filteredPayload, $dispatchToken)->onQueue('whatsapp')
         );
     }
 

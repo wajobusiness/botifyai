@@ -166,7 +166,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhooks/mercadopago',
             // iyzico posts the checkout result token here from the customer's browser.
             'billing/iyzico/callback',
+            'webhooks/whatsapp',
             'webhooks/whatsapp/*',
+            'webhooks/meta',
             'webhooks/meta/*',
             'webhooks/sms/*',
             'webhooks/automation/*',

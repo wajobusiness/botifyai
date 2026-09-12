@@ -28,9 +28,9 @@ Route::middleware('throttle:webhooks')->group(function () {
         Route::get('/global', [WhatsappWebhookController::class, 'verifyGlobal'])->name('global.verify');
         Route::post('/global', [WhatsappWebhookController::class, 'receiveGlobal'])->name('global.receive');
 
-        // Per-WABA token endpoints (used by manually configured WABAs).
-        Route::get('/{token}', [WhatsappWebhookController::class, 'verify'])->name('verify');
-        Route::post('/{token}', [WhatsappWebhookController::class, 'receive'])->name('receive');
+        // Main Meta WhatsApp webhook endpoints (supports /webhooks/whatsapp/{token} and /webhooks/whatsapp)
+        Route::get('/{token?}', [WhatsappWebhookController::class, 'verify'])->name('verify');
+        Route::post('/{token?}', [WhatsappWebhookController::class, 'receive'])->name('receive');
     });
 
     // ─── Meta (Instagram + Messenger) ───────────────────────────────────────────
