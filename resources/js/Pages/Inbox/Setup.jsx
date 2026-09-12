@@ -575,7 +575,6 @@ function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookToken
                     code,
                     waba_id: wabaId,
                     phone_number_id: phoneNumberId,
-                    redirect_uri: window.location.origin + window.location.pathname,
                 }),
             });
             const json = await res.json();
@@ -1239,7 +1238,6 @@ function AddInstagramForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                 },
                 body: JSON.stringify({
                     code,
-                    redirect_uri: window.location.origin + window.location.pathname,
                 }),
                 signal: controller.signal,
             });
@@ -1345,7 +1343,6 @@ function AddMessengerForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                 },
                 body: JSON.stringify({
                     code,
-                    redirect_uri: window.location.origin + window.location.pathname,
                 }),
                 signal: controller.signal,
             });

@@ -32,17 +32,22 @@ class WhatsappEmbeddedSignupController extends Controller
             return response()->json(['message' => 'Meta App credentials are not configured. Please ask your administrator to configure them in Admin → Integrations → Meta App.'], 422);
         }
 
-        $candidates = [];
-        if (! empty($validated['redirect_uri'])) {
+        // Codes obtained via Meta Embedded Signup (window.FB.login) do NOT have a
+        // redirect URI in their OAuth dialog request. Meta strictly checks that any
+        // redirect_uri parameter passed to oauth/access_token matches the dialog request;
+        // if a URL is provided, Meta rejects the exchange (error 100/36008) AND burns the
+        // single-use authorization code immediately.
+        // Therefore, omitting redirect_uri ('__OMIT__') and empty string ('') MUST be
+        // candidate #1 and #2.
+        $candidates = ['__OMIT__', ''];
+        if (! empty($validated['redirect_uri']) && ! in_array($validated['redirect_uri'], $candidates, true)) {
             $candidates[] = trim($validated['redirect_uri']);
         }
         $appUrl = rtrim((string) config('app.url'), '/');
         if ($appUrl !== '') {
-            $candidates[] = $appUrl;
             $candidates[] = $appUrl . '/app/inbox/setup';
+            $candidates[] = $appUrl;
         }
-        $candidates[] = '__OMIT__';
-        $candidates[] = '';
         $candidates = array_values(array_unique($candidates));
 
         $tokenRes = null;
