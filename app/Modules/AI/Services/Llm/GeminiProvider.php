@@ -12,14 +12,14 @@ class GeminiProvider implements LlmProviderInterface
 
     /**
      * Cache resolved working version and model per API key during runtime.
-     * key: md5($apiKey) => ['requested' => '...', 'version' => 'v1', 'model' => 'gemini-1.5-flash']
+     * key: md5($apiKey) => ['requested' => '...', 'version' => 'v1', 'model' => 'gemini-3.8-flash']
      */
     private static array $resolvedChatCache = [];
     private static array $resolvedEmbedCache = [];
 
     public function __construct(
         private readonly string $apiKey,
-        private readonly string $chatModel = 'gemini-1.5-flash',
+        private readonly string $chatModel = 'gemini-3.8-flash',
         private readonly string $embedModel = 'text-embedding-004',
     ) {}
 
@@ -116,8 +116,10 @@ class GeminiProvider implements LlmProviderInterface
         $successModel = null;
         $lastResp = null;
         $lastErrorBody = '';
+        $attemptedModels = [];
 
         foreach ($candidates as [$version, $model]) {
+            $attemptedModels[] = $model;
             $url = self::API_BASE."/{$version}/models/{$model}:generateContent?key={$this->apiKey}";
 
             try {
@@ -134,8 +136,29 @@ class GeminiProvider implements LlmProviderInterface
                 $lastErrorBody = $resp->body();
                 $status = $resp->status();
 
-                // If 404 (model not found for version or alias), try next candidate
-                if ($status === 404) {
+                // If Google suggests a replacement model in the error message, immediately try it:
+                // e.g. "Please update your code to use models/gemini-3.6-flash for the latest features..."
+                if (preg_match('#use models/([a-zA-Z0-9\.\-_]+)#i', $lastErrorBody, $match)) {
+                    $suggestedModel = $this->cleanModel($match[1]);
+                    if (! empty($suggestedModel) && ! in_array($suggestedModel, $attemptedModels, true)) {
+                        $attemptedModels[] = $suggestedModel;
+                        foreach (self::SUPPORTED_VERSIONS as $v) {
+                            $suggestedUrl = self::API_BASE."/{$v}/models/{$suggestedModel}:generateContent?key={$this->apiKey}";
+                            $sResp = Http::retry(1, 300)->timeout(60)->post($suggestedUrl, $body);
+                            if ($sResp->successful()) {
+                                $successResp = $sResp;
+                                $successVersion = $v;
+                                $successModel = $suggestedModel;
+                                break 2;
+                            }
+                            $lastResp = $sResp;
+                            $lastErrorBody = $sResp->body();
+                        }
+                    }
+                }
+
+                // If 404 or "no longer available", try next candidate
+                if ($status === 404 || str_contains($lastErrorBody, 'no longer available') || str_contains($lastErrorBody, 'not found')) {
                     continue;
                 }
 
@@ -167,25 +190,54 @@ class GeminiProvider implements LlmProviderInterface
             }
         }
 
-        // If candidates all returned 404, query ListModels for dynamic model discovery
-        if (! $successResp && ($lastResp?->status() === 404 || str_contains($lastErrorBody, 'not found for API version'))) {
-            $discovered = $this->discoverWorkingModel($cleanRequested);
-            if ($discovered) {
-                [$discVersion, $discModel] = $discovered;
+        // If candidates all returned 404 / unavailable, query ListModels for dynamic model discovery
+        if (! $successResp && ($lastResp?->status() === 404 || str_contains($lastErrorBody, 'not found') || str_contains($lastErrorBody, 'no longer available'))) {
+            $discoveredList = $this->discoverWorkingModels($cleanRequested);
+            foreach ($discoveredList as [$discVersion, $discModel]) {
+                if (in_array($discModel, $attemptedModels, true)) {
+                    continue;
+                }
+                $attemptedModels[] = $discModel;
                 $url = self::API_BASE."/{$discVersion}/models/{$discModel}:generateContent?key={$this->apiKey}";
-                $resp = Http::retry(1, 300)->timeout(60)->post($url, $body);
-                if ($resp->successful()) {
-                    $successResp = $resp;
-                    $successVersion = $discVersion;
-                    $successModel = $discModel;
-                    Log::channel('json')->info('llm.gemini_model_discovered', [
-                        'requested' => $cleanRequested,
-                        'resolved' => $discModel,
-                        'version' => $discVersion,
-                    ]);
-                } else {
+
+                try {
+                    $resp = Http::retry(1, 300)->timeout(60)->post($url, $body);
+                    if ($resp->successful()) {
+                        $successResp = $resp;
+                        $successVersion = $discVersion;
+                        $successModel = $discModel;
+                        Log::channel('json')->info('llm.gemini_model_discovered', [
+                            'requested' => $cleanRequested,
+                            'resolved' => $discModel,
+                            'version' => $discVersion,
+                        ]);
+                        break;
+                    }
+
                     $lastResp = $resp;
                     $lastErrorBody = $resp->body();
+
+                    // Check if error recommends a model
+                    if (preg_match('#use models/([a-zA-Z0-9\.\-_]+)#i', $lastErrorBody, $match)) {
+                        $suggestedModel = $this->cleanModel($match[1]);
+                        if (! empty($suggestedModel) && ! in_array($suggestedModel, $attemptedModels, true)) {
+                            $attemptedModels[] = $suggestedModel;
+                            foreach (self::SUPPORTED_VERSIONS as $v) {
+                                $suggestedUrl = self::API_BASE."/{$v}/models/{$suggestedModel}:generateContent?key={$this->apiKey}";
+                                $sResp = Http::retry(1, 300)->timeout(60)->post($suggestedUrl, $body);
+                                if ($sResp->successful()) {
+                                    $successResp = $sResp;
+                                    $successVersion = $v;
+                                    $successModel = $suggestedModel;
+                                    break 2;
+                                }
+                                $lastResp = $sResp;
+                                $lastErrorBody = $sResp->body();
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    $lastErrorBody = $e->getMessage();
                 }
             }
         }
@@ -314,43 +366,52 @@ class GeminiProvider implements LlmProviderInterface
     private function getCandidateModels(string $requestedModel): array
     {
         $clean = $this->cleanModel($requestedModel);
-        $models = [$clean];
 
-        if (str_contains($clean, '1.5-flash')) {
-            $models = array_merge($models, [
-                'gemini-1.5-flash-latest',
+        // Modern 3.x and 2.x models
+        $topModels = [
+            'gemini-3.8-flash',
+            'gemini-3.6-flash',
+            'gemini-3.8-flash-latest',
+            'gemini-3.6-flash-latest',
+            'gemini-3.8-pro',
+            'gemini-3.6-pro',
+        ];
+
+        // If the requested model is known to be deprecated or unavailable to new users,
+        // prioritize active 3.8 and 3.6 flash models before the deprecated model
+        if (in_array($clean, ['gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-1.0-pro', 'gemini-1.5-pro'], true)) {
+            $models = array_merge([
+                'gemini-3.8-flash',
+                'gemini-3.6-flash',
+                $clean,
+            ], $topModels, [
                 'gemini-2.0-flash',
-                'gemini-1.5-flash-001',
-                'gemini-1.5-flash-002',
-                'gemini-1.5-pro',
             ]);
-        } elseif (str_contains($clean, '2.0-flash')) {
-            $models = array_merge($models, [
-                'gemini-2.0-flash-exp',
-                'gemini-1.5-flash',
-                'gemini-1.5-flash-latest',
-                'gemini-1.5-pro',
-            ]);
-        } elseif (str_contains($clean, '1.5-pro')) {
-            $models = array_merge($models, [
-                'gemini-1.5-pro-latest',
-                'gemini-1.5-pro-001',
-                'gemini-1.5-flash',
-                'gemini-2.0-flash',
+        } elseif (str_contains($clean, '3.8-flash')) {
+            $models = array_merge([$clean, 'gemini-3.6-flash'], $topModels);
+        } elseif (str_contains($clean, '3.6-flash')) {
+            $models = array_merge([$clean, 'gemini-3.8-flash'], $topModels);
+        } elseif (str_contains($clean, 'pro')) {
+            $models = array_merge([
+                $clean,
+                'gemini-3.8-pro',
+                'gemini-3.6-pro',
+                'gemini-3.8-flash',
+                'gemini-3.6-flash',
             ]);
         } else {
-            $models = array_merge($models, [
-                'gemini-1.5-flash',
+            $models = array_merge([$clean], $topModels, [
                 'gemini-2.0-flash',
-                'gemini-1.5-pro',
+                'gemini-1.5-flash',
             ]);
         }
 
         return array_values(array_unique($models));
     }
 
-    private function discoverWorkingModel(string $requestedModel): ?array
+    private function discoverWorkingModels(string $requestedModel): array
     {
+        $discovered = [];
         foreach (self::SUPPORTED_VERSIONS as $version) {
             try {
                 $url = self::API_BASE."/{$version}/models?key={$this->apiKey}";
@@ -364,71 +425,67 @@ class GeminiProvider implements LlmProviderInterface
                     continue;
                 }
 
-                $validModels = [];
                 foreach ($modelsList as $m) {
                     $methods = $m['supportedGenerationMethods'] ?? [];
                     if (in_array('generateContent', $methods, true)) {
                         $name = $this->cleanModel($m['name'] ?? '');
-                        if (! empty($name)) {
-                            $validModels[] = $name;
+                        // Exclude models known to be deprecated or discontinued
+                        if (! empty($name) && ! str_contains($name, '2.5') && ! str_contains($name, '1.0')) {
+                            $discovered[] = [$version, $name];
                         }
                     }
                 }
-
-                if (empty($validModels)) {
-                    continue;
-                }
-
-                usort($validModels, function ($a, $b) use ($requestedModel) {
-                    $scoreA = 0;
-                    $scoreB = 0;
-                    if (str_contains($a, $requestedModel)) {
-                        $scoreA += 10;
-                    }
-                    if (str_contains($b, $requestedModel)) {
-                        $scoreB += 10;
-                    }
-                    if (str_contains($a, 'flash')) {
-                        $scoreA += 5;
-                    }
-                    if (str_contains($b, 'flash')) {
-                        $scoreB += 5;
-                    }
-                    if (str_contains($a, '2.0')) {
-                        $scoreA += 3;
-                    }
-                    if (str_contains($b, '2.0')) {
-                        $scoreB += 3;
-                    }
-                    if (str_contains($a, '1.5')) {
-                        $scoreA += 2;
-                    }
-                    if (str_contains($b, '1.5')) {
-                        $scoreB += 2;
-                    }
-
-                    return $scoreB <=> $scoreA;
-                });
-
-                return [$version, $validModels[0]];
             } catch (\Throwable) {
                 // Try next version
             }
         }
 
-        return null;
+        // Rank discovered models: prioritize 3.8, 3.6, flash
+        usort($discovered, function ($a, $b) use ($requestedModel) {
+            $scoreA = $this->scoreModel($a[1], $requestedModel);
+            $scoreB = $this->scoreModel($b[1], $requestedModel);
+
+            return $scoreB <=> $scoreA;
+        });
+
+        return $discovered;
+    }
+
+    private function scoreModel(string $model, string $requestedModel): int
+    {
+        $score = 0;
+        if (str_contains($model, $requestedModel)) {
+            $score += 30;
+        }
+        if (str_contains($model, '3.8')) {
+            $score += 25;
+        }
+        if (str_contains($model, '3.6')) {
+            $score += 20;
+        }
+        if (str_contains($model, 'flash')) {
+            $score += 15;
+        }
+        if (str_contains($model, 'pro')) {
+            $score += 8;
+        }
+        if (str_contains($model, '2.0')) {
+            $score += 5;
+        }
+
+        return $score;
     }
 
     private function throwDetailedException(string $action, string $model, ?int $status, string $errorBody): never
     {
         $message = "Gemini {$action} failed for model '{$model}'. ";
 
-        if ($status === 404 || str_contains($errorBody, 'not found for API version')) {
+        if ($status === 404 || str_contains($errorBody, 'not found for API version') || str_contains($errorBody, 'no longer available')) {
             $message .= "The model was not found in Google's API catalog for this key (HTTP 404). "
                 ."Troubleshooting:\n"
                 ."1. Ensure your API key was created at Google AI Studio (https://aistudio.google.com/app/apikey).\n"
-                ."2. If using a Google Cloud Console project, make sure 'Generative Language API' is enabled at console.cloud.google.com.\n"
-                ."3. Check that your Google account / project has not disabled Generative Language API access.\n"
+                ."2. In AI Settings > AI Providers, select 'gemini-3.8-flash' or 'gemini-3.6-flash'.\n"
+                ."3. If using a Google Cloud Console project, make sure 'Generative Language API' is enabled at console.cloud.google.com.\n"
                 ."Google error details: {$errorBody}";
         } elseif (in_array($status, [401, 403], true) || str_contains($errorBody, 'API_KEY_INVALID')) {
             $message .= "Google rejected the API key as invalid or unauthorized (HTTP {$status}). "

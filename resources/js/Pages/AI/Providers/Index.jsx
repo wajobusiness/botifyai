@@ -103,7 +103,7 @@ const GeminiLogo = () => (
 const PROVIDER_INFO = {
     openai:    { label: 'OpenAI',    Icon: OpenAILogo,    models: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'] },
     anthropic: { label: 'Anthropic', Icon: AnthropicLogo, models: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'] },
-    gemini:    { label: 'Gemini',    Icon: GeminiLogo,    models: ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-latest'] },
+    gemini:    { label: 'Gemini',    Icon: GeminiLogo,    models: ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.8-pro', 'gemini-3.6-pro', 'gemini-2.0-flash', 'gemini-1.5-flash'] },
 };
 
 function ProviderCard({ provider }) {
@@ -113,7 +113,7 @@ function ProviderCard({ provider }) {
 
     const { data, setData, put, processing, errors } = useForm({
         api_key:             '',
-        default_model_chat:  provider.default_model_chat || (info.models?.includes('gemini-1.5-flash') ? 'gemini-1.5-flash' : info.models?.[1]) || info.models?.[0] || '',
+        default_model_chat:  provider.default_model_chat || (info.models?.includes('gemini-3.8-flash') ? 'gemini-3.8-flash' : info.models?.[1]) || info.models?.[0] || '',
         enabled:             provider.enabled,
     });
 
@@ -151,6 +151,9 @@ function ProviderCard({ provider }) {
                 <div>
                     <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('ai.default_chat_model')}</label>
                     <select value={data.default_model_chat} onChange={e => setData('default_model_chat', e.target.value)} className="mt-1 w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
+                        {data.default_model_chat && info.models && !info.models.includes(data.default_model_chat) && (
+                            <option value={data.default_model_chat}>{data.default_model_chat}</option>
+                        )}
                         {info.models?.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                 </div>
