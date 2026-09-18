@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import LandingLayout from '@/Layouts/LandingLayout';
+import SeoHead from '@/Components/SeoHead';
 import { useTranslation } from 'react-i18next';
 
 function Badge({ text }) {
@@ -35,12 +36,26 @@ export default function Faq({ landing = {}, canRegister }) {
     const title = s('faq_title', 'Frequently Asked Questions');
     const subtitle = s('faq_subtitle', 'Everything you need to know about our platform.');
 
+    const faqSchema = faqs.length > 0 ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((f) => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: f.a,
+            },
+        })),
+    } : null;
+
     return (
         <LandingLayout>
-            <Head>
-                <title>{t('faq.head_title', { title })}</title>
-                <meta name="description" content={subtitle} />
-            </Head>
+            <SeoHead
+                title={t('faq.head_title', { title })}
+                description={subtitle}
+                jsonLd={faqSchema}
+            />
 
             {/* ── Page hero ── */}
             <section

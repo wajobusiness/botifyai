@@ -1,2 +1,9 @@
 User-agent: *
-Disallow:
+Disallow: /admin/
+Disallow: /app/
+Disallow: /webhooks/
+Disallow: /broadcasting/
+Disallow: /api/
+Allow: /
+
+Sitemap: https://botifyai.cloud/sitemap.xml

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import LandingLayout from '@/Layouts/LandingLayout';
+import SeoHead from '@/Components/SeoHead';
 import { useTranslation } from 'react-i18next';
 
 function Badge({ text }) {
@@ -41,14 +42,42 @@ export default function Pricing({ landing = {}, plans = [], canRegister }) {
         text: s(`testimonial_${i}_text`),
     })).filter((t) => t.name && t.text);
 
-    const [openFaq, setOpenFaq] = useState(null);
+    const pricingSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: 'BotifyAI Messaging Platform',
+        description: t('pricing.choose_plan_anytime'),
+        offers: plans.map((p) => ({
+            '@type': 'Offer',
+            name: p.name,
+            price: yearly ? p.price_yearly : p.price_monthly,
+            priceCurrency: 'USD',
+            availability: 'https://schema.org/InStock',
+        })),
+    };
+
+    const faqSchema = faqs.length > 0 ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((f) => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: f.a,
+            },
+        })),
+    } : null;
+
+    const schemas = [pricingSchema, faqSchema].filter(Boolean);
 
     return (
         <LandingLayout>
-            <Head>
-                <title>{t('pricing.head_title')}</title>
-                <meta name="description" content={t('pricing.choose_plan_anytime')} />
-            </Head>
+            <SeoHead
+                title={t('pricing.head_title')}
+                description={t('pricing.choose_plan_anytime')}
+                jsonLd={schemas}
+            />
 
             {/* ── Page hero ── */}
             <section

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import LandingLayout from '@/Layouts/LandingLayout';
+import SeoHead from '@/Components/SeoHead';
 import { useTranslation } from 'react-i18next';
 
 function Badge({ text }) {
@@ -119,10 +120,10 @@ export default function UseCases({ landing = {}, canRegister }) {
 
     return (
         <LandingLayout>
-            <Head>
-                <title>{t('use_cases.head_title')}</title>
-                <meta name="description" content={t('use_cases.meta_desc')} />
-            </Head>
+            <SeoHead
+                title={t('use_cases.head_title')}
+                description={t('use_cases.meta_desc')}
+            />
 
             {/* ── Page hero ── */}
             <section

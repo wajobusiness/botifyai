@@ -50,20 +50,43 @@ Route::get('/sitemap.xml', function () {
     } catch (Throwable $e) {
         // table may not exist yet
     }
-    $urls = $landingEnabled
-        ? [url('/'), url('/pricing'), url('/faq'), url('/use-cases'), url('/about'), url('/integrations'), url('/contact'), route('login'), route('register')]
-        : [route('login'), route('register')];
-    try {
-        $cmsPages = CmsPage::where('published', true)->get();
-        foreach ($cmsPages as $page) {
-            $urls[] = route('cms-page.show', $page->slug);
+
+    $entries = [];
+
+    if ($landingEnabled) {
+        $now = now()->toAtomString();
+        $entries[] = ['loc' => url('/'), 'priority' => '1.0', 'changefreq' => 'daily', 'lastmod' => $now];
+        $entries[] = ['loc' => url('/pricing'), 'priority' => '0.9', 'changefreq' => 'weekly', 'lastmod' => $now];
+        $entries[] = ['loc' => url('/use-cases'), 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $now];
+        $entries[] = ['loc' => url('/integrations'), 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $now];
+        $entries[] = ['loc' => url('/faq'), 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => $now];
+        $entries[] = ['loc' => url('/about'), 'priority' => '0.6', 'changefreq' => 'monthly', 'lastmod' => $now];
+        $entries[] = ['loc' => url('/contact'), 'priority' => '0.5', 'changefreq' => 'monthly', 'lastmod' => $now];
+
+        try {
+            $cmsPages = CmsPage::where('published', true)->get();
+            foreach ($cmsPages as $page) {
+                $entries[] = [
+                    'loc' => route('cms-page.show', $page->slug),
+                    'priority' => '0.5',
+                    'changefreq' => 'monthly',
+                    'lastmod' => ($page->updated_at ?? now())->toAtomString(),
+                ];
+            }
+        } catch (Throwable $e) {
+            // table may not exist yet
         }
-    } catch (Throwable $e) {
-        // table may not exist yet
     }
-    $xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-    foreach ($urls as $url) {
-        $xml .= '<url><loc>'.htmlspecialchars($url).'</loc></url>';
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+    foreach ($entries as $entry) {
+        $xml .= '  <url>'."\n";
+        $xml .= '    <loc>'.htmlspecialchars($entry['loc']).'</loc>'."\n";
+        $xml .= '    <lastmod>'.$entry['lastmod'].'</lastmod>'."\n";
+        $xml .= '    <changefreq>'.$entry['changefreq'].'</changefreq>'."\n";
+        $xml .= '    <priority>'.$entry['priority'].'</priority>'."\n";
+        $xml .= '  </url>'."\n";
     }
     $xml .= '</urlset>';
 
@@ -74,7 +97,7 @@ Route::get('/robots.txt', function () {
     $sitemap = route('sitemap');
 
     return response(
-        "User-agent: *\nDisallow: /admin/\nDisallow: /app/\nSitemap: {$sitemap}",
+        "User-agent: *\nDisallow: /admin/\nDisallow: /app/\nDisallow: /webhooks/\nDisallow: /broadcasting/\nDisallow: /api/\nAllow: /\n\nSitemap: {$sitemap}",
         200
     )->header('Content-Type', 'text/plain');
 })->name('robots');

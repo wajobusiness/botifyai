@@ -26,6 +26,13 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="vapid-public-key" content="{{ config('webpush.vapid_public_key') }}">
 
+        @if(request()->is('admin*', 'app*'))
+        <meta name="robots" content="noindex, nofollow">
+        @else
+        <meta name="robots" content="index, follow">
+        @endif
+        <link rel="canonical" href="{{ url()->current() }}">
+
         {{-- config('app.name') is overridden at boot from the admin-configured
              brand name (see BrandingServiceProvider), so this needs no direct
              SystemSetting lookup. --}}
