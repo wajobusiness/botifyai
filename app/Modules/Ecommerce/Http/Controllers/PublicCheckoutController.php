@@ -5,15 +5,12 @@ namespace App\Modules\Ecommerce\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentGatewayConfig;
 use App\Modules\Ecommerce\Models\EcommerceOrder;
-use App\Modules\Ecommerce\Models\EcommercePaymentLog;
 use App\Modules\Ecommerce\Models\EcommerceProduct;
-use App\Modules\Ecommerce\Services\DigitalFulfillmentService;
-use App\Modules\Ecommerce\Services\MerchantWalletService;
+use App\Modules\Ecommerce\Services\CommercePaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,8 +18,7 @@ use Inertia\Response;
 class PublicCheckoutController extends Controller
 {
     public function __construct(
-        private MerchantWalletService $walletService,
-        private DigitalFulfillmentService $fulfillmentService
+        private CommercePaymentService $paymentService
     ) {}
 
     /**
@@ -99,7 +95,7 @@ class PublicCheckoutController extends Controller
     }
 
     /**
-     * Process checkout form and initiate payment gateway.
+     * Process checkout form and initiate payment gateway session.
      */
     public function process(Request $request, string $slug): JsonResponse
     {
@@ -127,7 +123,7 @@ class PublicCheckoutController extends Controller
         // Generate unique order reference
         $reference = 'ORD-'.strtoupper(Str::random(12));
 
-        // Create pending order
+        // Create pending order with payment_status = pending
         $order = EcommerceOrder::create([
             'workspace_id' => $product->workspace_id,
             'store_id' => $product->store_id,
@@ -138,6 +134,7 @@ class PublicCheckoutController extends Controller
             'platform' => 'native',
             'number' => $reference,
             'status' => 'pending',
+            'payment_status' => 'pending',
             'financial_status' => 'pending',
             'currency' => $currency,
             'total' => $grossTotal,
@@ -154,11 +151,20 @@ class PublicCheckoutController extends Controller
             ],
         ]);
 
-        if ($validated['gateway'] === 'paystack') {
-            return $this->initializePaystack($order, $product, $validated);
+        $result = $this->paymentService->initialize($order, $product, $validated);
+
+        if (! $result['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Unable to initialize checkout session.',
+            ], 422);
         }
 
-        return $this->initializeStripe($order, $product, $validated);
+        return response()->json([
+            'success' => true,
+            'url' => $result['url'],
+            'order_uuid' => $order->uuid,
+        ]);
     }
 
     /**
@@ -181,39 +187,75 @@ class PublicCheckoutController extends Controller
             return redirect('/')->with('error', 'Order not found.');
         }
 
-        // Idempotency: If already paid, take directly to receipt
+        // Idempotency: If already paid (e.g. processed via webhook beforehand), redirect directly to receipt
         if ($order->isPaid()) {
             return redirect()->route('public.checkout.receipt', ['orderUuid' => $order->uuid]);
         }
 
         $isVerified = false;
+        $gatewayData = [];
 
         if ($order->payment_gateway === 'paystack') {
-            $isVerified = $this->verifyPaystackPayment($reference, $order);
+            $config = PaymentGatewayConfig::where('gateway', 'paystack')->where('enabled', true)->first();
+            $creds = $config?->getActiveCredentials() ?? [];
+            $secretKey = $creds['secret_key'] ?? config('services.paystack.secret_key', '');
+
+            $response = Http::withToken($secretKey)
+                ->acceptJson()
+                ->get("https://api.paystack.co/transaction/verify/{$reference}");
+
+            if ($response->successful() && $response->json('data.status') === 'success') {
+                $isVerified = true;
+                $gatewayData = $response->json('data') ?? [];
+            }
         } elseif ($order->payment_gateway === 'stripe') {
-            $isVerified = $this->verifyStripePayment($reference, $order);
-        } else {
-            $isVerified = true;
+            $config = PaymentGatewayConfig::where('gateway', 'stripe')->where('enabled', true)->first();
+            $creds = $config?->getActiveCredentials() ?? [];
+            $secretKey = $creds['secret_key'] ?? config('services.stripe.secret', '');
+
+            $response = Http::withBasicAuth($secretKey, '')
+                ->get("https://api.stripe.com/v1/checkout/sessions/{$reference}");
+
+            if ($response->successful() && $response->json('payment_status') === 'paid') {
+                $isVerified = true;
+                $gatewayData = [
+                    'amount' => $response->json('amount_total'),
+                    'currency' => $response->json('currency'),
+                    'raw' => $response->json(),
+                ];
+            }
         }
 
         if ($isVerified) {
-            $order->update([
-                'status' => 'completed',
-                'financial_status' => 'paid',
-                'paid_at' => now(),
-            ]);
-
-            // Credit merchant wallet with double-entry ledger audit
-            $this->walletService->creditSale($order);
-
-            // Generate digital download tokens
-            $this->fulfillmentService->fulfillOrder($order);
+            $this->paymentService->handlePaymentSuccess($order, $reference, $gatewayData, $order->payment_gateway ?: 'paystack');
 
             return redirect()->route('public.checkout.receipt', ['orderUuid' => $order->uuid]);
         }
 
         return redirect()->route('public.checkout.show', ['slug' => $order->line_items[0]['product_id'] ?? 'store'])
             ->with('error', 'Payment verification failed. Please try again.');
+    }
+
+    /**
+     * Poll order payment status (used for Bank Transfer, USSD, and background webhook completion).
+     */
+    public function status(Request $request, string $uuid): JsonResponse
+    {
+        $order = EcommerceOrder::where('uuid', $uuid)->first();
+
+        if (! $order) {
+            return response()->json(['error' => 'Order not found'], 404);
+        }
+
+        return response()->json([
+            'uuid' => $order->uuid,
+            'status' => $order->status,
+            'payment_status' => $order->payment_status,
+            'is_paid' => $order->isPaid(),
+            'receipt_url' => $order->isPaid()
+                ? route('public.checkout.receipt', ['orderUuid' => $order->uuid])
+                : null,
+        ]);
     }
 
     /**
@@ -247,8 +289,10 @@ class PublicCheckoutController extends Controller
                 'total' => (float) $order->total,
                 'currency' => $order->currency,
                 'status' => $order->status,
+                'payment_status' => $order->payment_status,
                 'customer_name' => $order->customer_name,
                 'customer_email' => $order->customer_email,
+                'customer_phone' => $order->customer_phone,
                 'paid_at' => $order->paid_at?->toFormattedDateString(),
             ],
             'store' => [
@@ -258,146 +302,5 @@ class PublicCheckoutController extends Controller
             ],
             'downloads' => $tokens,
         ]);
-    }
-
-    private function initializePaystack(EcommerceOrder $order, EcommerceProduct $product, array $validated): JsonResponse
-    {
-        $config = PaymentGatewayConfig::where('gateway', 'paystack')->where('enabled', true)->first();
-        $creds = $config?->getActiveCredentials() ?? [];
-        $secretKey = $creds['secret_key'] ?? config('services.paystack.secret_key', '');
-
-        $amountInSubunits = (int) round(((float) $order->total) * 100);
-        $callbackUrl = route('public.checkout.verify');
-
-        $response = Http::withToken($secretKey)
-            ->acceptJson()
-            ->post('https://api.paystack.co/transaction/initialize', [
-                'email' => $validated['customer_email'],
-                'amount' => $amountInSubunits,
-                'currency' => $order->currency,
-                'reference' => $order->payment_reference,
-                'callback_url' => $callbackUrl,
-                'metadata' => [
-                    'order_id' => $order->id,
-                    'order_uuid' => $order->uuid,
-                    'workspace_id' => $order->workspace_id,
-                    'type' => 'commerce_sale',
-                    'customer_name' => $validated['customer_name'],
-                    'customer_phone' => $validated['customer_phone'] ?? null,
-                ],
-            ]);
-
-        if ($response->successful() && $response->json('status') === true) {
-            $authUrl = $response->json('data.authorization_url');
-
-            return response()->json([
-                'success' => true,
-                'url' => $authUrl,
-            ]);
-        }
-
-        Log::error('Paystack initialization failed for commerce order', [
-            'order_id' => $order->id,
-            'response' => $response->json(),
-        ]);
-
-        return response()->json([
-            'success' => false,
-            'message' => $response->json('message') ?: 'Payment gateway error. Please try again.',
-        ], 422);
-    }
-
-    private function initializeStripe(EcommerceOrder $order, EcommerceProduct $product, array $validated): JsonResponse
-    {
-        $config = PaymentGatewayConfig::where('gateway', 'stripe')->where('enabled', true)->first();
-        $creds = $config?->getActiveCredentials() ?? [];
-        $secretKey = $creds['secret_key'] ?? config('services.stripe.secret', '');
-
-        $amountInCents = (int) round(((float) $order->total) * 100);
-        $currency = strtolower($order->currency ?: 'usd');
-
-        $response = Http::withBasicAuth($secretKey, '')
-            ->asForm()
-            ->post('https://api.stripe.com/v1/checkout/sessions', [
-                'payment_method_types' => ['card'],
-                'mode' => 'payment',
-                'customer_email' => $validated['customer_email'],
-                'client_reference_id' => $order->payment_reference,
-                'success_url' => route('public.checkout.verify').'?session_id={CHECKOUT_SESSION_ID}&reference='.$order->payment_reference,
-                'cancel_url' => route('public.checkout.show', ['slug' => $product->slug ?: $product->id]),
-                'line_items' => [
-                    [
-                        'price_data' => [
-                            'currency' => $currency,
-                            'unit_amount' => $amountInCents,
-                            'product_data' => [
-                                'name' => $product->name,
-                                'description' => Str::limit(strip_tags($product->description ?? ''), 250),
-                            ],
-                        ],
-                        'quantity' => 1,
-                    ],
-                ],
-            ]);
-
-        if ($response->successful() && ! empty($response->json('url'))) {
-            return response()->json([
-                'success' => true,
-                'url' => $response->json('url'),
-            ]);
-        }
-
-        Log::error('Stripe initialization failed for commerce order', [
-            'order_id' => $order->id,
-            'response' => $response->json(),
-        ]);
-
-        return response()->json([
-            'success' => false,
-            'message' => $response->json('error.message') ?: 'Stripe checkout initialization failed.',
-        ], 422);
-    }
-
-    private function verifyPaystackPayment(string $reference, EcommerceOrder $order): bool
-    {
-        $config = PaymentGatewayConfig::where('gateway', 'paystack')->where('enabled', true)->first();
-        $creds = $config?->getActiveCredentials() ?? [];
-        $secretKey = $creds['secret_key'] ?? config('services.paystack.secret_key', '');
-
-        $response = Http::withToken($secretKey)
-            ->acceptJson()
-            ->get("https://api.paystack.co/transaction/verify/{$reference}");
-
-        if ($response->successful() && $response->json('data.status') === 'success') {
-            EcommercePaymentLog::updateOrCreate(
-                ['gateway' => 'paystack', 'reference' => $reference],
-                ['order_id' => $order->id, 'status' => 'success', 'payload' => $response->json()]
-            );
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private function verifyStripePayment(string $sessionId, EcommerceOrder $order): bool
-    {
-        $config = PaymentGatewayConfig::where('gateway', 'stripe')->where('enabled', true)->first();
-        $creds = $config?->getActiveCredentials() ?? [];
-        $secretKey = $creds['secret_key'] ?? config('services.stripe.secret', '');
-
-        $response = Http::withBasicAuth($secretKey, '')
-            ->get("https://api.stripe.com/v1/checkout/sessions/{$sessionId}");
-
-        if ($response->successful() && $response->json('payment_status') === 'paid') {
-            EcommercePaymentLog::updateOrCreate(
-                ['gateway' => 'stripe', 'reference' => $sessionId],
-                ['order_id' => $order->id, 'status' => 'paid', 'payload' => $response->json()]
-            );
-
-            return true;
-        }
-
-        return false;
     }
 }

@@ -32,6 +32,14 @@ const FULFILL_COLORS = {
     fulfilled: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
 };
 
+const PAYMENT_COLORS = {
+    paid: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    failed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    cancelled: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400',
+    refunded: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+};
+
 export default function OrdersIndex({ orders, filters = {}, stores = [], stats = {} }) {
     const { t } = useTranslation();
     const { props } = usePage();
@@ -72,6 +80,14 @@ export default function OrdersIndex({ orders, filters = {}, stores = [], stats =
                         <option value="">{t('ecommerce.all_stores') || 'All stores'}</option>
                         {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
+                    <select value={filters.payment_status ?? ''} onChange={e => apply({ payment_status: e.target.value || undefined })}
+                        className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
+                        <option value="">{t('ecommerce.all_payment') || 'All payment statuses'}</option>
+                        <option value="paid">Paid</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                        <option value="refunded">Refunded</option>
+                    </select>
                     <select value={filters.fulfillment ?? ''} onChange={e => apply({ fulfillment: e.target.value || undefined })}
                         className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
                         <option value="">{t('ecommerce.all_fulfillment') || 'All fulfillment'}</option>
@@ -99,9 +115,14 @@ export default function OrdersIndex({ orders, filters = {}, stores = [], stats =
                                 <tr key={o.id} onClick={() => router.visit(route('client.ecommerce.orders.show', o.id))}
                                     className="hover:bg-neutral-50 dark:hover:bg-neutral-800/40 cursor-pointer">
                                     <td className="px-4 py-2.5 font-medium text-neutral-800 dark:text-neutral-200">{o.number}</td>
-                                    <td className="px-4 py-2.5 text-neutral-600 dark:text-neutral-300">{o.contact?.name || '—'}</td>
+                                    <td className="px-4 py-2.5">
+                                        <p className="font-medium text-neutral-800 dark:text-neutral-200 text-xs">{o.contact?.name || o.customer_name || '—'}</p>
+                                        {(o.contact?.email || o.customer_email) && (
+                                            <p className="text-[11px] text-neutral-400">{o.contact?.email || o.customer_email}</p>
+                                        )}
+                                    </td>
                                     <td className="px-4 py-2.5 text-right font-medium">{o.currency} {o.total}</td>
-                                    <td className="px-4 py-2.5"><Badge value={o.financial_status} /></td>
+                                    <td className="px-4 py-2.5"><Badge value={o.payment_status || o.financial_status} map={PAYMENT_COLORS} /></td>
                                     <td className="px-4 py-2.5"><Badge value={o.fulfillment_status} map={FULFILL_COLORS} /></td>
                                     <td className="px-4 py-2.5 text-neutral-500">{o.placed_at ? new Date(o.placed_at).toLocaleDateString() : '—'}</td>
                                 </tr>

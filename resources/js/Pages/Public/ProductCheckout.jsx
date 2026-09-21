@@ -1,8 +1,8 @@
 import { Head } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     ShieldCheck, Zap, Download, Lock, CheckCircle2,
-    AlertCircle, Sparkles, MessageCircle, CreditCard,
+    AlertCircle, Sparkles, MessageCircle, CreditCard, Loader2,
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -23,6 +23,26 @@ export default function ProductCheckout({ product, store = {}, gateways = [] }) 
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [pendingOrderUuid, setPendingOrderUuid] = useState(null);
+    const [isPolling, setIsPolling] = useState(false);
+
+    useEffect(() => {
+        if (!pendingOrderUuid || !isPolling) return;
+
+        const interval = setInterval(async () => {
+            try {
+                const res = await axios.get(`/buy/orders/${pendingOrderUuid}/status`);
+                if (res.data?.is_paid && res.data?.receipt_url) {
+                    clearInterval(interval);
+                    window.location.href = res.data.receipt_url;
+                }
+            } catch (err) {
+                // Ignore polling errors while payment is completing
+            }
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [pendingOrderUuid, isPolling]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -32,6 +52,10 @@ export default function ProductCheckout({ product, store = {}, gateways = [] }) 
         try {
             const res = await axios.post(`/buy/${product.slug || product.id}/checkout`, form);
             if (res.data?.url) {
+                if (res.data?.order_uuid) {
+                    setPendingOrderUuid(res.data.order_uuid);
+                    setIsPolling(true);
+                }
                 window.location.href = res.data.url;
             } else {
                 setError('Could not initialize payment session.');

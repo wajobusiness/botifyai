@@ -40,10 +40,10 @@ class EcommerceOrder extends Model
     protected $fillable = [
         'uuid', 'workspace_id', 'store_id', 'contact_id', 'customer_name',
         'customer_email', 'customer_phone', 'external_order_id', 'platform',
-        'number', 'status', 'financial_status', 'fulfillment_status', 'currency',
+        'number', 'status', 'financial_status', 'payment_status', 'fulfillment_status', 'currency',
         'total', 'platform_fee_cents', 'merchant_net_cents', 'payment_gateway',
-        'payment_reference', 'line_items', 'tracking_url', 'tracking_number',
-        'placed_at', 'paid_at', 'raw',
+        'payment_reference', 'line_items', 'metadata', 'tracking_url', 'tracking_number',
+        'placed_at', 'paid_at', 'failed_at', 'failure_reason', 'cancelled_at', 'cancelled_reason', 'raw',
     ];
 
     /** `raw` holds the full platform payload incl. customer PII — never serialize it. */
@@ -53,12 +53,15 @@ class EcommerceOrder extends Model
     {
         return [
             'line_items' => 'array',
+            'metadata' => 'array',
             'raw' => 'array',
             'total' => 'decimal:2',
             'platform_fee_cents' => 'integer',
             'merchant_net_cents' => 'integer',
             'placed_at' => 'datetime',
             'paid_at' => 'datetime',
+            'failed_at' => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
     }
 
@@ -77,9 +80,29 @@ class EcommerceOrder extends Model
         return $this->hasMany(EcommerceDownloadToken::class, 'order_id');
     }
 
+    public function paymentLogs(): HasMany
+    {
+        return $this->hasMany(EcommercePaymentLog::class, 'order_id');
+    }
+
+    public function ledgerEntries(): HasMany
+    {
+        return $this->hasMany(MerchantLedgerEntry::class, 'reference_id')->where('reference_type', 'order');
+    }
+
     public function isPaid(): bool
     {
-        return $this->financial_status === 'paid' || $this->paid_at !== null;
+        return $this->payment_status === 'paid' || $this->financial_status === 'paid' || $this->paid_at !== null;
+    }
+
+    public function isFailed(): bool
+    {
+        return $this->payment_status === 'failed' || $this->status === 'failed';
+    }
+
+    public function isPending(): bool
+    {
+        return ! $this->isPaid() && ! $this->isFailed() && $this->status !== 'cancelled';
     }
 
     protected static function booted(): void

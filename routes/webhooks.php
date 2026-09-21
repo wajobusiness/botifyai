@@ -14,6 +14,7 @@
 use App\Http\Controllers\Webhooks\AutomationWebhookController;
 use App\Modules\Broadcasting\Http\Controllers\EmailTrackingController;
 use App\Modules\Broadcasting\Http\Controllers\SmsStatusWebhookController;
+use App\Modules\Ecommerce\Http\Controllers\CommerceWebhookController;
 use App\Modules\Ecommerce\Http\Controllers\EcommerceOAuthController;
 use App\Modules\Ecommerce\Http\Controllers\EcommerceWebhookController;
 use App\Modules\Inbox\Http\Controllers\MetaWebhookController;
@@ -59,6 +60,10 @@ Route::middleware('throttle:webhooks')->group(function () {
     // WooCommerce auth endpoint posts the API keys here (server-to-server, no auth/CSRF).
     Route::post('webhooks/ecommerce/woo-auth', [EcommerceOAuthController::class, 'woocommerceCallback'])
         ->name('webhooks.ecommerce.woo_auth');
+
+    // ─── Native Commerce Payment Webhooks ────────────────────────────────────────
+    Route::post('webhooks/commerce/paystack', [CommerceWebhookController::class, 'paystack'])
+        ->name('webhooks.commerce.paystack');
 
     // ─── Email open tracking pixel ───────────────────────────────────────────────
     Route::get('track/email/{token}/open.gif', [EmailTrackingController::class, 'open'])

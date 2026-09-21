@@ -5,7 +5,7 @@ import {
     Plus, Zap, Play, Pause, Trash2, BarChart2, Pencil, Clock,
     UserRound, Tag, MessageCircle, Megaphone, FileText, Link2,
     ShoppingBag, PackageCheck, XCircle, ShoppingCart, UserPlus,
-    Sparkles, Loader2, AlertTriangle,
+    Sparkles, Loader2, AlertTriangle, DollarSign, AlertCircle, RefreshCw,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +32,9 @@ const TRIGGER_META = {
     'form.submitted':    { labelKey: 'automation.trigger_form_submitted',    Icon: FileText      },
     'webhook.received':  { labelKey: 'automation.trigger_webhook_received',  Icon: Link2         },
     'order.placed':      { labelKey: 'automation.trigger_order_placed',      Icon: ShoppingBag   },
+    'order.paid':        { labelKey: 'automation.trigger_order_paid',        Icon: DollarSign    },
+    'payment.failed':    { labelKey: 'automation.trigger_payment_failed',    Icon: AlertCircle   },
+    'order.refunded':    { labelKey: 'automation.trigger_order_refunded',    Icon: RefreshCw     },
     'order.fulfilled':   { labelKey: 'automation.trigger_order_fulfilled',   Icon: PackageCheck  },
     'order.cancelled':   { labelKey: 'automation.trigger_order_cancelled',   Icon: XCircle       },
     'cart.abandoned':    { labelKey: 'automation.trigger_cart_abandoned',    Icon: ShoppingCart  },

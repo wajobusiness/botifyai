@@ -32,8 +32,12 @@ class OrderController extends Controller
             ->when($request->input('store_id'), fn ($q, $id) => $q->where('store_id', $id))
             ->when($request->input('fulfillment'), fn ($q, $s) => $q->where('fulfillment_status', $s))
             ->when($request->input('financial'), fn ($q, $s) => $q->where('financial_status', $s))
+            ->when($request->input('payment_status'), fn ($q, $s) => $q->where('payment_status', $s))
             ->when($request->input('search'), fn ($q, $s) => $q->where(fn ($q) => $q
                 ->where('number', 'like', "%{$s}%")
+                ->orWhere('customer_name', 'like', "%{$s}%")
+                ->orWhere('customer_email', 'like', "%{$s}%")
+                ->orWhere('customer_phone', 'like', "%{$s}%")
                 ->orWhereHas('contact', fn ($q) => $q
                     ->where('email', 'like', "%{$s}%")
                     ->orWhere('phone_e164', 'like', "%{$s}%"))));
@@ -48,21 +52,28 @@ class OrderController extends Controller
                 'number' => $o->number,
                 'platform' => $o->platform,
                 'status' => $o->status,
+                'payment_status' => $o->payment_status ?: ($o->financial_status === 'paid' ? 'paid' : 'pending'),
                 'financial_status' => $o->financial_status,
                 'fulfillment_status' => $o->fulfillment_status,
                 'currency' => $o->currency,
                 'total' => $o->total,
-                'placed_at' => $o->placed_at,
+                'placed_at' => $o->placed_at ?? $o->created_at,
+                'customer_name' => $o->customer_name,
+                'customer_email' => $o->customer_email,
                 'contact' => $o->contact ? [
                     'uuid' => $o->contact->uuid,
                     'name' => Demo::name(trim(($o->contact->first_name ?? '').' '.($o->contact->last_name ?? '')) ?: $o->contact->email),
                     'email' => Demo::email($o->contact->email),
-                ] : null,
+                ] : (! empty($o->customer_name) || ! empty($o->customer_email) ? [
+                    'uuid' => null,
+                    'name' => $o->customer_name ?: $o->customer_email,
+                    'email' => $o->customer_email,
+                ] : null),
             ]);
 
         return Inertia::render('Ecommerce/Orders/Index', [
             'orders' => $orders,
-            'filters' => $request->only('store_id', 'fulfillment', 'financial', 'search'),
+            'filters' => $request->only('store_id', 'fulfillment', 'financial', 'payment_status', 'search'),
             'stores' => EcommerceStore::where('workspace_id', $workspaceId)->get(['id', 'name'])
                 ->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])->all(),
             'stats' => [
@@ -77,30 +88,139 @@ class OrderController extends Controller
     public function show(Request $request, EcommerceOrder $order): Response
     {
         $this->authorizeOrder($request, $order);
-        $order->load('contact:id,uuid,first_name,last_name,email,phone_e164', 'store:id,name,platform');
+        $order->load([
+            'contact:id,uuid,first_name,last_name,email,phone_e164',
+            'store:id,name,platform',
+            'paymentLogs' => fn ($q) => $q->latest(),
+            'downloadTokens.product',
+            'downloadTokens.digitalAsset',
+            'ledgerEntries',
+        ]);
+
+        // Build structured audit timeline
+        $timeline = [];
+
+        // 1. Order Placed
+        $timeline[] = [
+            'title' => 'Order Placed',
+            'description' => "Order #{$order->number} initialized by customer",
+            'timestamp' => $order->placed_at?->toIso8601String() ?? $order->created_at?->toIso8601String(),
+            'status' => 'completed',
+        ];
+
+        // 2. Gateway Initialized
+        $initLog = $order->paymentLogs->firstWhere('status', 'initialized');
+        if ($initLog) {
+            $timeline[] = [
+                'title' => 'Payment Session Opened',
+                'description' => 'Gateway session initiated with reference '.$order->payment_reference,
+                'timestamp' => $initLog->created_at?->toIso8601String(),
+                'status' => 'completed',
+            ];
+        }
+
+        // 3. Payment Status (Paid / Failed)
+        if ($order->isPaid()) {
+            $timeline[] = [
+                'title' => 'Payment Verified',
+                'description' => 'Payment confirmed via '.(ucfirst($order->payment_gateway ?: 'Gateway')),
+                'timestamp' => $order->paid_at?->toIso8601String() ?? $order->updated_at?->toIso8601String(),
+                'status' => 'completed',
+            ];
+        } elseif ($order->isFailed()) {
+            $timeline[] = [
+                'title' => 'Payment Failed',
+                'description' => $order->failure_reason ?: 'Payment processing declined or timed out',
+                'timestamp' => $order->failed_at?->toIso8601String() ?? $order->updated_at?->toIso8601String(),
+                'status' => 'failed',
+            ];
+        } else {
+            $timeline[] = [
+                'title' => 'Awaiting Payment',
+                'description' => 'Customer is currently completing payment',
+                'timestamp' => null,
+                'status' => 'pending',
+            ];
+        }
+
+        // 4. Escrow Wallet Credited
+        $saleCredit = $order->ledgerEntries->firstWhere('entry_type', 'sale_credit');
+        if ($saleCredit) {
+            $timeline[] = [
+                'title' => 'Escrow Wallet Credited',
+                'description' => "Merchant wallet credited {$order->currency} ".number_format($saleCredit->net_amount_cents / 100, 2)." (Platform Fee: {$order->currency} ".number_format($saleCredit->fee_cents / 100, 2).')',
+                'timestamp' => $saleCredit->created_at?->toIso8601String(),
+                'status' => 'completed',
+            ];
+        }
+
+        // 5. Digital Downloads Issued
+        if ($order->downloadTokens->isNotEmpty()) {
+            $timeline[] = [
+                'title' => 'Digital Assets Issued',
+                'description' => "{$order->downloadTokens->count()} digital download token(s) granted to buyer vault",
+                'timestamp' => $order->downloadTokens->first()?->created_at?->toIso8601String(),
+                'status' => 'completed',
+            ];
+        }
 
         return Inertia::render('Ecommerce/Orders/Show', [
             'order' => [
                 'id' => $order->id,
+                'uuid' => $order->uuid,
                 'number' => $order->number,
                 'platform' => $order->platform,
                 'status' => $order->status,
+                'payment_status' => $order->payment_status ?: ($order->financial_status === 'paid' ? 'paid' : 'pending'),
                 'financial_status' => $order->financial_status,
                 'fulfillment_status' => $order->fulfillment_status,
+                'payment_gateway' => $order->payment_gateway,
+                'payment_reference' => $order->payment_reference,
                 'currency' => $order->currency,
                 'total' => $order->total,
                 'line_items' => $order->line_items ?? [],
                 'tracking_url' => $order->tracking_url,
                 'tracking_number' => $order->tracking_number,
                 'placed_at' => $order->placed_at,
+                'paid_at' => $order->paid_at,
+                'failed_at' => $order->failed_at,
+                'failure_reason' => $order->failure_reason,
                 'external_order_id' => $order->external_order_id,
                 'store' => $order->store ? ['name' => $order->store->name] : null,
+                'customer_name' => $order->customer_name,
+                'customer_email' => $order->customer_email,
+                'customer_phone' => $order->customer_phone,
                 'contact' => $order->contact ? [
                     'uuid' => $order->contact->uuid,
                     'name' => Demo::name(trim(($order->contact->first_name ?? '').' '.($order->contact->last_name ?? '')) ?: $order->contact->email),
                     'email' => Demo::email($order->contact->email),
                     'phone' => Demo::phone($order->contact->phone_e164),
-                ] : null,
+                ] : (! empty($order->customer_name) || ! empty($order->customer_email) ? [
+                    'uuid' => null,
+                    'name' => $order->customer_name ?: $order->customer_email,
+                    'email' => $order->customer_email,
+                    'phone' => $order->customer_phone,
+                ] : null),
+                'timeline' => $timeline,
+                'downloads' => $order->downloadTokens->map(fn ($t) => [
+                    'id' => $t->id,
+                    'token' => $t->token,
+                    'product_name' => $t->product?->name ?: 'Digital Product',
+                    'file_name' => $t->digitalAsset?->file_name ?: 'Asset',
+                    'download_count' => $t->download_count,
+                    'max_downloads' => $t->max_downloads,
+                    'is_expired' => $t->isExpired(),
+                    'expires_at' => $t->expires_at?->toIso8601String(),
+                ]),
+                'payment_logs' => $order->paymentLogs->map(fn ($l) => [
+                    'id' => $l->id,
+                    'gateway' => $l->gateway,
+                    'reference' => $l->reference,
+                    'status' => $l->status,
+                    'amount' => $l->amount_cents ? number_format($l->amount_cents / 100, 2) : null,
+                    'currency' => $l->currency,
+                    'created_at' => $l->created_at?->toIso8601String(),
+                ]),
             ],
         ]);
     }

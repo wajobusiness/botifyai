@@ -151,6 +151,11 @@ class WebhookController extends Controller
             'body_length' => strlen($request->getContent()),
         ]);
 
+        $payload = json_decode($request->getContent(), true);
+        if (is_array($payload) && ($payload['data']['metadata']['type'] ?? null) === 'commerce_sale') {
+            return app(\App\Modules\Ecommerce\Http\Controllers\CommerceWebhookController::class)->paystack($request);
+        }
+
         $gateway = $this->gateways->get('paystack');
         if (! $gateway) {
             return new Response('Gateway not configured', 503);

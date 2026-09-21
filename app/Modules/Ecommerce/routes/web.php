@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 // Public Commerce Checkout, Receipt & Digital Delivery (No Auth required)
 Route::middleware(['web'])->group(function () {
     Route::get('/buy/callback/verify', [PublicCheckoutController::class, 'verify'])->name('public.checkout.verify');
+    Route::get('/buy/orders/{uuid}/status', [PublicCheckoutController::class, 'status'])->name('public.checkout.status');
     Route::get('/buy/receipt/{orderUuid}', [PublicCheckoutController::class, 'receipt'])->name('public.checkout.receipt');
     Route::get('/buy/download/{token}', [DigitalDownloadController::class, 'download'])->name('public.download.file');
     Route::get('/buy/{slug}', [PublicCheckoutController::class, 'show'])->name('public.checkout.show');

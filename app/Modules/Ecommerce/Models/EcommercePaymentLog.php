@@ -18,7 +18,7 @@ class EcommercePaymentLog extends Model
     protected $table = 'ecommerce_payment_logs';
 
     protected $fillable = [
-        'order_id', 'gateway', 'reference', 'status', 'payload',
+        'workspace_id', 'order_id', 'gateway', 'reference', 'status', 'amount_cents', 'currency', 'error_message', 'payload',
     ];
 
     protected function casts(): array

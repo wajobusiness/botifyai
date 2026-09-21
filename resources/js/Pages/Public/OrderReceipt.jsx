@@ -45,16 +45,32 @@ export default function OrderReceipt({ order = {}, store = {}, downloads = [] })
                         </div>
                         <div className="text-left">
                             <span className="text-neutral-400 block">Delivery Email</span>
-                            <span className="font-medium text-neutral-800 dark:text-neutral-200">{order.customer_email}</span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="font-medium text-neutral-800 dark:text-neutral-200">{order.customer_email}</span>
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                    <CheckCircle className="h-2.5 w-2.5" /> Sent
+                                </span>
+                            </div>
                         </div>
                     </div>
 
                     {/* Digital Vault Downloads */}
                     <div className="mt-8 text-left">
-                        <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2 mb-3">
-                            <Sparkles className="h-5 w-5 text-teal-600" />
-                            <span>Your Digital Vault</span>
-                        </h2>
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+                                <Sparkles className="h-5 w-5 text-teal-600" />
+                                <span>Your Digital Vault</span>
+                            </h2>
+                            <a
+                                href={`https://wa.me/?text=${encodeURIComponent(`Here is my receipt and digital product download for Order #${order.number}: ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-green-200 dark:border-green-800/60 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 text-xs font-medium hover:bg-green-100 transition"
+                            >
+                                <MessageCircle className="h-3.5 w-3.5 text-green-600" />
+                                <span>Send to WhatsApp</span>
+                            </a>
+                        </div>
 
                         <div className="space-y-3">
                             {downloads.length === 0 && (

@@ -111,6 +111,11 @@ class Contact extends Model
         return $this->hasMany(Conversation::class);
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Ecommerce\Models\EcommerceOrder::class, 'contact_id');
+    }
+
     public function getFullNameAttribute(): string
     {
         return trim(($this->first_name ?? '').' '.($this->last_name ?? ''));
