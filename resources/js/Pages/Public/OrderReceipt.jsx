@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import {
     CheckCircle, Download, ExternalLink, ShieldCheck,
-    Clock, Mail, ArrowRight, Sparkles, FileText,
+    Clock, Mail, ArrowRight, Sparkles, FileText, MessageCircle,
 } from 'lucide-react';
 
 function currencySymbol(code) {

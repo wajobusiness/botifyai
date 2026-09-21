@@ -4,11 +4,10 @@ namespace App\Modules\Ecommerce\Notifications;
 
 use App\Modules\Ecommerce\Models\EcommerceOrder;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class OrderReceiptNotification extends Notification implements ShouldQueue
+class OrderReceiptNotification extends Notification
 {
     use Queueable;
 

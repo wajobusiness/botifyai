@@ -28,6 +28,7 @@ import {
     KeyRound,
     LogOut,
     Wallet,
+    ShoppingBag,
 } from 'lucide-react';
 
 /** Nav item: { labelKey, route, href, icon, permission } - show only if user has permission (or no permission required). Order follows typical admin usage frequency. */
@@ -37,6 +38,7 @@ const ADMIN_NAV_ITEMS = [
     { labelKey: 'admin.nav.subscriptions', route: 'admin.subscriptions.index', href: () => route('admin.subscriptions.index'), icon: CreditCard, permission: 'view_subscriptions' },
     { labelKey: 'admin.nav.support', route: 'admin.support.index', href: () => route('admin.support.index'), icon: LifeBuoy, permission: 'view_settings' },
     { labelKey: 'admin.nav.payments', route: 'admin.payments.index', href: () => route('admin.payments.index'), icon: Receipt, permission: 'view_payment_gateways' },
+    { labelKey: 'admin.nav.commerce_orders', labelFallback: 'Commerce Orders', route: 'admin.ecommerce.orders.index', href: () => route('admin.ecommerce.orders.index'), icon: ShoppingBag, permission: 'view_payment_gateways' },
     { labelKey: 'admin.nav.merchant_payouts', labelFallback: 'Merchant Payouts', route: 'admin.ecommerce.payouts.index', href: () => route('admin.ecommerce.payouts.index'), icon: Wallet, permission: 'view_payment_gateways' },
     { labelKey: 'admin.nav.plans', route: 'admin.plans.index', href: () => route('admin.plans.index'), icon: Package, permission: 'view_plans' },
     { labelKey: 'admin.nav.coupons', route: 'admin.coupons.index', href: () => route('admin.coupons.index'), icon: Tag, permission: 'view_plans' },

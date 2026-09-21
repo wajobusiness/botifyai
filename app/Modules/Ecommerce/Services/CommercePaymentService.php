@@ -144,7 +144,7 @@ class CommercePaymentService
             if (! empty($lockedOrder->customer_email)) {
                 try {
                     Notification::route('mail', $lockedOrder->customer_email)
-                        ->notify(new OrderReceiptNotification($lockedOrder));
+                        ->notifyNow(new OrderReceiptNotification($lockedOrder));
                 } catch (\Throwable $e) {
                     Log::warning('Failed to send buyer order receipt email', [
                         'order_id' => $lockedOrder->id,
