@@ -5,7 +5,7 @@ import { Dropdown } from '@/Components/ui';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/hooks/useLocale';
 import { useBranding } from '@/hooks/useBranding';
-import { Globe } from 'lucide-react';
+import { Globe, Coins } from 'lucide-react';
 
 function SunIcon({ className }) {
     return (
@@ -56,6 +56,12 @@ export default function LandingLayout({ children }) {
     const { locale: currentLocale, setLocale } = useLocale();
     const supportedLocales = page.props.supportedLocales ?? { en: 'English' };
     const localeEntries = Object.entries(supportedLocales);
+    const currencies = page.props.currencies ?? [];
+    const displayCurrency = page.props.displayCurrency ?? 'USD';
+
+    const handleCurrencyChange = (code) => {
+        router.put(route('currency.update'), { currency: code }, { preserveScroll: true });
+    };
     const { appName, logoUrl } = useBranding();
     // No uploaded logo → fall back to the brand name as a wordmark rather than a
     // vendor logo file, which a white-label install has no way to replace.
@@ -148,6 +154,38 @@ export default function LandingLayout({ children }) {
                                             className={currentLocale === code ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 font-medium' : ''}
                                         >
                                             {label}
+                                        </Dropdown.Item>
+                                    ))}
+                                </Dropdown.Content>
+                            </Dropdown>
+                        )}
+
+                        {/* Currency */}
+                        {currencies.length > 1 && (
+                            <Dropdown>
+                                <Dropdown.Trigger>
+                                    <button
+                                        type="button"
+                                        className="hidden sm:flex items-center gap-1.5 rounded-soft px-2.5 py-1.5 text-sm text-white/70 hover:text-white hover:bg-white/10 transition duration-150"
+                                        aria-label={t('topbar.currency', 'Currency')}
+                                    >
+                                        <Coins className="h-4 w-4" />
+                                        <span>{displayCurrency}</span>
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                </Dropdown.Trigger>
+                                <Dropdown.Content align="right" width="48">
+                                    {currencies.map((c) => (
+                                        <Dropdown.Item
+                                            key={c.code}
+                                            as="button"
+                                            onClick={() => handleCurrencyChange(c.code)}
+                                            className={displayCurrency === c.code ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 font-medium' : ''}
+                                        >
+                                            <span className="font-semibold mr-1.5">{c.symbol}</span>
+                                            <span>{c.code}</span>
                                         </Dropdown.Item>
                                     ))}
                                 </Dropdown.Content>
@@ -265,6 +303,22 @@ export default function LandingLayout({ children }) {
                                         </Link>
                                     )}
                                 </>
+                            )}
+                            {currencies.length > 1 && (
+                                <div className="pt-3 border-t border-white/10 flex items-center justify-between text-sm px-2 text-white/80">
+                                    <span className="flex items-center gap-1.5"><Coins className="h-4 w-4" /> {t('topbar.currency', 'Currency')}</span>
+                                    <select
+                                        value={displayCurrency}
+                                        onChange={(e) => handleCurrencyChange(e.target.value)}
+                                        className="bg-brand-900/60 text-white rounded-md px-2.5 py-1 text-xs border border-white/20 focus:outline-none"
+                                    >
+                                        {currencies.map((c) => (
+                                            <option key={c.code} value={c.code} className="text-neutral-900 bg-white">
+                                                {c.code} ({c.symbol})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             )}
                         </div>
                     </div>

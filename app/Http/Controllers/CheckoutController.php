@@ -34,7 +34,16 @@ class CheckoutController extends Controller
             return back()->with('error', __('That payment gateway is not configured.'));
         }
 
-        $result = $gateway->createCheckout($request->user(), $plan, $validated['billing_cycle']);
+        $user = $request->user();
+        if ($user && $request->session()->has('display_currency')) {
+            $sessionCurrency = $request->session()->get('display_currency');
+            if ($sessionCurrency && $user->display_currency !== $sessionCurrency) {
+                $user->update(['display_currency' => $sessionCurrency]);
+                $user->display_currency = $sessionCurrency;
+            }
+        }
+
+        $result = $gateway->createCheckout($user, $plan, $validated['billing_cycle']);
 
         if (isset($result['error'])) {
             return back()->with('error', $result['error']);

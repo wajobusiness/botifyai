@@ -489,6 +489,8 @@ function PricingSection({ plans }) {
                 <div className={`grid gap-6 ${plans.length <= 2 ? 'sm:grid-cols-2 max-w-2xl mx-auto' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
                     {plans.map((plan) => {
                         const price = yearly ? plan.price_yearly : plan.price_monthly;
+                        const priceDisplay = yearly ? plan.yearly_price_display : plan.monthly_price_display;
+                        const isFree = plan.is_free || price === 0;
                         return (
                             <div
                                 key={plan.id}
@@ -513,9 +515,9 @@ function PricingSection({ plans }) {
 
                                 <div className="mt-5 mb-6">
                                     <span className={`text-4xl font-bold ${plan.is_featured ? 'text-white' : 'text-neutral-900 dark:text-white'}`}>
-                                        {price === 0 ? t('welcome.free') : `$${parseFloat(price).toFixed(0)}`}
+                                        {isFree ? t('welcome.free') : (priceDisplay || `${plan.currency_symbol || '$'}${parseFloat(price).toLocaleString()}`)}
                                     </span>
-                                    {price > 0 && (
+                                    {!isFree && (
                                         <span className={`text-sm ml-1 ${plan.is_featured ? 'text-neutral-400' : 'text-neutral-400'}`}>{yearly ? t('welcome.per_year') : t('welcome.per_month')}</span>
                                     )}
                                     {plan.trial_days > 0 && (

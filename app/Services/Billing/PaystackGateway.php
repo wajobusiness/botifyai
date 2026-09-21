@@ -62,22 +62,35 @@ class PaystackGateway implements BillingGatewayInterface
             ->asJson();
     }
 
-    public function createCheckout(User $user, Plan $plan, string $billingCycle): array
+    public function createCheckout(User $user, Plan $plan, string $billingCycle, ?string $currency = null): array
     {
         if (! $this->isConfigured()) {
             return ['error' => 'Paystack is not configured.'];
         }
+
+        $targetCurrency = strtoupper($currency ?: ($user->display_currency ?? $plan->currency_code ?? 'NGN'));
+        $planCurrency = strtoupper($plan->currency_code ?? 'USD');
 
         $priceCents = $plan->priceCentsForCycle($billingCycle);
         if ($priceCents === null || $priceCents <= 0) {
             return ['error' => 'Plan has no price for this billing cycle.'];
         }
 
-        $currency = strtoupper($plan->currency_code ?? 'NGN');
+        // If target currency differs from plan currency, convert to target subunits
+        if ($targetCurrency !== $planCurrency) {
+            try {
+                $priceCents = app(\App\Services\CurrencyService::class)->convert($priceCents, $planCurrency, $targetCurrency);
+            } catch (\Throwable $e) {
+                Log::warning('Paystack currency conversion failed, falling back to plan base', ['error' => $e->getMessage()]);
+                $targetCurrency = $planCurrency;
+            }
+        }
+
+        $currency = $targetCurrency;
         $interval = $billingCycle === 'year' ? 'annually' : 'monthly';
 
         // 1) Create a plan on Paystack (idempotent: same name+interval+amount reuse it).
-        $planName = $plan->name.' ('.$billingCycle.')';
+        $planName = $plan->name.' ('.$billingCycle.') - '.$currency;
         $planRes = $this->http()->post(self::BASE_URL.'/plan', [
             'name' => $planName,
             'interval' => $interval,

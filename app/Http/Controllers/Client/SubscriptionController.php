@@ -72,8 +72,10 @@ class SubscriptionController extends Controller
             'id' => $p->id,
             'name' => $p->name,
             'slug' => $p->slug,
-            'monthly_price' => $p->monthly_price,
-            'annual_price' => $p->annual_price,
+            'monthly_price' => round(($p->priceCentsForCycle('month') ?? 0) / 100, 2),
+            'annual_price' => round(($p->priceCentsForCycle('year') ?? 0) / 100, 2),
+            'monthly_price_cents' => $p->priceCentsForCycle('month'),
+            'yearly_price_cents' => $p->priceCentsForCycle('year'),
         ]);
 
         $transactions = $user->paymentTransactions()
