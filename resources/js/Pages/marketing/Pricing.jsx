@@ -29,6 +29,7 @@ function StarRating() {
 export default function Pricing({ landing = {}, plans = [], canRegister }) {
     const { t } = useTranslation();
     const [yearly, setYearly] = useState(false);
+    const [openFaq, setOpenFaq] = useState(null);
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
 
     const faqs = [1, 2, 3, 4, 5].map((i) => ({
