@@ -10,6 +10,7 @@ use App\Modules\Ecommerce\Services\DigitalFulfillmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,26 +51,37 @@ class AdminOrderController extends Controller
             ->latest('placed_at')
             ->paginate(20)
             ->withQueryString()
-            ->through(fn (EcommerceOrder $o) => [
-                'id' => $o->id,
-                'uuid' => $o->uuid,
-                'number' => $o->number,
-                'store_name' => $o->store?->name ?: 'Native Store',
-                'customer_name' => $o->customer_name ?: ($o->contact ? trim(($o->contact->first_name ?? '').' '.($o->contact->last_name ?? '')) : 'Guest'),
-                'customer_email' => $o->customer_email ?: $o->contact?->email,
-                'customer_phone' => $o->customer_phone,
-                'total' => (float) $o->total,
-                'currency' => $o->currency,
-                'status' => $o->status,
-                'payment_status' => $o->payment_status ?: ($o->financial_status === 'paid' ? 'paid' : 'pending'),
-                'fulfillment_status' => $o->fulfillment_status,
-                'payment_gateway' => $o->payment_gateway,
-                'payment_reference' => $o->payment_reference,
-                'downloads_count' => $o->downloadTokens->count(),
-                'receipt_url' => route('public.checkout.receipt', ['orderUuid' => $o->uuid]),
-                'paid_at' => $o->paid_at?->format('M d, Y H:i'),
-                'placed_at' => ($o->placed_at ?? $o->created_at)?->format('M d, Y H:i'),
-            ]);
+            ->through(function (EcommerceOrder $o) {
+                if (empty($o->uuid)) {
+                    $o->uuid = (string) Str::uuid();
+                    $o->saveQuietly();
+                }
+
+                $receiptUrl = ! empty($o->uuid)
+                    ? route('public.checkout.receipt', ['orderUuid' => $o->uuid])
+                    : null;
+
+                return [
+                    'id' => $o->id,
+                    'uuid' => $o->uuid,
+                    'number' => $o->number,
+                    'store_name' => $o->store?->name ?: 'Native Store',
+                    'customer_name' => $o->customer_name ?: ($o->contact ? trim(($o->contact->first_name ?? '').' '.($o->contact->last_name ?? '')) : 'Guest'),
+                    'customer_email' => $o->customer_email ?: $o->contact?->email,
+                    'customer_phone' => $o->customer_phone,
+                    'total' => (float) $o->total,
+                    'currency' => $o->currency,
+                    'status' => $o->status,
+                    'payment_status' => $o->payment_status ?: ($o->financial_status === 'paid' ? 'paid' : 'pending'),
+                    'fulfillment_status' => $o->fulfillment_status,
+                    'payment_gateway' => $o->payment_gateway,
+                    'payment_reference' => $o->payment_reference,
+                    'downloads_count' => $o->downloadTokens->count(),
+                    'receipt_url' => $receiptUrl,
+                    'paid_at' => $o->paid_at?->format('M d, Y H:i'),
+                    'placed_at' => ($o->placed_at ?? $o->created_at)?->format('M d, Y H:i'),
+                ];
+            });
 
         $baseCount = EcommerceOrder::query();
         $stats = [

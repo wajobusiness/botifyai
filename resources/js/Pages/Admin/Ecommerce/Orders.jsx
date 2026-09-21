@@ -194,15 +194,17 @@ export default function AdminEcommerceOrders({ orders, filters = {}, stats = {} 
                                         </td>
                                         <td className="py-3 text-right">
                                             <div className="flex items-center justify-end gap-1.5">
-                                                <a
-                                                    href={o.receipt_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    title="View Public Receipt"
-                                                    className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-                                                >
-                                                    <ExternalLink className="h-3.5 w-3.5" />
-                                                </a>
+                                                {o.receipt_url && (
+                                                    <a
+                                                        href={o.receipt_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        title="View Public Receipt"
+                                                        className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+                                                    >
+                                                        <ExternalLink className="h-3.5 w-3.5" />
+                                                    </a>
+                                                )}
 
                                                 {o.customer_email && (
                                                     <button
