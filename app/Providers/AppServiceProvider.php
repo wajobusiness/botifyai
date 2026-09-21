@@ -159,6 +159,19 @@ class AppServiceProvider extends ServiceProvider
             return str_starts_with($route->uri(), 'api/v1');
         });
 
+        // Ensure public/build/manifest.json stays synchronized with build/manifest.json
+        // in single-directory deployments (e.g. cPanel public_html docroot).
+        try {
+            $rootManifest = base_path('build/manifest.json');
+            $publicManifest = public_path('build/manifest.json');
+            if (is_file($rootManifest)) {
+                if (! is_file($publicManifest) || @filesize($rootManifest) !== @filesize($publicManifest)) {
+                    @mkdir(dirname($publicManifest), 0755, true);
+                    @copy($rootManifest, $publicManifest);
+                }
+            }
+        } catch (\Throwable) {}
+
         Vite::prefetch(concurrency: 3);
     }
 
