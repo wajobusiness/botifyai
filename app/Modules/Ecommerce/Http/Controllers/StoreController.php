@@ -18,6 +18,7 @@ use Inertia\Response;
 class StoreController extends Controller
 {
     public const FIELDS = [
+        'native' => [],
         'shopify' => [
             ['key' => 'access_token', 'label' => 'Admin API Access Token', 'type' => 'password', 'required' => true],
             ['key' => 'api_secret_key', 'label' => 'API Secret Key (optional — verifies webhook signatures)', 'type' => 'password', 'required' => false],
@@ -32,6 +33,7 @@ class StoreController extends Controller
     ];
 
     public const LABELS = [
+        'native' => 'Botify Native Store',
         'shopify' => 'Shopify',
         'woocommerce' => 'WooCommerce',
         'bigcommerce' => 'BigCommerce',
@@ -42,6 +44,7 @@ class StoreController extends Controller
         $workspaceId = $this->workspaceId($request);
 
         $stores = EcommerceStore::where('workspace_id', $workspaceId)
+            ->where('platform', '!=', 'native')
             ->orderBy('created_at')
             ->get()
             ->map(fn (EcommerceStore $s) => [
@@ -61,11 +64,13 @@ class StoreController extends Controller
 
         return Inertia::render('Ecommerce/Stores/Index', [
             'stores' => $stores,
-            'platforms' => collect(EcommerceStore::PLATFORMS)->map(fn ($p) => [
-                'platform' => $p,
-                'label' => self::LABELS[$p],
-                'fields' => self::FIELDS[$p],
-            ])->values(),
+            'platforms' => collect(EcommerceStore::PLATFORMS)
+                ->filter(fn ($p) => $p !== 'native')
+                ->map(fn ($p) => [
+                    'platform' => $p,
+                    'label' => self::LABELS[$p] ?? ucfirst($p),
+                    'fields' => self::FIELDS[$p] ?? [],
+                ])->values(),
             // Whether one-click OAuth is available per platform. Woo needs no app
             // credentials; Shopify/BigCommerce require the admin to configure them.
             'oauth' => [
