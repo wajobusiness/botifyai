@@ -43,6 +43,18 @@ class WebhookController extends Controller
             'body_length' => strlen($request->getContent()),
         ]);
 
+        $payload = json_decode($request->getContent(), true);
+        $clientRef = $payload['data']['object']['client_reference_id'] ?? '';
+        $metaType = $payload['data']['object']['metadata']['type'] ?? null;
+
+        $isCommerce = $metaType === 'commerce_sale'
+            || str_starts_with($clientRef, 'ORD-')
+            || (! empty($clientRef) && \App\Modules\Ecommerce\Models\EcommerceOrder::where('payment_reference', $clientRef)->exists());
+
+        if ($isCommerce) {
+            return app(\App\Modules\Ecommerce\Http\Controllers\CommerceWebhookController::class)->stripe($request);
+        }
+
         $gateway = $this->gateways->get('stripe');
         if (! $gateway) {
             return new Response('Gateway not configured', 503);
@@ -152,7 +164,17 @@ class WebhookController extends Controller
         ]);
 
         $payload = json_decode($request->getContent(), true);
-        if (is_array($payload) && ($payload['data']['metadata']['type'] ?? null) === 'commerce_sale') {
+        $reference = $payload['data']['reference'] ?? '';
+        $metadata = $payload['data']['metadata'] ?? [];
+        if (is_string($metadata)) {
+            $metadata = json_decode($metadata, true) ?: [];
+        }
+
+        $isCommerce = ($metadata['type'] ?? null) === 'commerce_sale'
+            || str_starts_with($reference, 'ORD-')
+            || (! empty($reference) && \App\Modules\Ecommerce\Models\EcommerceOrder::where('payment_reference', $reference)->exists());
+
+        if ($isCommerce) {
             return app(\App\Modules\Ecommerce\Http\Controllers\CommerceWebhookController::class)->paystack($request);
         }
 

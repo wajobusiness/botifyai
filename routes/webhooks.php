@@ -64,6 +64,8 @@ Route::middleware('throttle:webhooks')->group(function () {
     // ─── Native Commerce Payment Webhooks ────────────────────────────────────────
     Route::post('webhooks/commerce/paystack', [CommerceWebhookController::class, 'paystack'])
         ->name('webhooks.commerce.paystack');
+    Route::post('webhooks/commerce/stripe', [CommerceWebhookController::class, 'stripe'])
+        ->name('webhooks.commerce.stripe');
 
     // ─── Email open tracking pixel ───────────────────────────────────────────────
     Route::get('track/email/{token}/open.gif', [EmailTrackingController::class, 'open'])

@@ -72,11 +72,59 @@ class CommerceWebhookController extends Controller
         return new Response('OK', 200);
     }
 
+    /**
+     * Handle incoming Stripe webhook for commerce sales.
+     */
+    public function stripe(Request $request): Response
+    {
+        $payload = $request->getContent();
+        $data = json_decode($payload, true) ?: [];
+        $event = $data['type'] ?? '';
+        $session = $data['data']['object'] ?? [];
+
+        $eventId = $data['id'] ?? ($session['id'] ?? uniqid('stripe_', true));
+        $idempotencyKey = (string) $eventId . '_' . $event;
+
+        if (! $this->idempotencyService->isNewEvent('stripe_commerce', $idempotencyKey)) {
+            return new Response('OK (Duplicate)', 200);
+        }
+
+        try {
+            if ($event === 'checkout.session.completed' || $event === 'payment_intent.succeeded') {
+                $reference = $session['client_reference_id'] ?? ($session['metadata']['order_reference'] ?? '');
+                $order = ! empty($reference) ? EcommerceOrder::where('payment_reference', $reference)->first() : null;
+
+                if (! $order && ! empty($session['metadata']['order_uuid'] ?? '')) {
+                    $order = EcommerceOrder::where('uuid', $session['metadata']['order_uuid'])->first();
+                }
+
+                if ($order) {
+                    $this->paymentService->handlePaymentSuccess($order, $reference ?: $order->payment_reference, $session, 'stripe');
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('Commerce Stripe webhook processing exception', [
+                'event' => $event,
+                'error' => $e->getMessage(),
+            ]);
+
+            $this->idempotencyService->release('stripe_commerce', $idempotencyKey);
+            return new Response('Internal error processing webhook', 500);
+        }
+
+        return new Response('OK', 200);
+    }
+
     private function handleChargeSuccess(array $charge): void
     {
         $reference = $charge['reference'] ?? '';
-        $orderId = $charge['metadata']['order_id'] ?? null;
-        $orderUuid = $charge['metadata']['order_uuid'] ?? null;
+        $metadata = $charge['metadata'] ?? [];
+        if (is_string($metadata)) {
+            $metadata = json_decode($metadata, true) ?: [];
+        }
+
+        $orderId = $metadata['order_id'] ?? null;
+        $orderUuid = $metadata['order_uuid'] ?? null;
 
         $order = null;
         if (! empty($reference)) {
@@ -94,7 +142,7 @@ class CommerceWebhookController extends Controller
         if (! $order) {
             Log::warning('Commerce Paystack webhook: Order not found for charge', [
                 'reference' => $reference,
-                'metadata' => $charge['metadata'] ?? [],
+                'metadata' => $metadata,
             ]);
             return;
         }
@@ -105,8 +153,13 @@ class CommerceWebhookController extends Controller
     private function handleChargeFailed(array $charge): void
     {
         $reference = $charge['reference'] ?? '';
-        $orderId = $charge['metadata']['order_id'] ?? null;
-        $orderUuid = $charge['metadata']['order_uuid'] ?? null;
+        $metadata = $charge['metadata'] ?? [];
+        if (is_string($metadata)) {
+            $metadata = json_decode($metadata, true) ?: [];
+        }
+
+        $orderId = $metadata['order_id'] ?? null;
+        $orderUuid = $metadata['order_uuid'] ?? null;
 
         $order = null;
         if (! empty($reference)) {
@@ -131,9 +184,13 @@ class CommerceWebhookController extends Controller
 
     private function getPaystackSecret(): string
     {
-        $config = PaymentGatewayConfig::where('gateway', 'paystack')->where('enabled', true)->first();
+        $config = PaymentGatewayConfig::where('gateway', 'paystack')->first();
         $creds = $config?->getActiveCredentials() ?? [];
-        return $creds['secret_key'] ?? config('services.paystack.secret_key', '');
+        $secret = $creds['secret_key'] ?? config('services.paystack.secret_key', '');
+        if (empty($secret)) {
+            $secret = env('PAYSTACK_SECRET_KEY', '');
+        }
+        return (string) $secret;
     }
 }
 
