@@ -68,7 +68,8 @@ class AdminPayoutController extends Controller
         }
 
         try {
-            $this->walletService->completePayout($payout, (int) $request->user()->id);
+            $admin = $request->user('admin') ?? $request->user();
+            $this->walletService->completePayout($payout, (int) ($admin?->id ?? 1));
 
             return back()->with('success', "Payout #{$payout->reference} marked as completed.");
         } catch (Throwable $e) {
@@ -90,7 +91,8 @@ class AdminPayoutController extends Controller
         ]);
 
         try {
-            $this->walletService->rejectPayout($payout, $validated['rejection_reason'], (int) $request->user()->id);
+            $admin = $request->user('admin') ?? $request->user();
+            $this->walletService->rejectPayout($payout, $validated['rejection_reason'], (int) ($admin?->id ?? 1));
 
             return back()->with('success', "Payout #{$payout->reference} rejected and funds restored to merchant.");
         } catch (Throwable $e) {

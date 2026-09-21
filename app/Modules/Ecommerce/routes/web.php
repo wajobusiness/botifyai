@@ -1,7 +1,5 @@
 <?php
 
-use App\Modules\Ecommerce\Http\Controllers\AdminOrderController;
-use App\Modules\Ecommerce\Http\Controllers\AdminPayoutController;
 use App\Modules\Ecommerce\Http\Controllers\DigitalDownloadController;
 use App\Modules\Ecommerce\Http\Controllers\EcommerceOAuthController;
 use App\Modules\Ecommerce\Http\Controllers\MerchantWalletController;
@@ -61,15 +59,4 @@ Route::middleware(['web', 'client-app'])->prefix('app/ecommerce')->name('client.
 
     // Inbox order context
     Route::get('/contacts/{contact}/orders', [OrderContextController::class, 'index'])->name('contacts.orders');
-});
-
-// Platform Admin Ecommerce & Payout Management
-Route::middleware(['web', 'auth', 'admin'])->prefix('admin/ecommerce')->name('admin.ecommerce.')->group(function () {
-    Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
-    Route::post('/orders/{order}/resend-receipt', [AdminOrderController::class, 'resendReceipt'])->name('orders.resend-receipt');
-    Route::post('/orders/{order}/fulfill', [AdminOrderController::class, 'fulfill'])->name('orders.fulfill');
-
-    Route::get('/payouts', [AdminPayoutController::class, 'index'])->name('payouts.index');
-    Route::post('/payouts/{payout}/approve', [AdminPayoutController::class, 'approve'])->name('payouts.approve');
-    Route::post('/payouts/{payout}/reject', [AdminPayoutController::class, 'reject'])->name('payouts.reject');
 });

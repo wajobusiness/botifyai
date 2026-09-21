@@ -29,6 +29,8 @@ use App\Http\Controllers\Admin\TaxRateController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\TranslationController;
 use App\Http\Controllers\Admin\PusherSettingsController;
+use App\Modules\Ecommerce\Http\Controllers\AdminOrderController;
+use App\Modules\Ecommerce\Http\Controllers\AdminPayoutController;
 use App\Modules\Integrations\Http\Controllers\IntegrationConfigController;
 use Illuminate\Support\Facades\Route;
 
@@ -72,6 +74,15 @@ Route::post('/payments/{transaction}/refund', [TransactionController::class, 're
 Route::get('/payment-gateways', [PaymentGatewayConfigController::class, 'index'])->name('payment-gateways.index')->middleware('permission:view_payment_gateways');
 Route::get('/payment-gateways/{gateway}', [PaymentGatewayConfigController::class, 'show'])->name('payment-gateways.show')->middleware('permission:manage_payment_gateways');
 Route::put('/payment-gateways/{gateway}', [PaymentGatewayConfigController::class, 'update'])->name('payment-gateways.update')->middleware('permission:manage_payment_gateways');
+
+// Ecommerce Orders & Merchant Payouts
+Route::get('/ecommerce/orders', [AdminOrderController::class, 'index'])->name('ecommerce.orders.index')->middleware('permission:view_payment_gateways');
+Route::post('/ecommerce/orders/{order}/resend-receipt', [AdminOrderController::class, 'resendReceipt'])->name('ecommerce.orders.resend-receipt')->middleware('permission:manage_payment_gateways');
+Route::post('/ecommerce/orders/{order}/fulfill', [AdminOrderController::class, 'fulfill'])->name('ecommerce.orders.fulfill')->middleware('permission:manage_payment_gateways');
+
+Route::get('/ecommerce/payouts', [AdminPayoutController::class, 'index'])->name('ecommerce.payouts.index')->middleware('permission:view_payment_gateways');
+Route::post('/ecommerce/payouts/{payout}/approve', [AdminPayoutController::class, 'approve'])->name('ecommerce.payouts.approve')->middleware('permission:manage_payment_gateways');
+Route::post('/ecommerce/payouts/{payout}/reject', [AdminPayoutController::class, 'reject'])->name('ecommerce.payouts.reject')->middleware('permission:manage_payment_gateways');
 
 // Coupons
 Route::get('/coupons', [CouponController::class, 'index'])->name('coupons.index')->middleware('permission:view_plans');
