@@ -78,6 +78,20 @@ class AppServiceProvider extends ServiceProvider
         $this->configureHttpClientSsl();
         $this->forceHttpsForWebhookUrls();
 
+        // Auto-heal currency symbols in DB (e.g. NGN set to '$' during setup)
+        try {
+            if (config('app.installed')) {
+                \App\Models\Currency::where('code', 'NGN')
+                    ->where(function ($q) {
+                        $q->where('symbol', '$')
+                            ->orWhere('symbol', '')
+                            ->orWhereNull('symbol')
+                            ->orWhere('symbol', 'NGN');
+                    })
+                    ->update(['symbol' => '₦']);
+            }
+        } catch (\Throwable) {}
+
         Gate::define('viewAdmin', fn ($user) => $user?->isAdmin());
         Gate::define('manageAdminSensitive', fn ($user) => $user?->isAdmin());
 

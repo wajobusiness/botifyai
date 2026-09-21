@@ -112,10 +112,38 @@ function AddCurrencyRow() {
 
     const inputCls = 'rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20';
 
+    const STANDARD_SYMBOLS = {
+        NGN: '₦',
+        EUR: '€',
+        GBP: '£',
+        BDT: '৳',
+        INR: '₹',
+        JPY: '¥',
+        CNY: '¥',
+        GHS: 'GH₵',
+        KES: 'KSh',
+        ZAR: 'R',
+        BRL: 'R$',
+        CAD: 'CA$',
+        AUD: 'A$',
+        AED: 'AED ',
+        SAR: 'SAR ',
+        USD: '$',
+    };
+
+    const handleCodeChange = (e) => {
+        const code = e.target.value.toUpperCase();
+        setData((prev) => ({
+            ...prev,
+            code,
+            symbol: (!prev.symbol || prev.symbol === '$' || STANDARD_SYMBOLS[prev.code] === prev.symbol) && STANDARD_SYMBOLS[code] ? STANDARD_SYMBOLS[code] : prev.symbol,
+        }));
+    };
+
     return (
         <tr className="align-top bg-neutral-50/60 dark:bg-neutral-800/30">
             <td className="py-3 pr-4">
-                <input value={data.code} onChange={(e) => setData('code', e.target.value.toUpperCase())} placeholder="USD" maxLength={10} className={`${inputCls} w-20 uppercase`} />
+                <input value={data.code} onChange={handleCodeChange} placeholder="USD" maxLength={10} className={`${inputCls} w-20 uppercase`} />
                 {errors.code && <div className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.code}</div>}
             </td>
             <td className="py-3 pr-4">

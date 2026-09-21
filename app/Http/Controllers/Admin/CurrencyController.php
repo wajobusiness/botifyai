@@ -34,6 +34,10 @@ class CurrencyController extends Controller
         $validated['decimals'] = $validated['decimals'] ?? 2;
         $validated['exchange_rate'] = $validated['exchange_rate'] ?? 1;
 
+        if (trim($validated['symbol']) === '$' && $validated['code'] !== 'USD') {
+            $validated['symbol'] = Currency::standardSymbol($validated['code']);
+        }
+
         if (! empty($validated['is_default'])) {
             Currency::query()->update(['is_default' => false]);
         }
@@ -53,6 +57,10 @@ class CurrencyController extends Controller
             'is_default' => ['boolean'],
             'enabled' => ['boolean'],
         ]);
+
+        if (trim($validated['symbol']) === '$' && strtoupper($currency->code) !== 'USD') {
+            $validated['symbol'] = Currency::standardSymbol($currency->code);
+        }
 
         if (! empty($validated['is_default'])) {
             Currency::where('code', '!=', $currency->code)->update(['is_default' => false]);
