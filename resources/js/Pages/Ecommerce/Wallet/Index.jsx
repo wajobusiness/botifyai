@@ -118,15 +118,15 @@ export default function WalletIndex({
     };
 
     return (
-        <ClientLayout title="Merchant Wallet & Payouts">
-            <Head title="Merchant Wallet & Escrow" />
+        <ClientLayout title="My Wallet">
+            <Head title="My Wallet" />
             <div className="space-y-6">
                 {/* Top Title & CTA */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
                             <Wallet className="h-6 w-6 text-teal-600" />
-                            <span>Merchant Wallet & Payouts</span>
+                            <span>My Wallet</span>
                         </h2>
                         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                             Transparent double-entry ledger of your digital sales, platform fees, and withdrawals.

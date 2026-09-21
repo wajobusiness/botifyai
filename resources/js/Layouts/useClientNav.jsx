@@ -114,7 +114,7 @@ export default function useClientNav() {
     const ecommerceItems = [
         { label: t('nav.orders'),   href: safeRoute('client.ecommerce.orders.index'),   icon: <Package className={iconClass} />,     activePattern: 'client.ecommerce.orders.*' },
         { label: t('nav.products'), href: safeRoute('client.ecommerce.products.index'), icon: <Tag className={iconClass} />,         activePattern: 'client.ecommerce.products.*' },
-        { label: t('nav.wallet') || 'Wallet & Payouts', href: safeRoute('client.ecommerce.wallet.index'), icon: <Wallet className={iconClass} />, activePattern: 'client.ecommerce.wallet.*' },
+        { label: t('nav.wallet', 'My Wallet'), href: safeRoute('client.ecommerce.wallet.index'), icon: <Wallet className={iconClass} />, activePattern: 'client.ecommerce.wallet.*' },
         { label: t('nav.stores'),   href: safeRoute('client.ecommerce.stores.index'),   icon: <ShoppingBag className={iconClass} />, activePattern: 'client.ecommerce.stores.*' },
     ];
 
