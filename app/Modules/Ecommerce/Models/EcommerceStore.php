@@ -12,7 +12,12 @@ use Illuminate\Support\Str;
  * @property int $workspace_id
  * @property string $platform
  * @property string|null $name
+ * @property string|null $slug
  * @property string $domain
+ * @property string $currency
+ * @property string|null $support_email
+ * @property string|null $support_phone
+ * @property string $brand_color
  * @property array<string, mixed>|null $credentials
  * @property string $status
  * @property array<string, mixed>|null $external_meta
@@ -22,10 +27,11 @@ class EcommerceStore extends Model
 {
     protected $table = 'ecommerce_stores';
 
-    public const PLATFORMS = ['shopify', 'woocommerce', 'bigcommerce'];
+    public const PLATFORMS = ['native', 'shopify', 'woocommerce', 'bigcommerce'];
 
     protected $fillable = [
-        'uuid', 'workspace_id', 'platform', 'name', 'domain', 'credentials', 'status',
+        'uuid', 'workspace_id', 'platform', 'name', 'slug', 'domain', 'currency',
+        'support_email', 'support_phone', 'brand_color', 'credentials', 'status',
         'external_meta', 'webhook_secret', 'last_tested_at', 'last_test_status',
         'last_test_message', 'customers_synced_at', 'orders_synced_at', 'products_synced_at',
     ];
@@ -51,8 +57,29 @@ class EcommerceStore extends Model
     }
 
     /**
+     * Get or create the native commerce store for a given workspace.
+     */
+    public static function getOrCreateNativeStore(int $workspaceId, ?string $name = null): self
+    {
+        return static::firstOrCreate(
+            [
+                'workspace_id' => $workspaceId,
+                'platform' => 'native',
+            ],
+            [
+                'name' => $name ?: 'Botify Store',
+                'domain' => 'native',
+                'status' => 'connected',
+                'currency' => 'NGN',
+                'brand_color' => '#0D9488',
+                'last_test_status' => 'ok',
+            ]
+        );
+    }
+
+    /**
      * The full inbound webhook URL for a store, including the per-store secret
-     * token used as the primary verification gate for both platforms.
+     * token used as the primary verification gate for external platforms.
      */
     public static function webhookUrlFor(self $store): string
     {
@@ -71,10 +98,12 @@ class EcommerceStore extends Model
             if (empty($store->uuid)) {
                 $store->uuid = (string) Str::uuid();
             }
+            if (empty($store->slug) && ! empty($store->name)) {
+                $store->slug = Str::slug($store->name).'-'.Str::random(6);
+            }
         });
 
-        // No DB-level FK cascade, so clean up children when a store is removed,
-        // otherwise orders/carts/products are orphaned and pollute dashboards.
+        // No DB-level FK cascade, so clean up children when a store is removed.
         static::deleting(function (self $store) {
             $store->orders()->delete();
             $store->carts()->delete();
@@ -90,5 +119,10 @@ class EcommerceStore extends Model
     public function carts(): HasMany
     {
         return $this->hasMany(EcommerceCart::class, 'store_id');
+    }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(EcommerceProduct::class, 'store_id');
     }
 }

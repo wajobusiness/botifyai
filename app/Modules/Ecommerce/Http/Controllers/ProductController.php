@@ -18,37 +18,61 @@ class ProductController extends Controller
     public function index(Request $request): Response
     {
         $workspaceId = $this->workspaceId($request);
+        $nativeStore = EcommerceStore::getOrCreateNativeStore($workspaceId);
 
-        $query = EcommerceProduct::where('ecommerce_products.workspace_id', $workspaceId)
+        $query = EcommerceProduct::with(['digitalAsset', 'store'])
+            ->where('ecommerce_products.workspace_id', $workspaceId)
             ->when($request->input('store_id'), fn ($q, $id) => $q->where('store_id', $id))
+            ->when($request->input('platform'), fn ($q, $p) => $q->where('platform', $p))
             ->when($request->input('search'), fn ($q, $s) => $q->where(fn ($q) => $q
                 ->where('name', 'like', "%{$s}%")
-                ->orWhere('sku', 'like', "%{$s}%")))
+                ->orWhere('sku', 'like', "%{$s}%")
+                ->orWhere('slug', 'like', "%{$s}%")))
             ->when($request->boolean('low_stock'), fn ($q) => $q
                 ->whereNotNull('inventory_quantity')
                 ->where('inventory_quantity', '<=', self::LOW_STOCK_THRESHOLD));
 
         $products = (clone $query)
-            ->orderBy('name')
+            ->orderByDesc('id')
             ->paginate(30)
             ->withQueryString()
             ->through(fn (EcommerceProduct $p) => [
                 'id' => $p->id,
                 'name' => $p->name,
+                'slug' => $p->slug,
+                'product_type' => $p->product_type ?: 'digital',
                 'sku' => $p->sku,
-                'price' => $p->price,
+                'price' => (float) $p->price,
+                'compare_at_price' => $p->compare_at_price ? (float) $p->compare_at_price : null,
+                'currency' => $p->currency ?: ($p->store?->currency ?: 'NGN'),
                 'inventory_quantity' => $p->inventory_quantity,
                 'status' => $p->status,
+                'is_published' => (bool) $p->is_published,
                 'image_url' => $p->image_url,
                 'platform' => $p->platform,
+                'description' => $p->description,
+                'checkout_url' => $p->getCheckoutUrl(),
+                'digital_asset' => $p->digitalAsset ? [
+                    'id' => $p->digitalAsset->id,
+                    'asset_type' => $p->digitalAsset->asset_type,
+                    'file_name' => $p->digitalAsset->file_name,
+                    'file_size' => $p->digitalAsset->formatted_file_size,
+                    'external_redirect_url' => $p->digitalAsset->external_redirect_url,
+                ] : null,
             ]);
 
         return Inertia::render('Ecommerce/Products/Index', [
             'products' => $products,
-            'filters' => $request->only('store_id', 'search', 'low_stock'),
+            'filters' => $request->only('store_id', 'search', 'low_stock', 'platform'),
             'stores' => $this->workspaceStores($workspaceId),
+            'nativeStore' => [
+                'id' => $nativeStore->id,
+                'name' => $nativeStore->name,
+                'currency' => $nativeStore->currency,
+            ],
             'stats' => [
                 'total' => (clone $query)->count(),
+                'digital' => EcommerceProduct::where('workspace_id', $workspaceId)->where('product_type', 'digital')->count(),
                 'low_stock' => EcommerceProduct::where('workspace_id', $workspaceId)
                     ->whereNotNull('inventory_quantity')
                     ->where('inventory_quantity', '<=', self::LOW_STOCK_THRESHOLD)
@@ -70,37 +94,40 @@ class ProductController extends Controller
         $workspaceId = $this->workspaceId($request);
         $q = trim((string) $request->input('q', ''));
 
-        $products = EcommerceProduct::with('store:id,external_meta')
+        $products = EcommerceProduct::with('store:id,external_meta,currency')
             ->where('workspace_id', $workspaceId)
             ->when($q !== '', fn ($query) => $query->where(fn ($w) => $w
                 ->where('name', 'like', "%{$q}%")
-                ->orWhere('sku', 'like', "%{$q}%")))
+                ->orWhere('sku', 'like', "%{$q}%")
+                ->orWhere('slug', 'like', "%{$q}%")))
             ->orderBy('name')
             ->limit(20)
-            ->get(['id', 'store_id', 'name', 'sku', 'price', 'inventory_quantity', 'status', 'image_url', 'platform'])
+            ->get(['id', 'store_id', 'name', 'slug', 'product_type', 'sku', 'price', 'currency', 'inventory_quantity', 'status', 'image_url', 'platform'])
             ->map(fn (EcommerceProduct $p) => [
                 'id' => $p->id,
                 'name' => $p->name,
+                'slug' => $p->slug,
                 'sku' => $p->sku,
-                'price' => $p->price,
-                'currency' => $p->store?->external_meta['currency'] ?? null,
+                'price' => (float) $p->price,
+                'currency' => $p->currency ?: ($p->store?->currency ?: ($p->store?->external_meta['currency'] ?? 'NGN')),
                 'inventory_quantity' => $p->inventory_quantity,
                 'status' => $p->status,
                 'image_url' => $p->image_url,
                 'platform' => $p->platform,
+                'checkout_url' => $p->getCheckoutUrl(),
             ]);
 
         return response()->json($products);
     }
 
     /**
-     * @return array<int, array{id: int, name: string}>
+     * @return array<int, array{id: int, name: string, platform: string}>
      */
     private function workspaceStores(int $workspaceId): array
     {
         return EcommerceStore::where('workspace_id', $workspaceId)
-            ->get(['id', 'name'])
-            ->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])
+            ->get(['id', 'name', 'platform'])
+            ->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'platform' => $s->platform])
             ->all();
     }
 

@@ -27,6 +27,7 @@ import {
     Clock,
     KeyRound,
     LogOut,
+    Wallet,
 } from 'lucide-react';
 
 /** Nav item: { labelKey, route, href, icon, permission } - show only if user has permission (or no permission required). Order follows typical admin usage frequency. */
@@ -36,6 +37,7 @@ const ADMIN_NAV_ITEMS = [
     { labelKey: 'admin.nav.subscriptions', route: 'admin.subscriptions.index', href: () => route('admin.subscriptions.index'), icon: CreditCard, permission: 'view_subscriptions' },
     { labelKey: 'admin.nav.support', route: 'admin.support.index', href: () => route('admin.support.index'), icon: LifeBuoy, permission: 'view_settings' },
     { labelKey: 'admin.nav.payments', route: 'admin.payments.index', href: () => route('admin.payments.index'), icon: Receipt, permission: 'view_payment_gateways' },
+    { labelKey: 'admin.nav.merchant_payouts', labelFallback: 'Merchant Payouts', route: 'admin.ecommerce.payouts.index', href: () => route('admin.ecommerce.payouts.index'), icon: Wallet, permission: 'view_payment_gateways' },
     { labelKey: 'admin.nav.plans', route: 'admin.plans.index', href: () => route('admin.plans.index'), icon: Package, permission: 'view_plans' },
     { labelKey: 'admin.nav.coupons', route: 'admin.coupons.index', href: () => route('admin.coupons.index'), icon: Tag, permission: 'view_plans' },
     { labelKey: 'admin.tax_rates', route: 'admin.tax-rates.index', href: () => route('admin.tax-rates.index'), icon: Percent, permission: 'view_plans' },
@@ -71,7 +73,7 @@ function useAdminNav() {
             if (perm && !hasPermission(perm) && (!alt || !hasPermission(alt))) return false;
             return true;
         }).map((item) => ({
-            label: t(item.labelKey),
+            label: item.labelFallback && t(item.labelKey) === item.labelKey ? item.labelFallback : t(item.labelKey),
             route: item.route,
             href: typeof item.href === 'function' ? item.href() : item.href,
             icon: item.icon ? <item.icon className="h-5 w-5" /> : null,
