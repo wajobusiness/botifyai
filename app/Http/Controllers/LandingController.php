@@ -46,7 +46,7 @@ class LandingController extends Controller
             $displayCurrency = $this->resolveDisplayCurrency($request);
             $targetCurrency = Currency::where('code', $displayCurrency)->where('enabled', true)->first();
             $decimals = (int) ($targetCurrency?->decimals ?? 2);
-            $symbol = $targetCurrency?->symbol ?? '$';
+            $symbol = $targetCurrency?->symbol ?? Currency::standardSymbol($displayCurrency);
 
             return Plan::where('enabled', true)
                 ->orderBy('sort_order')

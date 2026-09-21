@@ -12,13 +12,12 @@ class CurrencyService
     public function format(int $amountCents, string $currencyCode): string
     {
         $currency = Currency::where('code', $currencyCode)->where('enabled', true)->first();
-        if (! $currency) {
-            return (string) $amountCents;
-        }
+        $decimals = (int) ($currency?->decimals ?? 2);
+        $symbol = $currency?->symbol ?? Currency::standardSymbol($currencyCode);
 
-        $value = $amountCents / (10 ** $currency->decimals);
+        $value = $amountCents / (10 ** $decimals);
 
-        return $currency->symbol . number_format($value, $currency->decimals);
+        return $symbol . number_format($value, $decimals);
     }
 
     /**

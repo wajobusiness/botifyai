@@ -11,6 +11,7 @@ deployment:
     - /bin/cp -R routes $DEPLOYPATH
     - /bin/cp -R storage $DEPLOYPATH
     - /bin/cp -R build $DEPLOYPATH 2>/dev/null || true
+    - /bin/mkdir -p $DEPLOYPATH/public/build && /bin/cp -R build/* $DEPLOYPATH/public/build/ 2>/dev/null || true
     - /bin/cp artisan $DEPLOYPATH
     - /bin/cp composer.json $DEPLOYPATH
     - /bin/cp index.php $DEPLOYPATH
