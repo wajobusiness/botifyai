@@ -84,7 +84,7 @@ export default function CronSetupIndex({
 
     const cronCommand = `* * * * * php ${basePath}/artisan schedule:run >> /dev/null 2>&1`;
 
-    const queueCommand = `php ${basePath}/artisan queue:work ${queueConnection} --queue=default --tries=3 --max-time=3600`;
+    const queueCommand = `php ${basePath}/artisan queue:work ${queueConnection} --queue=default,leads,ai,whatsapp,broadcast,social,automation --tries=3 --max-time=3600`;
 
     // Name the supervisor program after the brand so a white-label install doesn't
     // paste the vendor's name into its own server config.
@@ -92,7 +92,7 @@ export default function CronSetupIndex({
         (appName || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'app';
 
     const supervisorConfig = `[program:${workerSlug}-worker]
-command=${phpBinary} ${basePath}/artisan queue:work ${queueConnection} --queue=default --tries=3 --max-time=3600
+command=${phpBinary} ${basePath}/artisan queue:work ${queueConnection} --queue=default,leads,ai,whatsapp,broadcast,social,automation --tries=3 --max-time=3600
 directory=${basePath}
 user=www-data
 numprocs=2

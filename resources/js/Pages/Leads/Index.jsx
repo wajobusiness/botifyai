@@ -1,8 +1,9 @@
 import { Head, useForm, router, usePage, Link } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
-import { Search, MapPin, UserPlus, Trash2, Star, KanbanSquare } from 'lucide-react';
-import { useState } from 'react';
+import Pagination from '@/Components/ui/Pagination';
+import { Search, MapPin, UserPlus, Trash2, Star, KanbanSquare, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import ScoreBadge from './Partials/ScoreBadge';
 
@@ -28,6 +29,18 @@ export default function LeadsIndex({ leads, scrapeJobs }) {
     const flash = props.flash ?? {};
     const [selected, setSelected] = useState([]);
     const [showScraper, setShowScraper] = useState(false);
+
+    // Auto-poll every 4s while any scrape job is pending or running
+    const hasActiveJob = scrapeJobs?.some(j => j.status === 'pending' || j.status === 'running');
+    useEffect(() => {
+        if (!hasActiveJob) return;
+
+        const interval = setInterval(() => {
+            router.reload({ only: ['scrapeJobs', 'leads'] });
+        }, 4000);
+
+        return () => clearInterval(interval);
+    }, [hasActiveJob]);
 
     const { data, setData, post, processing, reset } = useForm({
         keyword: '',
@@ -83,12 +96,20 @@ export default function LeadsIndex({ leads, scrapeJobs }) {
                 {scrapeJobs.length > 0 && (
                     <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4">
                         <p className="text-xs font-semibold text-neutral-500 uppercase mb-2">{t('leads.recent_searches')}</p>
-                        <div className="space-y-1.5">
+                        <div className="space-y-2">
                             {scrapeJobs.map(job => (
-                                <div key={job.id} className="flex items-center gap-3 text-sm">
-                                    <span className="font-medium text-neutral-800 dark:text-neutral-200">{t('leads.keyword_in_location', { keyword: job.keyword, location: job.location })}</span>
-                                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${JOB_STATUS[job.status] ?? ''}`}>{t(`leads.job_status_${job.status}`, job.status)}</span>
-                                    {job.leads_found > 0 && <span className="text-neutral-400 text-xs">{t('leads.found_count', { count: job.leads_found })}</span>}
+                                <div key={job.id} className="space-y-1">
+                                    <div className="flex items-center gap-3 text-sm flex-wrap">
+                                        <span className="font-medium text-neutral-800 dark:text-neutral-200">{t('leads.keyword_in_location', { keyword: job.keyword, location: job.location })}</span>
+                                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${JOB_STATUS[job.status] ?? ''}`}>{t(`leads.job_status_${job.status}`, job.status)}</span>
+                                        {job.leads_found > 0 && <span className="text-neutral-400 text-xs">{t('leads.found_count', { count: job.leads_found })}</span>}
+                                    </div>
+                                    {job.status === 'failed' && job.error && (
+                                        <div className="flex items-start gap-1.5 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 p-2 rounded-lg border border-red-100 dark:border-red-900/50">
+                                            <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                            <span>{job.error}</span>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -155,6 +176,7 @@ export default function LeadsIndex({ leads, scrapeJobs }) {
                             )}
                         </tbody>
                     </table>
+                    {leads && <Pagination data={leads} />}
                 </div>
             </div>
 

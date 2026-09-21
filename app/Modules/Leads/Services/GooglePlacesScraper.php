@@ -203,22 +203,33 @@ class GooglePlacesScraper
         $details = $this->details($placeId, $apiKey);
         $geometry = $place['geometry']['location'] ?? [];
 
+        $phone = $details['international_phone_number'] ?? $details['formatted_phone_number'] ?? null;
+        $website = $details['website'] ?? null;
+
+        $attributes = [
+            'name' => $place['name'] ?? null,
+            'address' => $place['formatted_address'] ?? null,
+            'category' => implode(', ', array_slice($place['types'] ?? [], 0, 3)),
+            'rating' => $place['rating'] ?? null,
+            'review_count' => $place['user_ratings_total'] ?? 0,
+            'lat' => $geometry['lat'] ?? null,
+            'lng' => $geometry['lng'] ?? null,
+        ];
+
+        // Do not overwrite existing phone or website with null on re-scrape if details lookup omitted them
+        if ($phone !== null) {
+            $attributes['phone'] = $phone;
+        }
+        if ($website !== null) {
+            $attributes['website'] = $website;
+        }
+
         // Keyed on workspace_id too: the same business can legitimately be a lead
         // in more than one workspace, and keying on place_id alone reassigns the
         // existing row to whichever tenant scraped it last.
         $lead = Lead::updateOrCreate(
             ['workspace_id' => $workspaceId, 'google_place_id' => $placeId],
-            [
-                'name' => $place['name'] ?? null,
-                'phone' => $details['formatted_phone_number'] ?? null,
-                'website' => $details['website'] ?? null,
-                'address' => $place['formatted_address'] ?? null,
-                'category' => implode(', ', array_slice($place['types'] ?? [], 0, 3)),
-                'rating' => $place['rating'] ?? null,
-                'review_count' => $place['user_ratings_total'] ?? 0,
-                'lat' => $geometry['lat'] ?? null,
-                'lng' => $geometry['lng'] ?? null,
-            ]
+            $attributes
         );
 
         // Only a brand-new lead is filed into the first stage. Re-scraping a query
@@ -252,7 +263,7 @@ class GooglePlacesScraper
         try {
             $res = $this->http()->get(self::DETAILS_URL, [
                 'place_id' => $placeId,
-                'fields' => 'formatted_phone_number,website,url',
+                'fields' => 'formatted_phone_number,international_phone_number,website,url',
                 'key' => $apiKey,
             ])->throw()->json();
 

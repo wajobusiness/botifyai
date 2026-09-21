@@ -21,6 +21,10 @@
     # Block direct web access to sensitive storage directories
     RewriteRule ^storage/(app/private|framework|logs) - [F,L]
 
+    # Block direct web access to internal app directories and sensitive files
+    RewriteRule ^(app|bootstrap|config|database|routes|tests)/ - [F,L]
+    RewriteRule ^(\.env|composer\.(json|lock)|package\.(json|lock)) - [F,L]
+
     # Map public storage requests to storage/app/public
     RewriteCond %{DOCUMENT_ROOT}/storage/app/public/$1 -f
     RewriteRule ^storage/(.*)$ storage/app/public/$1 [L]

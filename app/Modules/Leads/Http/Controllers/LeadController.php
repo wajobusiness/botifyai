@@ -58,6 +58,23 @@ class LeadController extends Controller
         return back()->with('success', 'Scrape job started. Results will appear shortly.');
     }
 
+    private function normalizePhone(?string $raw): ?string
+    {
+        if (! $raw) {
+            return null;
+        }
+
+        $phone = preg_replace('/[\s().\-]+/', '', trim($raw)) ?? '';
+        if (str_starts_with($phone, '00')) {
+            $phone = '+'.substr($phone, 2);
+        }
+        if ($phone !== '' && $phone[0] !== '+' && ctype_digit($phone)) {
+            $phone = '+'.$phone;
+        }
+
+        return preg_match('/^\+[1-9]\d{6,14}$/', $phone) ? substr($phone, 0, 20) : null;
+    }
+
     public function pushToContacts(Request $request): RedirectResponse
     {
         $wid = $this->workspaceId($request);
@@ -65,17 +82,28 @@ class LeadController extends Controller
 
         $leads = Lead::where('workspace_id', $wid)->whereIn('id', $ids)->where('pushed_to_contacts', false)->get();
 
+        $pushedCount = 0;
         foreach ($leads as $lead) {
-            if (! $lead->phone && ! $lead->email) {
+            $normalizedPhone = $this->normalizePhone($lead->phone);
+
+            if (! $normalizedPhone && ! $lead->email) {
                 continue;
             }
 
             $nameParts = explode(' ', $lead->name ?? '', 2);
+            $lookup = ['workspace_id' => $wid];
+            if ($normalizedPhone) {
+                $lookup['phone_e164'] = $normalizedPhone;
+            } else {
+                $lookup['email'] = $lead->email;
+            }
+
             $contact = Contact::firstOrCreate(
-                ['workspace_id' => $wid, 'phone_e164' => $lead->phone],
+                $lookup,
                 [
                     'first_name' => $nameParts[0] ?? null,
                     'last_name' => $nameParts[1] ?? null,
+                    'phone_e164' => $normalizedPhone,
                     'email' => $lead->email,
                     'source' => 'lead_scraper',
                     'lead_id' => $lead->id,
@@ -90,9 +118,10 @@ class LeadController extends Controller
 
             $lead->update(['pushed_to_contacts' => true]);
             $this->activity->pushedToContacts($lead, (int) $contact->id);
+            $pushedCount++;
         }
 
-        return back()->with('success', count($leads).' lead(s) pushed to contacts.');
+        return back()->with('success', $pushedCount.' lead(s) pushed to contacts.');
     }
 
     public function destroy(Request $request, Lead $lead): RedirectResponse
