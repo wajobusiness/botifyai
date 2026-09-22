@@ -37,6 +37,12 @@ Route::prefix('v1/auth')->middleware(['throttle:10,1'])->group(function () {
     Route::post('/login', [MobileAuthController::class, 'login']);
 });
 
+// ─── Public Commerce AI Widget API (public — throttled) ───────────────────────
+Route::prefix('v1/public/widget')->middleware(['throttle:60,1'])->group(function () {
+    Route::get('/config', [\App\Modules\Ecommerce\Http\Controllers\PublicCommerceWidgetController::class, 'config']);
+    Route::post('/chat', [\App\Modules\Ecommerce\Http\Controllers\PublicCommerceWidgetController::class, 'chat']);
+});
+
 Route::prefix('v1/auth')->middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('/logout', [MobileAuthController::class, 'logout']);
     Route::get('/me', [MobileAuthController::class, 'me']);

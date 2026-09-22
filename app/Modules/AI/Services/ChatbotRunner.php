@@ -3,17 +3,24 @@
 namespace App\Modules\AI\Services;
 
 use App\Modules\AI\Models\AiChatbot;
+use App\Modules\Ecommerce\Models\EcommerceProduct;
+use App\Modules\Ecommerce\Services\CommerceToolRegistry;
 use App\Modules\Shared\Models\Message;
+use Illuminate\Support\Facades\Log;
 
 class ChatbotRunner
 {
     public function __construct(
         private LlmGateway $llmGateway,
         private EmbeddingStore $embedStore,
+        private CommerceToolRegistry $toolRegistry,
     ) {}
 
-    public function run(AiChatbot $bot, Message $inboundMessage): ?string
-    {
+    public function run(
+        AiChatbot $bot,
+        Message $inboundMessage,
+        ?EcommerceProduct $productContext = null
+    ): ?string {
         if (! $bot->enabled) {
             return null;
         }
@@ -21,39 +28,6 @@ class ChatbotRunner
         $conversation = $inboundMessage->conversation;
         $body = $inboundMessage->body ?? '';
         $workspaceId = $conversation->workspace_id;
-
-        // 1. Embed the user query
-        $queryEmbedding = [];
-        if ($bot->ai_kb_id) {
-            try {
-                $embeddings = $this->llmGateway->embed($workspaceId, [$body]);
-                $queryEmbedding = $embeddings[0] ?? [];
-            } catch (\Throwable) {
-                // proceed without retrieval
-            }
-        }
-
-        // 2. Retrieve top-k relevant chunks
-        $contextChunks = [];
-        if ($bot->ai_kb_id && ! empty($queryEmbedding)) {
-            $results = $this->embedStore->search($bot->ai_kb_id, $queryEmbedding, $bot->max_context_chunks ?? 5);
-            $contextChunks = array_column($results, 'chunk');
-        }
-
-        // 3. Build prompt
-        $systemPrompt = $bot->system_prompt ?? 'You are a helpful assistant.';
-        if (! empty($contextChunks)) {
-            $context = implode("\n\n---\n\n", array_map(fn ($c) => $c->content, $contextChunks));
-            $systemPrompt .= "\n\nRelevant context:\n".$context;
-        }
-
-        // Inject the customer's recent orders so the bot can answer "where is my order?".
-        // Gated on a connected Ecommerce store; resolved lazily to avoid a hard
-        // cross-module dependency (matches the CredentialResolver class_exists pattern).
-        $orderSummary = $this->orderSummary($workspaceId, $conversation->contact_id);
-        if ($orderSummary !== null) {
-            $systemPrompt .= "\n\nUse this order information if the customer asks about their order status, shipping, or delivery:\n".$orderSummary;
-        }
 
         // Load recent conversation turns as context (last 20 messages)
         $history = [];
@@ -74,46 +48,215 @@ class ChatbotRunner
             ];
         }
 
-        $messages = array_merge(
-            [['role' => 'system', 'content' => $systemPrompt]],
+        $result = $this->runSession(
+            $bot,
+            $body,
+            $workspaceId,
             $history,
-            [['role' => 'user', 'content' => $body]],
+            $productContext,
+            $conversation->contact_id,
+            $conversation->id
         );
 
-        // 4. Call LLM
-        try {
-            $response = $this->llmGateway->chat(
-                $workspaceId,
-                $messages,
-                ['max_tokens' => 512],
-                $bot->id,
-                $conversation->id,
-            );
-
-            return $response->content;
-        } catch (\Throwable $e) {
-            // Fallback
-            return $bot->fallback_reply ?? null;
-        }
+        return $result['reply'] ?? $bot->fallback_reply ?? null;
     }
 
     /**
-     * Build a short summary of the contact's recent orders, or null when the
-     * Ecommerce module is absent / no store is connected / no orders exist.
+     * API-friendly variant: run the chatbot with a plain text message, session context, and optional product.
+     *
+     * @param  array  $history  Array of {role, content} prior turns (optional)
+     * @return array{reply: string|null, tokens_used: int, actions: array}
      */
-    private function orderSummary(int $workspaceId, ?int $contactId): ?string
-    {
-        $storeModel = 'App\Modules\Ecommerce\Models\EcommerceStore';
-        $orderModel = 'App\Modules\Ecommerce\Models\EcommerceOrder';
+    public function runForApi(
+        AiChatbot $bot,
+        string $message,
+        int $workspaceId,
+        array $history = [],
+        ?EcommerceProduct $productContext = null,
+        ?int $contactId = null
+    ): array {
+        return $this->runSession(
+            $bot,
+            $message,
+            $workspaceId,
+            $history,
+            $productContext,
+            $contactId
+        );
+    }
 
-        if (! $contactId || ! class_exists($storeModel) || ! class_exists($orderModel)) {
-            return null;
+    /**
+     * Unified agentic session execution loop: Multi-KB RAG + Live Context + Deterministic Tool Calling.
+     */
+    private function runSession(
+        AiChatbot $bot,
+        string $message,
+        int $workspaceId,
+        array $history = [],
+        ?EcommerceProduct $productContext = null,
+        ?int $contactId = null,
+        ?int $conversationId = null
+    ): array {
+        // 1. Multi-KB RAG Retrieval
+        $kbs = $bot->allKnowledgeBases();
+        $contextChunks = [];
+
+        if ($kbs->isNotEmpty()) {
+            try {
+                $embeddings = $this->llmGateway->embed($workspaceId, [$message]);
+                $queryEmbedding = $embeddings[0] ?? [];
+
+                if (! empty($queryEmbedding)) {
+                    $maxChunks = $bot->max_context_chunks ?? 5;
+                    $chunksPerKb = max(1, (int) ceil($maxChunks / $kbs->count()));
+
+                    foreach ($kbs as $kb) {
+                        $results = $this->embedStore->search($kb->id, $queryEmbedding, $chunksPerKb);
+                        foreach ($results as $res) {
+                            if (isset($res['chunk'])) {
+                                $contextChunks[] = $res['chunk'];
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('ChatbotRunner RAG retrieval failed', ['error' => $e->getMessage()]);
+            }
         }
 
-        $hasStore = $storeModel::where('workspace_id', $workspaceId)
-            ->where('status', 'connected')
-            ->exists();
-        if (! $hasStore) {
+        // 2. Build system prompt
+        $systemPrompt = $bot->system_prompt ?? 'You are a helpful commerce assistant for this store.';
+        $systemPrompt .= "\n\nTone directive: Always maintain a {$bot->tone} tone of voice.";
+        $systemPrompt .= "\nImportant: Do not invent prices or stock levels. Use the available tools to search products, verify price, or generate checkout links.";
+
+        if (! empty($contextChunks)) {
+            $context = implode("\n\n---\n\n", array_map(fn ($c) => $c->content, array_slice($contextChunks, 0, $bot->max_context_chunks ?? 5)));
+            $systemPrompt .= "\n\nKnowledge Base Context:\n".$context;
+        }
+
+        // 3. Inject Current Product Context if active
+        if ($productContext) {
+            $productDetails = [
+                'Product Name: '.$productContext->name,
+                'Price: '.($productContext->currency ?: 'NGN').' '.(float) $productContext->price,
+                'Type: '.$productContext->product_type,
+                'Description: '.strip_tags($productContext->description ?? ''),
+                'Checkout URL: '.$productContext->getCheckoutUrl(),
+            ];
+            if ($productContext->digitalAsset) {
+                $productDetails[] = 'Digital File: '.$productContext->digitalAsset->file_name.' ('.$productContext->digitalAsset->formatted_file_size.') - Instant Download Delivery';
+            }
+            $systemPrompt .= "\n\nThe customer is currently viewing this product on the store:\n".implode("\n", $productDetails);
+        }
+
+        // 4. Inject recent orders if contactId is known
+        $orderSummary = $this->orderSummary($workspaceId, $contactId);
+        if ($orderSummary !== null) {
+            $systemPrompt .= "\n\nCustomer Recent Orders:\n".$orderSummary;
+        }
+
+        $messages = array_merge(
+            [['role' => 'system', 'content' => $systemPrompt]],
+            $history,
+            [['role' => 'user', 'content' => $message]],
+        );
+
+        // 5. Resolve Allowed Commerce Tools
+        $tools = CommerceToolRegistry::getToolDefinitions();
+        $toolActions = [];
+
+        // 6. Call LLM with Tool Definitions
+        try {
+            $opts = [
+                'max_tokens' => 600,
+                'temperature' => (float) ($bot->temperature ?? 0.70),
+                'tools' => $tools,
+                'tool_choice' => 'auto',
+            ];
+
+            $response = $this->llmGateway->chat(
+                $workspaceId,
+                $messages,
+                $opts,
+                $bot->id,
+                $conversationId
+            );
+
+            // 7. Check for Tool Calls
+            if (! empty($response->toolCalls)) {
+                $messages[] = [
+                    'role' => 'assistant',
+                    'content' => $response->content ?: null,
+                    'tool_calls' => $response->toolCalls,
+                ];
+
+                foreach ($response->toolCalls as $call) {
+                    $toolName = $call['function']['name'] ?? '';
+                    $callId = $call['id'] ?? ('call_'.Str::random(10));
+                    $arguments = json_decode($call['function']['arguments'] ?? '{}', true) ?: [];
+
+                    $toolResult = $this->toolRegistry->execute(
+                        $toolName,
+                        $arguments,
+                        $workspaceId,
+                        $productContext?->store_id,
+                        $contactId
+                    );
+
+                    $toolActions[] = [
+                        'tool' => $toolName,
+                        'args' => $arguments,
+                        'result' => $toolResult,
+                    ];
+
+                    $messages[] = [
+                        'role' => 'tool',
+                        'tool_call_id' => $callId,
+                        'content' => json_encode($toolResult),
+                    ];
+                }
+
+                // Second-turn LLM call to synthesize the tool results into natural language response
+                $finalResponse = $this->llmGateway->chat(
+                    $workspaceId,
+                    $messages,
+                    ['max_tokens' => 600, 'temperature' => (float) ($bot->temperature ?? 0.70)],
+                    $bot->id,
+                    $conversationId
+                );
+
+                return [
+                    'reply' => $finalResponse->content,
+                    'tokens_used' => ($response->promptTokens + $response->completionTokens) + ($finalResponse->promptTokens + $finalResponse->completionTokens),
+                    'actions' => $toolActions,
+                ];
+            }
+
+            return [
+                'reply' => $response->content,
+                'tokens_used' => $response->promptTokens + $response->completionTokens,
+                'actions' => [],
+            ];
+        } catch (\Throwable $e) {
+            Log::error('ChatbotRunner runSession exception', [
+                'bot_id' => $bot->id,
+                'workspace_id' => $workspaceId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'reply' => $bot->fallback_reply ?? "I'm having trouble processing your request right now. Please feel free to check our checkout options above!",
+                'tokens_used' => 0,
+                'actions' => [],
+            ];
+        }
+    }
+
+    private function orderSummary(int $workspaceId, ?int $contactId): ?string
+    {
+        $orderModel = 'App\Modules\Ecommerce\Models\EcommerceOrder';
+
+        if (! $contactId || ! class_exists($orderModel)) {
             return null;
         }
 
@@ -128,76 +271,19 @@ class ChatbotRunner
         }
 
         return $orders->map(function ($o) {
-            $parts = ['Order '.($o->number ?: $o->external_order_id)];
-            if ($o->fulfillment_status) {
-                $parts[] = 'status: '.$o->fulfillment_status;
+            $parts = ['Order '.($o->number ?: $o->uuid ?: $o->external_order_id)];
+            if ($o->payment_status) {
+                $parts[] = 'payment: '.$o->payment_status;
             }
-            $parts[] = 'total: '.$o->currency.' '.$o->total;
+            if ($o->fulfillment_status) {
+                $parts[] = 'fulfillment: '.$o->fulfillment_status;
+            }
+            $parts[] = 'total: '.($o->currency ?: 'NGN').' '.$o->total;
             if ($o->tracking_url) {
                 $parts[] = 'tracking: '.$o->tracking_url;
-            }
-            if ($o->placed_at) {
-                $parts[] = 'placed: '.$o->placed_at->toDateString();
             }
 
             return '- '.implode(', ', $parts);
         })->implode("\n");
-    }
-
-    /**
-     * API-friendly variant: run the chatbot with a plain text message.
-     * Does not require an existing Message/Conversation model.
-     *
-     * @param  array  $history  Array of {role, content} prior turns (optional)
-     * @return array{reply: string|null, tokens_used: int}
-     */
-    public function runForApi(AiChatbot $bot, string $message, int $workspaceId, array $history = []): array
-    {
-        // 1. Embed the user query for RAG
-        $queryEmbedding = [];
-        if ($bot->ai_kb_id) {
-            try {
-                $embeddings = $this->llmGateway->embed($workspaceId, [$message]);
-                $queryEmbedding = $embeddings[0] ?? [];
-            } catch (\Throwable) {
-            }
-        }
-
-        // 2. Retrieve top-k relevant chunks
-        $contextChunks = [];
-        if ($bot->ai_kb_id && ! empty($queryEmbedding)) {
-            $results = $this->embedStore->search($bot->ai_kb_id, $queryEmbedding, $bot->max_context_chunks ?? 5);
-            $contextChunks = array_column($results, 'chunk');
-        }
-
-        // 3. Build messages array
-        $systemPrompt = $bot->system_prompt ?? 'You are a helpful assistant.';
-        if (! empty($contextChunks)) {
-            $context = implode("\n\n---\n\n", array_map(fn ($c) => $c->content, $contextChunks));
-            $systemPrompt .= "\n\nRelevant context:\n".$context;
-        }
-
-        $messages = array_merge(
-            [['role' => 'system', 'content' => $systemPrompt]],
-            $history,
-            [['role' => 'user', 'content' => $message]],
-        );
-
-        // 4. Call LLM
-        try {
-            $response = $this->llmGateway->chat(
-                $workspaceId,
-                $messages,
-                ['max_tokens' => 512],
-                $bot->id,
-            );
-
-            return [
-                'reply' => $response->content,
-                'tokens_used' => $response->promptTokens + $response->completionTokens,
-            ];
-        } catch (\Throwable) {
-            return ['reply' => $bot->fallback_reply ?? null, 'tokens_used' => 0];
-        }
     }
 }

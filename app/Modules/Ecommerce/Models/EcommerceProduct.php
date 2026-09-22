@@ -106,4 +106,28 @@ class EcommerceProduct extends Model
             $product->downloadTokens()->delete();
         });
     }
+
+    public function botAssignment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Modules\AI\Models\AiBotProductAssignment::class, 'product_id');
+    }
+
+    public function resolvedBot(): ?\App\Modules\AI\Models\AiChatbot
+    {
+        if ($this->botAssignment && $this->botAssignment->chatbot) {
+            return $this->botAssignment->chatbot;
+        }
+
+        if ($this->store) {
+            $storeBot = $this->store->defaultBot();
+            if ($storeBot) {
+                return $storeBot;
+            }
+        }
+
+        return \App\Modules\AI\Models\AiChatbot::where('workspace_id', $this->workspace_id)
+            ->where('is_default', true)
+            ->first()
+            ?? \App\Modules\AI\Models\AiChatbot::where('workspace_id', $this->workspace_id)->first();
+    }
 }

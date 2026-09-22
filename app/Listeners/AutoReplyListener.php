@@ -99,13 +99,44 @@ class AutoReplyListener
             }
         }
 
-        // ── 3. AI chatbot (only if one is linked to this channel account) ─────
-        $chatbotId = $channelAccount->meta_json['ai_chatbot_id'] ?? null;
-        if (! $chatbotId) {
-            return;
+        // ── 3. AI chatbot (linked to channel account, product referral, or workspace default) ─────
+        $chatbot = null;
+        $productContext = null;
+        $bodyRaw = $message->body ?? '';
+
+        // Detect product referral tag from WhatsApp deep links, e.g. [REF:12] or [REF:slug]
+        if (preg_match('/\[REF:([a-zA-Z0-9_\-]+)\]/i', $bodyRaw, $matches)) {
+            $ref = $matches[1];
+            $productContext = \App\Modules\Ecommerce\Models\EcommerceProduct::where('workspace_id', $conversation->workspace_id)
+                ->where(function ($q) use ($ref) {
+                    $q->where('slug', $ref)->orWhere('id', (int) $ref);
+                })->first();
+
+            if ($productContext) {
+                $assignedBot = $productContext->resolvedBot();
+                if ($assignedBot && $assignedBot->enabled) {
+                    $chatbot = $assignedBot;
+                }
+            }
         }
 
-        $chatbot = AiChatbot::find($chatbotId);
+        if (! $chatbot) {
+            $chatbotId = $channelAccount->meta_json['ai_chatbot_id'] ?? null;
+            if ($chatbotId) {
+                $chatbot = AiChatbot::find($chatbotId);
+            }
+        }
+
+        if (! $chatbot) {
+            $chatbot = AiChatbot::where('workspace_id', $conversation->workspace_id)
+                ->where('enabled', true)
+                ->where('is_default', true)
+                ->first()
+                ?? AiChatbot::where('workspace_id', $conversation->workspace_id)
+                    ->where('enabled', true)
+                    ->first();
+        }
+
         if (! $chatbot || ! $chatbot->enabled) {
             return;
         }
@@ -115,7 +146,7 @@ class AutoReplyListener
         }
 
         try {
-            $reply = $this->runner->run($chatbot, $message);
+            $reply = $this->runner->run($chatbot, $message, $productContext);
             if ($reply === null) {
                 return;
             }

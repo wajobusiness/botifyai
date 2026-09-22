@@ -23,12 +23,19 @@ class OpenAiProvider implements LlmProviderInterface
             $headers['OpenAI-Organization'] = $this->organization;
         }
 
-        $resp = Http::withHeaders($headers)->retry(2, 500)->timeout(60)->post(self::BASE.'/chat/completions', [
+        $payload = [
             'model' => $opts['model'] ?? $this->chatModel,
             'messages' => $messages,
             'max_tokens' => $opts['max_tokens'] ?? 1024,
             'temperature' => $opts['temperature'] ?? 0.7,
-        ]);
+        ];
+
+        if (! empty($opts['tools'])) {
+            $payload['tools'] = $opts['tools'];
+            $payload['tool_choice'] = $opts['tool_choice'] ?? 'auto';
+        }
+
+        $resp = Http::withHeaders($headers)->retry(2, 500)->timeout(60)->post(self::BASE.'/chat/completions', $payload);
 
         if (! $resp->successful()) {
             throw new \RuntimeException('OpenAI chat failed: '.$resp->body());
@@ -36,13 +43,16 @@ class OpenAiProvider implements LlmProviderInterface
 
         $json = $resp->json();
         $latency = (int) ((microtime(true) - $start) * 1000);
+        $message = $json['choices'][0]['message'] ?? [];
+        $toolCalls = $message['tool_calls'] ?? [];
 
         return new LlmResponse(
-            content: $json['choices'][0]['message']['content'] ?? '',
+            content: $message['content'] ?? '',
             promptTokens: $json['usage']['prompt_tokens'] ?? 0,
             completionTokens: $json['usage']['completion_tokens'] ?? 0,
             model: $json['model'] ?? $this->chatModel,
             latencyMs: $latency,
+            toolCalls: $toolCalls,
         );
     }
 

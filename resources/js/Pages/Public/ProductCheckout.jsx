@@ -5,6 +5,7 @@ import {
     AlertCircle, Sparkles, MessageCircle, CreditCard, Loader2,
 } from 'lucide-react';
 import axios from 'axios';
+import CommerceChatDrawer from '@/Components/CommerceChatDrawer';
 
 function currencySymbol(code) {
     const symbols = { NGN: '₦', USD: '$', EUR: '€', GBP: '£' };
@@ -292,6 +293,9 @@ export default function ProductCheckout({ product, store = {}, gateways = [] }) 
                     — Sell digital products directly in chat & social media.
                 </p>
             </footer>
+
+            {/* Embedded Conversational AI Assistant */}
+            <CommerceChatDrawer product={product} store={store} />
         </div>
     );
 }

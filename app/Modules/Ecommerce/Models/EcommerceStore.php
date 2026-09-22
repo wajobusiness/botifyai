@@ -125,4 +125,32 @@ class EcommerceStore extends Model
     {
         return $this->hasMany(EcommerceProduct::class, 'store_id');
     }
+
+    public function botConnections(): HasMany
+    {
+        return $this->hasMany(\App\Modules\AI\Models\AiBotStoreConnection::class, 'store_id');
+    }
+
+    public function bots(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Modules\AI\Models\AiChatbot::class,
+            'ai_bot_store_connections',
+            'store_id',
+            'chatbot_id'
+        )->withPivot([
+            'is_store_default',
+            'enable_catalog_search',
+            'enable_cart_creation',
+            'enable_order_tracking',
+        ])->withTimestamps();
+    }
+
+    public function defaultBot(): ?\App\Modules\AI\Models\AiChatbot
+    {
+        return $this->bots()->wherePivot('is_store_default', true)->first()
+            ?? $this->bots()->first()
+            ?? \App\Modules\AI\Models\AiChatbot::where('workspace_id', $this->workspace_id)->where('is_default', true)->first()
+            ?? \App\Modules\AI\Models\AiChatbot::where('workspace_id', $this->workspace_id)->first();
+    }
 }
