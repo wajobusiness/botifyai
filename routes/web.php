@@ -192,3 +192,9 @@ Route::get('/storage/{path}', function (string $path) {
 
     return response()->file($fullPath);
 })->where('path', '.*')->name('storage.local');
+
+// Buyer Digital Asset Vault & Order History
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('/buyer/dashboard', [\App\Modules\Ecommerce\Http\Controllers\CustomerPortalController::class, 'index'])->name('buyer.dashboard');
+    Route::get('/buyer/downloads', [\App\Modules\Ecommerce\Http\Controllers\CustomerPortalController::class, 'index'])->name('buyer.downloads');
+});

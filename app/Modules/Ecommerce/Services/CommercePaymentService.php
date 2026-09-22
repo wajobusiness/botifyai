@@ -167,6 +167,13 @@ class CommercePaymentService
                 ]);
             }
 
+            // 11. Dispatch Server-Side Conversion API Events (Meta CAPI / TikTok Events API)
+            try {
+                app(\App\Modules\Ecommerce\Services\MarketingPixelService::class)->trackServerSidePurchase($lockedOrder);
+            } catch (\Throwable $e) {
+                Log::warning('MarketingPixelService server-side conversion dispatch failed: ' . $e->getMessage());
+            }
+
             return true;
         });
     }

@@ -2,7 +2,11 @@
 
 namespace App\Modules\Ecommerce\Models;
 
+use App\Modules\AI\Models\AiBotStoreConnection;
+use App\Modules\AI\Models\AiChatbot;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -18,6 +22,14 @@ use Illuminate\Support\Str;
  * @property string|null $support_email
  * @property string|null $support_phone
  * @property string $brand_color
+ * @property string|null $logo_url
+ * @property string|null $banner_url
+ * @property string|null $description
+ * @property array<string, mixed>|null $seo_meta
+ * @property array<string, mixed>|null $marketing_pixels
+ * @property array<string, mixed>|null $policies
+ * @property int|null $bank_account_id
+ * @property \Illuminate\Support\Carbon|null $published_at
  * @property array<string, mixed>|null $credentials
  * @property string $status
  * @property array<string, mixed>|null $external_meta
@@ -31,9 +43,11 @@ class EcommerceStore extends Model
 
     protected $fillable = [
         'uuid', 'workspace_id', 'platform', 'name', 'slug', 'domain', 'currency',
-        'support_email', 'support_phone', 'brand_color', 'credentials', 'status',
-        'external_meta', 'webhook_secret', 'last_tested_at', 'last_test_status',
-        'last_test_message', 'customers_synced_at', 'orders_synced_at', 'products_synced_at',
+        'support_email', 'support_phone', 'brand_color', 'logo_url', 'banner_url',
+        'description', 'seo_meta', 'marketing_pixels', 'policies', 'bank_account_id',
+        'published_at', 'credentials', 'status', 'external_meta', 'webhook_secret',
+        'last_tested_at', 'last_test_status', 'last_test_message', 'customers_synced_at',
+        'orders_synced_at', 'products_synced_at',
     ];
 
     protected $hidden = ['credentials', 'webhook_secret'];
@@ -49,6 +63,10 @@ class EcommerceStore extends Model
         return [
             'credentials' => 'encrypted:array',
             'external_meta' => 'array',
+            'seo_meta' => 'array',
+            'marketing_pixels' => 'array',
+            'policies' => 'array',
+            'published_at' => 'datetime',
             'last_tested_at' => 'datetime',
             'customers_synced_at' => 'datetime',
             'orders_synced_at' => 'datetime',
@@ -103,7 +121,7 @@ class EcommerceStore extends Model
             }
         });
 
-        // No DB-level FK cascade, so clean up children when a store is removed.
+        // Clean up child resources when a store is removed.
         static::deleting(function (self $store) {
             $store->orders()->delete();
             $store->carts()->delete();
@@ -126,15 +144,20 @@ class EcommerceStore extends Model
         return $this->hasMany(EcommerceProduct::class, 'store_id');
     }
 
-    public function botConnections(): HasMany
+    public function bankAccount(): BelongsTo
     {
-        return $this->hasMany(\App\Modules\AI\Models\AiBotStoreConnection::class, 'store_id');
+        return $this->belongsTo(MerchantBankAccount::class, 'bank_account_id');
     }
 
-    public function bots(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function botConnections(): HasMany
+    {
+        return $this->hasMany(AiBotStoreConnection::class, 'store_id');
+    }
+
+    public function bots(): BelongsToMany
     {
         return $this->belongsToMany(
-            \App\Modules\AI\Models\AiChatbot::class,
+            AiChatbot::class,
             'ai_bot_store_connections',
             'store_id',
             'chatbot_id'
@@ -146,11 +169,31 @@ class EcommerceStore extends Model
         ])->withTimestamps();
     }
 
-    public function defaultBot(): ?\App\Modules\AI\Models\AiChatbot
+    public function defaultBot(): ?AiChatbot
     {
         return $this->bots()->wherePivot('is_store_default', true)->first()
             ?? $this->bots()->first()
-            ?? \App\Modules\AI\Models\AiChatbot::where('workspace_id', $this->workspace_id)->where('is_default', true)->first()
-            ?? \App\Modules\AI\Models\AiChatbot::where('workspace_id', $this->workspace_id)->first();
+            ?? AiChatbot::where('workspace_id', $this->workspace_id)->where('is_default', true)->first()
+            ?? AiChatbot::where('workspace_id', $this->workspace_id)->first();
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status === 'connected' || $this->status === 'published' || $this->published_at !== null;
+    }
+
+    public function getMetaTitle(): string
+    {
+        return $this->seo_meta['meta_title'] ?? $this->name ?? 'BotifyAI Store';
+    }
+
+    public function getMetaDescription(): string
+    {
+        return $this->seo_meta['meta_description'] ?? $this->description ?? 'Discover exclusive digital products, tools, and courses.';
+    }
+
+    public function getPixelConfig(string $platform): ?array
+    {
+        return $this->marketing_pixels[$platform] ?? null;
     }
 }

@@ -5,7 +5,7 @@ import {
     LayoutDashboard, CreditCard, Package, FileText, Users, Settings,
     Layers, Webhook, Key, BookOpen, Image, Radio, Inbox, Bot, Database,
     Zap, Share2, MapPin, Tag, LifeBuoy, ExternalLink, Mail, MessageSquare,
-    ShoppingBag, KanbanSquare, Wallet,
+    ShoppingBag, KanbanSquare, Wallet, Store, Sparkles,
 } from 'lucide-react';
 
 const iconClass = 'h-4 w-4';
@@ -112,10 +112,11 @@ export default function useClientNav() {
     ];
 
     const ecommerceItems = [
-        { label: t('nav.orders'),   href: safeRoute('client.ecommerce.orders.index'),   icon: <Package className={iconClass} />,     activePattern: 'client.ecommerce.orders.*' },
-        { label: t('nav.products'), href: safeRoute('client.ecommerce.products.index'), icon: <Tag className={iconClass} />,         activePattern: 'client.ecommerce.products.*' },
-        { label: t('nav.wallet', 'My Wallet'), href: safeRoute('client.ecommerce.wallet.index'), icon: <Wallet className={iconClass} />, activePattern: 'client.ecommerce.wallet.*' },
-        { label: t('nav.stores'),   href: safeRoute('client.ecommerce.stores.index'),   icon: <ShoppingBag className={iconClass} />, activePattern: 'client.ecommerce.stores.*' },
+        { label: t('nav.stores', 'Stores & Hub'), href: safeRoute('client.ecommerce.stores.index'), icon: <Store className={iconClass} />, activePattern: 'client.ecommerce.stores.*' },
+        { label: t('nav.products', 'Products & Vault'), href: safeRoute('client.ecommerce.products.index'), icon: <Package className={iconClass} />, activePattern: 'client.ecommerce.products.*' },
+        { label: t('nav.orders', 'Orders & Sales'), href: safeRoute('client.ecommerce.orders.index'), icon: <ShoppingBag className={iconClass} />, activePattern: 'client.ecommerce.orders.*' },
+        { label: t('nav.wallet', 'My Wallet & Payouts'), href: safeRoute('client.ecommerce.wallet.index'), icon: <Wallet className={iconClass} />, activePattern: 'client.ecommerce.wallet.*' },
+        { label: t('nav.affiliates', 'Affiliate Hub'), href: safeRoute('client.affiliates.index'), icon: <Sparkles className={iconClass} />, activePattern: 'client.affiliates.*' },
     ];
 
     const reportsItems = [

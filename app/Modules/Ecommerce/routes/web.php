@@ -9,6 +9,8 @@ use App\Modules\Ecommerce\Http\Controllers\OrderController;
 use App\Modules\Ecommerce\Http\Controllers\ProductController;
 use App\Modules\Ecommerce\Http\Controllers\PublicCheckoutController;
 use App\Modules\Ecommerce\Http\Controllers\StoreController;
+use App\Modules\Ecommerce\Http\Controllers\StoreDashboardController;
+use App\Modules\Ecommerce\Http\Controllers\StoreWizardController;
 use Illuminate\Support\Facades\Route;
 
 // Public Commerce Checkout, Receipt & Digital Delivery (No Auth required)
@@ -23,8 +25,17 @@ Route::middleware(['web'])->group(function () {
 
 // Ecommerce module — client app routes (per-workspace store & commerce management).
 Route::middleware(['web', 'client-app'])->prefix('app/ecommerce')->name('client.ecommerce.')->group(function () {
-    // Stores & Connectors
-    Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
+    // Store Command Center & Management
+    Route::get('/stores', [StoreDashboardController::class, 'index'])->name('stores.index');
+    Route::get('/stores/integrations', [StoreController::class, 'index'])->name('stores.integrations');
+    Route::get('/stores/wizard', [StoreWizardController::class, 'create'])->name('stores.wizard.create');
+    Route::get('/stores/{store:uuid}/wizard', [StoreWizardController::class, 'edit'])->name('stores.wizard.edit');
+    Route::post('/stores/wizard', [StoreWizardController::class, 'save'])->name('stores.wizard.save');
+    Route::post('/stores/{store:uuid}/wizard', [StoreWizardController::class, 'save'])->name('stores.wizard.update');
+    Route::post('/stores/{store:uuid}/publish', [StoreWizardController::class, 'publish'])->name('stores.publish');
+    Route::get('/stores/{storeUuid}', [StoreDashboardController::class, 'index'])->name('stores.show');
+
+    // External Store Connectors
     Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
     Route::post('/stores/{store}/test', [StoreController::class, 'test'])->name('stores.test');
     Route::post('/stores/{store}/sync', [StoreController::class, 'sync'])->name('stores.sync');

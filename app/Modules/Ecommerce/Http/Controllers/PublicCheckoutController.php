@@ -35,7 +35,18 @@ class PublicCheckoutController extends Controller
                 }
             })
             ->where('is_published', true)
-            ->firstOrFail();
+            ->first();
+
+        if (! $product) {
+            $storeCandidate = \App\Modules\Ecommerce\Models\EcommerceStore::where('slug', $slug)->first();
+            if ($storeCandidate) {
+                $firstProduct = $storeCandidate->products()->where('is_published', true)->first();
+                if ($firstProduct) {
+                    return redirect()->route('public.checkout.show', ['slug' => $firstProduct->slug]);
+                }
+            }
+            abort(404, 'Product or store not found.');
+        }
 
         $store = $product->store;
 
@@ -70,6 +81,10 @@ class PublicCheckoutController extends Controller
             ];
         }
 
+        $headerPixelsHtml = $store
+            ? app(\App\Modules\Ecommerce\Services\MarketingPixelService::class)->renderHeaderTags($store)
+            : '';
+
         return Inertia::render('Public/ProductCheckout', [
             'product' => [
                 'id' => $product->id,
@@ -87,9 +102,13 @@ class PublicCheckoutController extends Controller
             'store' => [
                 'name' => $store?->name ?: 'BotifyAI Merchant',
                 'brand_color' => $store?->brand_color ?: '#0D9488',
+                'logo_url' => $store?->logo_url,
+                'banner_url' => $store?->banner_url,
                 'support_email' => $store?->support_email,
                 'support_phone' => $store?->support_phone,
+                'policies' => $store?->policies,
             ],
+            'header_pixels_html' => $headerPixelsHtml,
             'gateways' => $availableGateways,
         ]);
     }

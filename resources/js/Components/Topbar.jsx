@@ -283,6 +283,61 @@ export default function Topbar({
                     </Dropdown>
                 )}
 
+                {/* Multi-Role SSO Switcher (Merchant / Customer / Affiliate) */}
+                {user && !isAdmin && (
+                    <Dropdown>
+                        <Dropdown.Trigger>
+                            <button
+                                type="button"
+                                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold bg-teal-50 text-teal-800 dark:bg-teal-950/50 dark:text-teal-300 border border-teal-200 dark:border-teal-800/80 hover:bg-teal-100 transition duration-150 shadow-xs"
+                            >
+                                <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+                                <span className="hidden sm:inline capitalize">
+                                    {user.active_role || 'Merchant'} Mode
+                                </span>
+                                <svg className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </Dropdown.Trigger>
+                        <Dropdown.Content align="right" width="56">
+                            <div className="px-3.5 py-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                                Switch Role Mode
+                            </div>
+                            <Dropdown.Item
+                                as="button"
+                                onClick={() => router.post(route('client.role.switch'), { role: 'merchant' })}
+                                className={(!user.active_role || user.active_role === 'merchant') ? 'bg-teal-50 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300 font-bold' : ''}
+                            >
+                                <span className="flex items-center justify-between w-full">
+                                    <span>🏬 Merchant Store Hub</span>
+                                    {(!user.active_role || user.active_role === 'merchant') && <span className="text-xs">✓</span>}
+                                </span>
+                            </Dropdown.Item>
+                            <Dropdown.Item
+                                as="button"
+                                onClick={() => router.post(route('client.role.switch'), { role: 'customer' })}
+                                className={user.active_role === 'customer' ? 'bg-teal-50 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300 font-bold' : ''}
+                            >
+                                <span className="flex items-center justify-between w-full">
+                                    <span>🛍️ Customer Digital Vault</span>
+                                    {user.active_role === 'customer' && <span className="text-xs">✓</span>}
+                                </span>
+                            </Dropdown.Item>
+                            <Dropdown.Item
+                                as="button"
+                                onClick={() => router.post(route('client.role.switch'), { role: 'affiliate' })}
+                                className={user.active_role === 'affiliate' ? 'bg-teal-50 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300 font-bold' : ''}
+                            >
+                                <span className="flex items-center justify-between w-full">
+                                    <span>✨ Affiliate Partner Hub</span>
+                                    {user.active_role === 'affiliate' && <span className="text-xs">✓</span>}
+                                </span>
+                            </Dropdown.Item>
+                        </Dropdown.Content>
+                    </Dropdown>
+                )}
+
                 {/* Language switcher */}
                 <Dropdown>
                     <Dropdown.Trigger>

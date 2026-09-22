@@ -62,6 +62,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'workspace_id',
         'theme',
         'timezone',
+        'active_role',
+        'user_roles',
+        'affiliate_status',
         'two_factor_secret',
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
@@ -95,6 +98,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
             'password' => 'hashed',
+            'user_roles' => 'array',
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
         ];
@@ -228,6 +232,32 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isClientAdministrator(): bool
     {
         return $this->client_role === self::CLIENT_ROLE_ADMINISTRATOR;
+    }
+
+    public function getActiveRole(): string
+    {
+        return $this->active_role ?: 'merchant';
+    }
+
+    public function isMerchant(): bool
+    {
+        return $this->getActiveRole() === 'merchant';
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->getActiveRole() === 'customer';
+    }
+
+    public function isAffiliate(): bool
+    {
+        return $this->getActiveRole() === 'affiliate' || $this->affiliate_status === 'active';
+    }
+
+    public function hasUserRole(string $role): bool
+    {
+        $roles = $this->user_roles ?: ['merchant', 'customer', 'affiliate'];
+        return in_array($role, $roles, true);
     }
 
     // -------------------------------------------------------------------------

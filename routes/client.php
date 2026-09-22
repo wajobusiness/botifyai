@@ -21,7 +21,9 @@ use App\Http\Controllers\Client\WebhookEndpointController;
 use App\Http\Controllers\Client\WebPushController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoleContextController;
 use App\Http\Controllers\WorkspaceController;
+use App\Modules\Ecommerce\Http\Controllers\AffiliatePortalController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -127,4 +129,10 @@ Route::middleware(['verified'])->group(function () {
     // Web Push subscriptions
     Route::post('/push/subscribe', [WebPushController::class, 'subscribe'])->name('push.subscribe');
     Route::post('/push/unsubscribe', [WebPushController::class, 'unsubscribe'])->name('push.unsubscribe');
+
+    // Multi-Role SSO Switcher
+    Route::post('/role/switch', [RoleContextController::class, 'switchRole'])->name('role.switch');
+
+    // Affiliate Portal Foundation
+    Route::get('/affiliates', [AffiliatePortalController::class, 'index'])->name('affiliates.index');
 });
