@@ -85,7 +85,7 @@ class StoreDashboardController extends Controller
                 'total_revenue' => (float) (($p->sales_count ?? 0) * (float) $p->price),
                 'product_type' => $p->product_type,
                 'image_url' => $p->image_url,
-                'checkout_url' => route('public.checkout.show', ['slug' => $p->slug]),
+                'checkout_url' => $p->getCheckoutUrl(),
             ]);
 
         // Marketing Pixel Health

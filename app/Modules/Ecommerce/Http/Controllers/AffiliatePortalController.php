@@ -37,7 +37,7 @@ class AffiliatePortalController extends Controller
                 'commission_rate' => 15, // 15% standard commission
                 'estimated_commission' => round((float) $p->price * 0.15, 2),
                 'image_url' => $p->image_url,
-                'affiliate_link' => route('public.checkout.show', ['slug' => $p->slug]) . '?ref=' . $referralCode,
+                'affiliate_link' => $p->getCheckoutUrl() . '?ref=' . $referralCode,
             ]);
 
         $stats = [

@@ -74,11 +74,19 @@ class EcommerceProduct extends Model
      */
     public function getCheckoutUrl(): string
     {
+        return route('public.checkout.show', ['slug' => $this->getCheckoutSlug()]);
+    }
+
+    /**
+     * Get the safe checkout slug (falls back to p-{id} if slug is unset).
+     */
+    public function getCheckoutSlug(): string
+    {
         if (! empty($this->slug)) {
-            return url('/buy/'.$this->slug);
+            return $this->slug;
         }
 
-        return url('/buy/p-'.$this->id);
+        return 'p-'.$this->id;
     }
 
     protected static function booted(): void
