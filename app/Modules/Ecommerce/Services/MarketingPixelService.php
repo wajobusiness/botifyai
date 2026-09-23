@@ -142,10 +142,10 @@ HTML;
                     'value' => (float) $order->total,
                     'order_id' => (string) $order->number,
                     'content_type' => 'product',
-                    'contents' => $order->items->map(fn ($item) => [
-                        'id' => (string) $item->product_id,
-                        'quantity' => $item->quantity,
-                        'item_price' => (float) $item->unit_price,
+                    'contents' => collect($order->line_items ?? [])->map(fn ($item) => [
+                        'id' => (string) ($item['product_id'] ?? $item['id'] ?? ''),
+                        'quantity' => (int) ($item['quantity'] ?? 1),
+                        'item_price' => (float) ($item['unit_price'] ?? $item['price'] ?? 0),
                     ])->values()->all(),
                 ],
             ]);

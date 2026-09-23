@@ -52,7 +52,6 @@ class StoreDashboardController extends Controller
 
         // Recent Orders
         $recentOrders = EcommerceOrder::where('store_id', $currentStore->id)
-            ->with('items')
             ->latest('placed_at')
             ->take(6)
             ->get()
@@ -66,7 +65,7 @@ class StoreDashboardController extends Controller
                 'currency' => $o->currency ?: 'NGN',
                 'payment_status' => $o->payment_status ?: ($o->financial_status === 'paid' ? 'paid' : 'pending'),
                 'placed_at' => ($o->placed_at ?? $o->created_at)?->format('M d, H:i'),
-                'items_count' => $o->items->count(),
+                'items_count' => count($o->line_items ?? []),
             ]);
 
         // Top Selling Products

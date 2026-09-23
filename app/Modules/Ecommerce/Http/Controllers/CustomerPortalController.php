@@ -3,7 +3,7 @@
 namespace App\Modules\Ecommerce\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Ecommerce\Models\DigitalDownloadToken;
+use App\Modules\Ecommerce\Models\EcommerceDownloadToken;
 use App\Modules\Ecommerce\Models\EcommerceOrder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,7 +20,7 @@ class CustomerPortalController extends Controller
         $email = $user->email;
 
         $orders = EcommerceOrder::where('customer_email', $email)
-            ->with(['store', 'items.product', 'downloadTokens.product'])
+            ->with(['store', 'downloadTokens.product'])
             ->latest('placed_at')
             ->get()
             ->map(fn (EcommerceOrder $order) => [
@@ -35,14 +35,14 @@ class CustomerPortalController extends Controller
                 'fulfillment_status' => $order->fulfillment_status,
                 'placed_at' => ($order->placed_at ?? $order->created_at)?->format('M d, Y H:i'),
                 'receipt_url' => route('public.checkout.receipt', ['orderUuid' => $order->uuid]),
-                'items' => $order->items->map(fn ($item) => [
-                    'id' => $item->id,
-                    'name' => $item->name,
-                    'price' => (float) $item->unit_price,
-                    'quantity' => $item->quantity,
-                    'product_type' => $item->product?->product_type ?? 'digital',
-                    'image_url' => $item->product?->image_url,
-                ]),
+                'items' => collect($order->line_items ?? [])->map(fn ($item) => [
+                    'id' => $item['product_id'] ?? $item['id'] ?? null,
+                    'name' => $item['name'] ?? $item['title'] ?? 'Digital Product',
+                    'price' => (float) ($item['unit_price'] ?? $item['price'] ?? 0),
+                    'quantity' => (int) ($item['quantity'] ?? 1),
+                    'product_type' => $item['product_type'] ?? 'digital',
+                    'image_url' => $item['image_url'] ?? null,
+                ])->values()->all(),
                 'downloads' => $order->downloadTokens->map(fn ($token) => [
                     'id' => $token->id,
                     'token' => $token->token,
@@ -56,15 +56,17 @@ class CustomerPortalController extends Controller
             ]);
 
         // Aggregate digital assets from all paid orders
-        $digitalAssets = DigitalDownloadToken::whereHas('order', function ($q) use ($email) {
+        $digitalAssets = EcommerceDownloadToken::whereHas('order', function ($q) use ($email) {
             $q->where('customer_email', $email)
-              ->whereIn('payment_status', ['paid', 'completed'])
-              ->orWhere('financial_status', 'paid');
+              ->where(function ($sq) {
+                  $sq->whereIn('payment_status', ['paid', 'completed'])
+                    ->orWhere('financial_status', 'paid');
+              });
         })
         ->with(['order.store', 'product'])
         ->latest()
         ->get()
-        ->map(fn (DigitalDownloadToken $t) => [
+        ->map(fn (EcommerceDownloadToken $t) => [
             'id' => $t->id,
             'title' => $t->product?->name ?? 'Digital Product',
             'store_name' => $t->order?->store?->name ?? 'Botify Store',
