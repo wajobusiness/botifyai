@@ -40,16 +40,45 @@ class ConnectionTester
     private function testMeta(IntegrationConfig $config): array
     {
         $creds = $config->credentials ?? [];
-        $token = $creds['system_user_token'] ?? '';
+        $token = trim($creds['system_user_token'] ?? '');
+        $appSecret = trim($creds['app_secret'] ?? '');
+
         if (empty($token)) {
-            return ['ok' => false, 'message' => 'System user token is not configured.'];
-        }
-        $resp = HttpFacade::timeout(10)->get('https://graph.facebook.com/v20.0/me', ['access_token' => $token]);
-        if ($resp->successful() && isset($resp->json()['id'])) {
-            return ['ok' => true, 'message' => 'Connected. User ID: '.$resp->json()['id']];
+            return ['ok' => false, 'message' => 'System User Access Token is not configured.'];
         }
 
-        return ['ok' => false, 'message' => $resp->json()['error']['message'] ?? 'Meta API error.'];
+        // Test with appsecret_proof if app_secret is set
+        $params = ['access_token' => $token];
+        if (! empty($appSecret)) {
+            $params['appsecret_proof'] = hash_hmac('sha256', $token, $appSecret);
+        }
+
+        $resp = HttpFacade::timeout(10)->get('https://graph.facebook.com/v20.0/me', $params);
+        if ($resp->successful() && isset($resp->json()['id'])) {
+            $name = $resp->json()['name'] ?? 'System User';
+            return ['ok' => true, 'message' => "Connected to Meta API successfully. Verified: {$name} (ID: {$resp->json()['id']})"];
+        }
+
+        // Try without appsecret_proof if the with-proof call failed
+        if (isset($params['appsecret_proof'])) {
+            $fallbackResp = HttpFacade::timeout(10)->get('https://graph.facebook.com/v20.0/me', ['access_token' => $token]);
+            if ($fallbackResp->successful() && isset($fallbackResp->json()['id'])) {
+                $name = $fallbackResp->json()['name'] ?? 'System User';
+                return ['ok' => true, 'message' => "Connected to Meta API successfully. Verified: {$name} (ID: {$fallbackResp->json()['id']})"];
+            }
+        }
+
+        $error = $resp->json()['error'] ?? [];
+        $errorMsg = $error['message'] ?? 'Meta API error.';
+
+        if (str_contains($errorMsg, 'could not be decrypted') || ($error['code'] ?? 0) === 190) {
+            return [
+                'ok' => false,
+                'message' => 'Meta Error (Code 190): "The access token could not be decrypted". The System User Token is either invalid, truncated, expired, or belongs to a different Meta Business Manager. Please generate a new permanent System User Token from Meta Business Settings → System Users → Generate Token with whatsapp_business_messaging and pages_manage_posts permissions.',
+            ];
+        }
+
+        return ['ok' => false, 'message' => $errorMsg];
     }
 
     private function testOAuth(IntegrationConfig $config): array

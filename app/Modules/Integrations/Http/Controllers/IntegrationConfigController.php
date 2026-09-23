@@ -102,7 +102,8 @@ class IntegrationConfigController extends Controller
             if (preg_match('/^•+/', (string) $v)) {
                 continue; // keep existing
             }
-            $merged[$k] = $v;
+            $cleanValue = is_string($v) ? trim($v) : $v;
+            $merged[$k] = $cleanValue;
             $changedKeys[] = $k;
         }
 
