@@ -14,9 +14,36 @@ export default defineConfig({
         react(),
     ],
     build: {
-        chunkSizeWarningLimit: 1600,
+        chunkSizeWarningLimit: 1200,
         rollupOptions: {
             maxParallelFileOps: 20,
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('handsontable')) {
+                            return 'vendor-handsontable';
+                        }
+                        if (id.includes('exceljs')) {
+                            return 'vendor-exceljs';
+                        }
+                        if (id.includes('@xyflow')) {
+                            return 'vendor-flow';
+                        }
+                        if (id.includes('recharts') || id.includes('d3-')) {
+                            return 'vendor-charts';
+                        }
+                        if (id.includes('firebase')) {
+                            return 'vendor-firebase';
+                        }
+                        if (id.includes('lucide-react')) {
+                            return 'vendor-icons';
+                        }
+                        if (id.includes('react') || id.includes('react-dom') || id.includes('@inertiajs')) {
+                            return 'vendor-core';
+                        }
+                    }
+                },
+            },
         },
     },
 });
