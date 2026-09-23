@@ -15,6 +15,8 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Modules\Ecommerce\Models\EcommerceStore;
+
 class PublicCheckoutController extends Controller
 {
     public function __construct(
@@ -38,12 +40,11 @@ class PublicCheckoutController extends Controller
             ->first();
 
         if (! $product) {
-            $storeCandidate = \App\Modules\Ecommerce\Models\EcommerceStore::where('slug', $slug)->first();
+            $storeCandidate = EcommerceStore::where('slug', $slug)
+                ->orWhere('uuid', $slug)
+                ->first();
             if ($storeCandidate) {
-                $firstProduct = $storeCandidate->products()->where('is_published', true)->first();
-                if ($firstProduct) {
-                    return redirect()->route('public.checkout.show', ['slug' => $firstProduct->getCheckoutSlug()]);
-                }
+                return redirect()->route('public.storefront.show', ['slug' => $storeCandidate->slug ?: $storeCandidate->uuid]);
             }
             abort(404, 'Product or store not found.');
         }
@@ -100,16 +101,72 @@ class PublicCheckoutController extends Controller
                 'file_size' => $product->digitalAsset?->formatted_file_size,
             ],
             'store' => [
+                'id' => $store?->id,
+                'uuid' => $store?->uuid,
                 'name' => $store?->name ?: 'BotifyAI Merchant',
+                'slug' => $store?->slug,
+                'store_url' => $store?->slug ? route('public.storefront.show', ['slug' => $store->slug]) : null,
                 'brand_color' => $store?->brand_color ?: '#0D9488',
                 'logo_url' => $store?->logo_url,
                 'banner_url' => $store?->banner_url,
+                'description' => $store?->description,
                 'support_email' => $store?->support_email,
                 'support_phone' => $store?->support_phone,
                 'policies' => $store?->policies,
             ],
             'header_pixels_html' => $headerPixelsHtml,
             'gateways' => $availableGateways,
+        ]);
+    }
+
+    /**
+     * Render the public storefront page displaying all products of a seller (/store/{slug}).
+     */
+    public function storefront(string $slug): Response
+    {
+        $store = EcommerceStore::where('slug', $slug)
+            ->orWhere('uuid', $slug)
+            ->firstOrFail();
+
+        $products = $store->products()
+            ->where('is_published', true)
+            ->latest()
+            ->get()
+            ->map(fn (EcommerceProduct $p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'slug' => $p->getCheckoutSlug(),
+                'product_type' => $p->product_type,
+                'description' => $p->description,
+                'price' => (float) $p->price,
+                'compare_at_price' => $p->compare_at_price ? (float) $p->compare_at_price : null,
+                'currency' => strtoupper($p->currency ?: $store->currency ?: 'NGN'),
+                'image_url' => $p->image_url,
+                'checkout_url' => $p->getCheckoutUrl(),
+                'file_name' => $p->digitalAsset?->file_name,
+                'file_size' => $p->digitalAsset?->formatted_file_size,
+            ]);
+
+        $headerPixelsHtml = app(\App\Modules\Ecommerce\Services\MarketingPixelService::class)->renderHeaderTags($store);
+
+        return Inertia::render('Public/Storefront', [
+            'store' => [
+                'id' => $store->id,
+                'uuid' => $store->uuid,
+                'name' => $store->name,
+                'slug' => $store->slug,
+                'brand_color' => $store->brand_color ?: '#0D9488',
+                'logo_url' => $store->logo_url,
+                'banner_url' => $store->banner_url,
+                'description' => $store->description,
+                'currency' => strtoupper($store->currency ?: 'NGN'),
+                'support_email' => $store->support_email,
+                'support_phone' => $store->support_phone,
+                'policies' => $store->policies,
+                'seo_meta' => $store->seo_meta,
+            ],
+            'products' => $products,
+            'header_pixels_html' => $headerPixelsHtml,
         ]);
     }
 

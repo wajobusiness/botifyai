@@ -118,39 +118,49 @@ class PublicCommerceWidgetController extends Controller
         ]);
 
         $product = null;
+        $store = null;
         if (! empty($validated['product_id'])) {
             $product = EcommerceProduct::with(['store', 'digitalAsset'])->find($validated['product_id']);
+            if ($product) {
+                $store = $product->store;
+            }
+        } elseif (! empty($request->input('store_id'))) {
+            $store = EcommerceStore::find($request->input('store_id'));
         }
 
-        if (! $product) {
-            return response()->json(['error' => 'Product context required.'], 404);
+        if (! $product && ! $store) {
+            return response()->json(['error' => 'Store or product context required.'], 404);
         }
 
-        $bot = $product->resolvedBot();
+        $bot = $product ? $product->resolvedBot() : $store->defaultBot();
         if (! $bot || ! $bot->enabled) {
             return response()->json([
-                'reply' => 'Our assistant is temporarily offline. Please use the checkout form above to proceed!',
+                'reply' => 'Our assistant is temporarily offline. Please feel free to browse the store items!',
                 'actions' => [],
             ]);
         }
+
+        $workspaceId = $product ? $product->workspace_id : $store->workspace_id;
+        $storeId = $product ? $product->store_id : $store->id;
 
         // Find or create conversation session
         $session = ConversationSession::firstOrCreate(
             ['session_token' => $validated['session_token']],
             [
                 'uuid' => (string) Str::uuid(),
-                'workspace_id' => $product->workspace_id,
+                'workspace_id' => $workspaceId,
                 'chatbot_id' => $bot->id,
                 'channel' => 'web',
-                'current_store_id' => $product->store_id,
-                'current_product_id' => $product->id,
+                'current_store_id' => $storeId,
+                'current_product_id' => $product?->id,
                 'status' => 'active',
                 'last_activity_at' => now(),
             ]
         );
 
         $session->update([
-            'current_product_id' => $product->id,
+            'current_product_id' => $product?->id,
+            'current_store_id' => $storeId,
             'last_activity_at' => now(),
         ]);
 
@@ -158,7 +168,7 @@ class PublicCommerceWidgetController extends Controller
         $result = $this->runner->runForApi(
             $bot,
             $validated['message'],
-            $product->workspace_id,
+            $workspaceId,
             $validated['history'] ?? [],
             $product,
             $session->contact_id

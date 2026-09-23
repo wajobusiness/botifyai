@@ -3,7 +3,7 @@ import { MessageSquare, X, Send, Bot, Sparkles, ShoppingBag, ExternalLink, Chevr
 import axios from 'axios';
 import MarkdownLite from '@/Components/MarkdownLite';
 
-export default function CommerceChatDrawer({ product, store = {} }) {
+export default function CommerceChatDrawer({ product = null, store = {} }) {
     const [isOpen, setIsOpen] = useState(false);
     const [config, setConfig] = useState(null);
     const [sessionToken, setSessionToken] = useState('');
@@ -12,18 +12,25 @@ export default function CommerceChatDrawer({ product, store = {} }) {
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
+    const contextId = product?.id ? `p_${product.id}` : (store?.id ? `s_${store.id}` : 'store');
+
     // Initialize or restore session token
     useEffect(() => {
-        let token = localStorage.getItem(`botify_chat_sess_${product.id}`);
+        let token = localStorage.getItem(`botify_chat_sess_${contextId}`);
         if (!token) {
             token = 'sess_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            localStorage.setItem(`botify_chat_sess_${product.id}`, token);
+            localStorage.setItem(`botify_chat_sess_${contextId}`, token);
         }
         setSessionToken(token);
 
         // Fetch widget configuration
-        const target = product.slug || product.id;
-        axios.get(`/api/v1/public/widget/config?product=${target}`)
+        const query = product?.slug || product?.id
+            ? `product=${product.slug || product.id}`
+            : (store?.slug || store?.uuid ? `store=${store.slug || store.uuid}` : null);
+
+        if (!query) return;
+
+        axios.get(`/api/v1/public/widget/config?${query}`)
             .then(res => {
                 if (res.data?.enabled) {
                     setConfig(res.data);
@@ -39,7 +46,7 @@ export default function CommerceChatDrawer({ product, store = {} }) {
             .catch(() => {
                 // Assistant is offline or disabled
             });
-    }, [product.id, product.slug]);
+    }, [contextId, product?.id, product?.slug, store?.id, store?.slug]);
 
     useEffect(() => {
         if (isOpen) {
@@ -57,12 +64,18 @@ export default function CommerceChatDrawer({ product, store = {} }) {
         setLoading(true);
 
         try {
-            const res = await axios.post('/api/v1/public/widget/chat', {
+            const payload = {
                 session_token: sessionToken,
-                product_id: product.id,
                 message: userMsg.content,
                 history: messages,
-            });
+            };
+            if (product?.id) {
+                payload.product_id = product.id;
+            } else if (store?.id) {
+                payload.store_id = store.id;
+            }
+
+            const res = await axios.post('/api/v1/public/widget/chat', payload);
 
             const reply = res.data?.reply || "I'm having trouble getting that answer right now. Please feel free to use the checkout form on this page!";
             const actions = res.data?.actions || [];

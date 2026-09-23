@@ -13,8 +13,10 @@ use App\Modules\Ecommerce\Http\Controllers\StoreDashboardController;
 use App\Modules\Ecommerce\Http\Controllers\StoreWizardController;
 use Illuminate\Support\Facades\Route;
 
-// Public Commerce Checkout, Receipt & Digital Delivery (No Auth required)
+// Public Commerce Checkout, Storefront, Receipt & Digital Delivery (No Auth required)
 Route::middleware(['web'])->group(function () {
+    Route::get('/store/{slug}', [PublicCheckoutController::class, 'storefront'])->name('public.storefront.show');
+    Route::get('/buy/store/{slug}', [PublicCheckoutController::class, 'storefront']);
     Route::get('/buy/callback/verify', [PublicCheckoutController::class, 'verify'])->name('public.checkout.verify');
     Route::get('/buy/orders/{uuid}/status', [PublicCheckoutController::class, 'status'])->name('public.checkout.status');
     Route::get('/buy/receipt/{orderUuid}', [PublicCheckoutController::class, 'receipt'])->name('public.checkout.receipt');
