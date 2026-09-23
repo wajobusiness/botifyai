@@ -71,17 +71,17 @@ class StoreDashboardController extends Controller
         // Top Selling Products
         $topProducts = EcommerceProduct::where('store_id', $currentStore->id)
             ->where('is_published', true)
-            ->orderByDesc('sales_count')
+            ->latest()
             ->take(5)
             ->get()
             ->map(fn (EcommerceProduct $p) => [
                 'id' => $p->id,
-                'uuid' => $p->uuid,
+                'uuid' => $p->external_id ?? (string) $p->id,
                 'name' => $p->name,
                 'price' => (float) $p->price,
                 'currency' => $p->currency ?: 'NGN',
-                'sales_count' => $p->sales_count ?? 0,
-                'total_revenue' => (float) (($p->sales_count ?? 0) * (float) $p->price),
+                'sales_count' => 0,
+                'total_revenue' => (float) $p->price,
                 'product_type' => $p->product_type,
                 'image_url' => $p->image_url,
                 'checkout_url' => $p->getCheckoutUrl(),
