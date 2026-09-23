@@ -13,4 +13,10 @@ export default defineConfig({
         }),
         react(),
     ],
+    build: {
+        chunkSizeWarningLimit: 1600,
+        rollupOptions: {
+            maxParallelFileOps: 20,
+        },
+    },
 });
