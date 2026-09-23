@@ -6,6 +6,7 @@ import {
     Store, Sparkles, UserCheck, HardDrive, FileText,
     ArrowUpRight, AlertCircle, RefreshCw
 } from 'lucide-react';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 export default function CustomerDashboard({
     user = {},
@@ -33,15 +34,12 @@ export default function CustomerDashboard({
             <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-600 to-emerald-500 flex items-center justify-center text-white font-black text-lg shadow-sm">
-                            B
-                        </div>
-                        <div>
-                            <span className="font-extrabold text-base tracking-tight text-gray-900 dark:text-white">BotifyAI</span>
-                            <span className="text-xs font-semibold px-2 py-0.5 ml-2 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300">
-                                Customer Vault
-                            </span>
-                        </div>
+                        <Link href={route('home')} className="flex items-center group shrink-0">
+                            <ApplicationLogo className="h-8 w-auto max-w-[160px] object-contain transition-opacity group-hover:opacity-85" />
+                        </Link>
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300">
+                            Customer Digital Vault
+                        </span>
                     </div>
 
                     <div className="flex items-center gap-3">
