@@ -10,6 +10,7 @@ import LocaleSync from '@/Components/LocaleSync';
 import BrandingFavicon from '@/Components/BrandingFavicon';
 import ErrorBoundary from '@/Components/ErrorBoundary';
 import { ThemeProvider } from '@/context/ThemeContext';
+import CookieConsent from '@/Components/CookieConsent';
 import { toast } from 'sonner';
 
 initI18n();
@@ -98,6 +99,7 @@ createInertiaApp({
                             <LocaleSync />
                             <BrandingFavicon />
                             <Page {...props} />
+                            <CookieConsent />
                         </ThemeProvider>
                     );
                 };

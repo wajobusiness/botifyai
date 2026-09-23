@@ -387,6 +387,15 @@ export default function LandingLayout({ children }) {
                                         <Link href={l.href} className="text-sm text-neutral-400 hover:text-white transition">{l.label}</Link>
                                     </li>
                                 ))}
+                                <li>
+                                    <button
+                                        type="button"
+                                        onClick={() => window.dispatchEvent(new Event('open-cookie-settings'))}
+                                        className="text-sm text-neutral-400 hover:text-white transition text-left"
+                                    >
+                                        {t('cookie_consent.footer_manage', 'Cookie Settings')}
+                                    </button>
+                                </li>
                             </ul>
                         </div>
 
