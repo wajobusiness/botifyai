@@ -712,3 +712,4 @@ export default function SeoSettings({ settings = {}, redirects = [], sitemapUrls
         </AdminLayout>
     );
 }
+

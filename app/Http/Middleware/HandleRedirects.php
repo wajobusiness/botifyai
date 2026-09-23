@@ -55,3 +55,4 @@ class HandleRedirects
         return $next($request);
     }
 }
+

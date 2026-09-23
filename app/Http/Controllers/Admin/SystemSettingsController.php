@@ -59,17 +59,46 @@ class SystemSettingsController extends Controller
             'appId'      => SystemSetting::get('firebase_app_id', ''),
         ];
 
-        // Fall back to the build defaults so the pickers open on the colours the UI
-        // is actually rendering, rather than on an empty/black swatch.
-        $general['primary_color']   = $general['primary_color']   ?: config('saas.branding.primary_color', '#467235');
-        $general['secondary_color'] = $general['secondary_color'] ?: config('saas.branding.secondary_color', '#283f24');
-        $general['font_family']     = $general['font_family']     ?: config('saas.branding.font_family', 'space-grotesk');
+        $seo = [
+            'seo_site_title_suffix' => SystemSetting::get('seo_site_title_suffix', '— BotifyAI'),
+            'seo_default_meta_description' => SystemSetting::get('seo_default_meta_description', ''),
+            'seo_default_meta_keywords' => SystemSetting::get('seo_default_meta_keywords', ''),
+            'seo_google_analytics_id' => SystemSetting::get('seo_google_analytics_id', ''),
+            'seo_google_tag_manager_id' => SystemSetting::get('seo_google_tag_manager_id', ''),
+            'seo_clarity_project_id' => SystemSetting::get('seo_clarity_project_id', 'yky6jsr41d'),
+            'seo_meta_pixel_id' => SystemSetting::get('seo_meta_pixel_id', ''),
+            'seo_tiktok_pixel_id' => SystemSetting::get('seo_tiktok_pixel_id', ''),
+            'seo_linkedin_partner_id' => SystemSetting::get('seo_linkedin_partner_id', ''),
+            'seo_google_verification_code' => SystemSetting::get('seo_google_verification_code', ''),
+            'seo_bing_verification_code' => SystemSetting::get('seo_bing_verification_code', ''),
+            'seo_yandex_verification_code' => SystemSetting::get('seo_yandex_verification_code', ''),
+            'seo_pinterest_verification_code' => SystemSetting::get('seo_pinterest_verification_code', ''),
+            'seo_custom_head_scripts' => SystemSetting::get('seo_custom_head_scripts', ''),
+            'seo_custom_body_scripts' => SystemSetting::get('seo_custom_body_scripts', ''),
+        ];
+
+        $redirects = [];
+        try {
+            $redirects = \App\Models\Redirect::latest()->get();
+        } catch (\Throwable) {
+            // Table may not exist yet
+        }
 
         return Inertia::render('Admin/Settings/Index', [
             'general'         => $general,
             'fonts'           => config('saas.branding.fonts', []),
             'settingsByGroup' => $byGroup,
             'firebase'        => $firebase,
+            'seo'             => $seo,
+            'redirects'       => $redirects,
+            'sitemapUrls'     => [
+                'index'    => route('sitemap'),
+                'pages'    => route('sitemap.pages'),
+                'cms'      => route('sitemap.cms'),
+                'stores'   => route('sitemap.stores'),
+                'products' => route('sitemap.products'),
+            ],
+            'robotsUrl'       => route('robots'),
         ]);
     }
 

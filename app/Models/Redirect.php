@@ -42,3 +42,4 @@ class Redirect extends Model
         $this->update(['last_accessed_at' => now()]);
     }
 }
+

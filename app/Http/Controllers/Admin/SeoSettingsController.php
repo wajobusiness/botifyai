@@ -151,3 +151,4 @@ class SeoSettingsController extends Controller
         return back()->with('success', 'Redirect deleted successfully.');
     }
 }
+
