@@ -24,7 +24,7 @@ class PublicCheckoutController extends Controller
     /**
      * Render the single-product public checkout page (/buy/{slug}).
      */
-    public function show(string $slug): Response
+    public function show(string $slug): Response|RedirectResponse
     {
         $product = EcommerceProduct::with(['store', 'digitalAsset'])
             ->where(function ($q) use ($slug) {
@@ -42,7 +42,7 @@ class PublicCheckoutController extends Controller
             if ($storeCandidate) {
                 $firstProduct = $storeCandidate->products()->where('is_published', true)->first();
                 if ($firstProduct) {
-                    return redirect()->route('public.checkout.show', ['slug' => $firstProduct->slug]);
+                    return redirect()->route('public.checkout.show', ['slug' => $firstProduct->getCheckoutSlug()]);
                 }
             }
             abort(404, 'Product or store not found.');
