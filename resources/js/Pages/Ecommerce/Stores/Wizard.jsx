@@ -609,7 +609,7 @@ export default function StoreWizard({
                                                         <div className="text-xs text-gray-400">{acc.account_name}</div>
                                                     </div>
                                                 </div>
-                                                {acc.is_primary && (
+                                                {(acc.is_default || acc.is_primary) && (
                                                     <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40">
                                                         Primary
                                                     </span>

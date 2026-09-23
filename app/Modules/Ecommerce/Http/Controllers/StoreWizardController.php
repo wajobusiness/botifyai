@@ -22,8 +22,8 @@ class StoreWizardController extends Controller
         $workspaceId = (int) ($request->user()->current_workspace_id ?? $request->user()->workspace_id);
 
         $bankAccounts = MerchantBankAccount::where('workspace_id', $workspaceId)
-            ->where('is_active', true)
-            ->get(['id', 'bank_name', 'account_number', 'account_name', 'is_primary']);
+            ->orderByDesc('is_default')
+            ->get(['id', 'bank_name', 'account_number', 'account_name', 'is_default']);
 
         $bots = AiChatbot::where('workspace_id', $workspaceId)
             ->get(['id', 'name', 'purpose', 'enabled', 'is_default']);
@@ -45,8 +45,8 @@ class StoreWizardController extends Controller
         abort_unless($store->workspace_id === $workspaceId, 403);
 
         $bankAccounts = MerchantBankAccount::where('workspace_id', $workspaceId)
-            ->where('is_active', true)
-            ->get(['id', 'bank_name', 'account_number', 'account_name', 'is_primary']);
+            ->orderByDesc('is_default')
+            ->get(['id', 'bank_name', 'account_number', 'account_name', 'is_default']);
 
         $bots = AiChatbot::where('workspace_id', $workspaceId)
             ->get(['id', 'name', 'purpose', 'enabled', 'is_default']);
