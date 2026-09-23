@@ -18,7 +18,7 @@ export function useLocale() {
     const setLocale = (code) => {
         if (code === locale) return;
         applyLocaleToDocument(code, rtlLocales);
-        router.put(route('locale.update'), { locale: code }, { preserveScroll: true });
+        router.put('/locale', { locale: code }, { preserveScroll: true });
     };
 
     return { locale, isRtl, locales, setLocale };

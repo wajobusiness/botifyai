@@ -11,20 +11,26 @@ import { useLocale } from '@/hooks/useLocale';
 import Dropdown from '@/Components/ui/Dropdown';
 import CommerceChatDrawer from '@/Components/CommerceChatDrawer';
 
-export default function Storefront({ store = {}, products = [], header_pixels_html = '' }) {
+export default function Storefront(props = {}) {
+    const store = props?.store || {};
+    const products = Array.isArray(props?.products) ? props.products : [];
+    const header_pixels_html = props?.header_pixels_html || '';
+
     const { t } = useTranslation();
     const { locale: currentLocale, setLocale } = useLocale();
     const page = usePage();
 
-    const supportedLocales = page.props.supportedLocales ?? { en: 'English' };
+    const supportedLocales = page.props?.supportedLocales ?? { en: 'English' };
     const localeEntries = Object.entries(supportedLocales);
-    const currencies = page.props.currencies ?? [
-        { code: 'NGN', symbol: '₦', decimals: 2, exchange_rate: 1 },
-        { code: 'USD', symbol: '$', decimals: 2, exchange_rate: 0.00065 },
-        { code: 'EUR', symbol: '€', decimals: 2, exchange_rate: 0.00060 },
-        { code: 'GBP', symbol: '£', decimals: 2, exchange_rate: 0.00052 },
-    ];
-    const initialCurrency = page.props.displayCurrency ?? store.currency ?? 'NGN';
+    const currencies = Array.isArray(page.props?.currencies) && page.props.currencies.length > 0
+        ? page.props.currencies
+        : [
+            { code: 'NGN', symbol: '₦', decimals: 2, exchange_rate: 1 },
+            { code: 'USD', symbol: '$', decimals: 2, exchange_rate: 0.00065 },
+            { code: 'EUR', symbol: '€', decimals: 2, exchange_rate: 0.00060 },
+            { code: 'GBP', symbol: '£', decimals: 2, exchange_rate: 0.00052 },
+        ];
+    const initialCurrency = page.props?.displayCurrency ?? store?.currency ?? 'NGN';
     const [selectedCurrency, setSelectedCurrency] = useState(initialCurrency);
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -33,16 +39,19 @@ export default function Storefront({ store = {}, products = [], header_pixels_ht
 
     const handleCurrencyChange = (code) => {
         setSelectedCurrency(code);
-        router.put(route('currency.update'), { currency: code }, { preserveScroll: true });
+        router.put('/currency', { currency: code }, { preserveScroll: true });
     };
 
     // Calculate dynamic converted price
     const formatPrice = (price, baseCurrency = 'NGN') => {
+        if (price === undefined || price === null || isNaN(Number(price))) {
+            return '';
+        }
         const baseCur = baseCurrency || 'NGN';
         const targetCur = selectedCurrency || baseCur;
 
-        const baseCurObj = currencies.find((c) => c.code === baseCur);
-        const targetCurObj = currencies.find((c) => c.code === targetCur);
+        const baseCurObj = (currencies || []).find((c) => c?.code === baseCur);
+        const targetCurObj = (currencies || []).find((c) => c?.code === targetCur);
 
         let convertedAmount = Number(price);
         if (baseCur !== targetCur && baseCurObj?.exchange_rate && targetCurObj?.exchange_rate) {
@@ -188,7 +197,7 @@ export default function Storefront({ store = {}, products = [], header_pixels_ht
                 <div
                     className="absolute inset-0 opacity-15 bg-center bg-cover"
                     style={{
-                        backgroundImage: store.banner_url ? `url(${store.banner_url})` : undefined,
+                        backgroundImage: store?.banner_url ? `url(${store.banner_url})` : undefined,
                     }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-transparent to-black/40" />
@@ -196,11 +205,11 @@ export default function Storefront({ store = {}, products = [], header_pixels_ht
                 <div className="relative max-w-6xl mx-auto flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5">
                         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white dark:bg-neutral-800 p-1 shadow-2xl border-2 border-teal-400/40 shrink-0">
-                            {store.logo_url ? (
+                            {store?.logo_url ? (
                                 <img src={store.logo_url} alt="" className="w-full h-full object-cover rounded-xl" />
                             ) : (
                                 <div className="w-full h-full rounded-xl bg-gradient-to-br from-teal-500 to-teal-800 flex items-center justify-center text-white text-3xl font-extrabold shadow-inner">
-                                    {(store.name || 'S')[0]?.toUpperCase()}
+                                    {(store?.name || 'S')[0]?.toUpperCase()}
                                 </div>
                             )}
                         </div>
@@ -208,7 +217,7 @@ export default function Storefront({ store = {}, products = [], header_pixels_ht
                         <div className="space-y-2">
                             <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
                                 <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                                    {store.name || 'Digital Storefront'}
+                                    {store?.name || 'Digital Storefront'}
                                 </h1>
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-500/20 text-teal-300 border border-teal-400/30 backdrop-blur-sm">
                                     <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" /> Verified Merchant
@@ -216,7 +225,7 @@ export default function Storefront({ store = {}, products = [], header_pixels_ht
                             </div>
 
                             <p className="text-sm text-neutral-300 max-w-xl line-clamp-2 leading-relaxed">
-                                {store.description || 'Welcome to our verified digital storefront. Explore our premium digital downloads, software tools, and courses with instant access upon purchase.'}
+                                {store?.description || 'Welcome to our verified digital storefront. Explore our premium digital downloads, software tools, and courses with instant access upon purchase.'}
                             </p>
 
                             {/* Trust Highlights */}
@@ -233,7 +242,7 @@ export default function Storefront({ store = {}, products = [], header_pixels_ht
 
                     {/* Store Policy Quick Buttons */}
                     <div className="flex items-center gap-2 flex-wrap justify-center">
-                        {store.policies?.refund_policy && (
+                        {store?.policies?.refund_policy && (
                             <button
                                 type="button"
                                 onClick={() => setActivePolicyModal('refund')}
@@ -242,7 +251,7 @@ export default function Storefront({ store = {}, products = [], header_pixels_ht
                                 Refund Policy
                             </button>
                         )}
-                        {store.policies?.delivery_terms && (
+                        {store?.policies?.delivery_terms && (
                             <button
                                 type="button"
                                 onClick={() => setActivePolicyModal('delivery')}
@@ -251,7 +260,7 @@ export default function Storefront({ store = {}, products = [], header_pixels_ht
                                 Delivery Terms
                             </button>
                         )}
-                        {store.support_email && (
+                        {store?.support_email && (
                             <a
                                 href={`mailto:${store.support_email}`}
                                 className="px-3 py-1.5 rounded-xl text-xs font-medium bg-white/10 hover:bg-white/20 border border-white/15 backdrop-blur-sm transition flex items-center gap-1"
@@ -400,8 +409,8 @@ export default function Storefront({ store = {}, products = [], header_pixels_ht
 
                         <div className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-line max-h-80 overflow-y-auto">
                             {activePolicyModal === 'refund'
-                                ? (store.policies?.refund_policy || 'All digital purchases are covered by our standard customer satisfaction guarantee.')
-                                : (store.policies?.delivery_terms || 'Digital download tokens and receipt links are issued instantly upon successful payment verification.')}
+                                ? (store?.policies?.refund_policy || 'All digital purchases are covered by our standard customer satisfaction guarantee.')
+                                : (store?.policies?.delivery_terms || 'Digital download tokens and receipt links are issued instantly upon successful payment verification.')}
                         </div>
 
                         <div className="pt-2 flex justify-end">
@@ -420,7 +429,7 @@ export default function Storefront({ store = {}, products = [], header_pixels_ht
             {/* Footer */}
             <footer className="py-8 border-t border-neutral-200 dark:border-neutral-800 text-center text-xs text-neutral-400 space-y-2">
                 <p>
-                    © {new Date().getFullYear()} {store.name || 'Merchant'}. All rights reserved.
+                    © {new Date().getFullYear()} {store?.name || 'Merchant'}. All rights reserved.
                 </p>
                 <p>
                     Powered by{' '}
@@ -441,3 +450,4 @@ export default function Storefront({ store = {}, products = [], header_pixels_ht
         </div>
     );
 }
+

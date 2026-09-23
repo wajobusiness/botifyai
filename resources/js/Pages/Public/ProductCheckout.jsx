@@ -12,20 +12,27 @@ import Dropdown from '@/Components/ui/Dropdown';
 import axios from 'axios';
 import CommerceChatDrawer from '@/Components/CommerceChatDrawer';
 
-export default function ProductCheckout({ product, store = {}, gateways = [], header_pixels_html = '' }) {
+export default function ProductCheckout(props = {}) {
+    const product = props?.product || {};
+    const store = props?.store || {};
+    const gateways = Array.isArray(props?.gateways) ? props.gateways : [];
+    const header_pixels_html = props?.header_pixels_html || '';
+
     const { t } = useTranslation();
     const { locale: currentLocale, setLocale } = useLocale();
     const page = usePage();
 
-    const supportedLocales = page.props.supportedLocales ?? { en: 'English' };
+    const supportedLocales = page.props?.supportedLocales ?? { en: 'English' };
     const localeEntries = Object.entries(supportedLocales);
-    const currencies = page.props.currencies ?? [
-        { code: 'NGN', symbol: '₦', decimals: 2, exchange_rate: 1 },
-        { code: 'USD', symbol: '$', decimals: 2, exchange_rate: 0.00065 },
-        { code: 'EUR', symbol: '€', decimals: 2, exchange_rate: 0.00060 },
-        { code: 'GBP', symbol: '£', decimals: 2, exchange_rate: 0.00052 },
-    ];
-    const initialCurrency = page.props.displayCurrency ?? product.currency ?? 'NGN';
+    const currencies = Array.isArray(page.props?.currencies) && page.props.currencies.length > 0
+        ? page.props.currencies
+        : [
+            { code: 'NGN', symbol: '₦', decimals: 2, exchange_rate: 1 },
+            { code: 'USD', symbol: '$', decimals: 2, exchange_rate: 0.00065 },
+            { code: 'EUR', symbol: '€', decimals: 2, exchange_rate: 0.00060 },
+            { code: 'GBP', symbol: '£', decimals: 2, exchange_rate: 0.00052 },
+        ];
+    const initialCurrency = page.props?.displayCurrency ?? product?.currency ?? 'NGN';
     const [selectedCurrency, setSelectedCurrency] = useState(initialCurrency);
 
     const [form, setForm] = useState({
@@ -41,20 +48,23 @@ export default function ProductCheckout({ product, store = {}, gateways = [], he
     const [isPolling, setIsPolling] = useState(false);
     const [activePolicyModal, setActivePolicyModal] = useState(null);
 
-    const storeUrl = store.store_url || (store.slug ? `/store/${store.slug}` : (store.uuid ? `/store/${store.uuid}` : '#'));
+    const storeUrl = store?.store_url || (store?.slug ? `/store/${store.slug}` : (store?.uuid ? `/store/${store.uuid}` : '#'));
 
     const handleCurrencyChange = (code) => {
         setSelectedCurrency(code);
-        router.put(route('currency.update'), { currency: code }, { preserveScroll: true });
+        router.put('/currency', { currency: code }, { preserveScroll: true });
     };
 
     // Calculate dynamic converted price
     const formatPrice = (price, baseCurrency = 'NGN') => {
+        if (price === undefined || price === null || isNaN(Number(price))) {
+            return '';
+        }
         const baseCur = baseCurrency || 'NGN';
         const targetCur = selectedCurrency || baseCur;
 
-        const baseCurObj = currencies.find((c) => c.code === baseCur);
-        const targetCurObj = currencies.find((c) => c.code === targetCur);
+        const baseCurObj = (currencies || []).find((c) => c?.code === baseCur);
+        const targetCurObj = (currencies || []).find((c) => c?.code === targetCur);
 
         let convertedAmount = Number(price);
         if (baseCur !== targetCur && baseCurObj?.exchange_rate && targetCurObj?.exchange_rate) {
@@ -71,7 +81,7 @@ export default function ProductCheckout({ product, store = {}, gateways = [], he
         })}`;
     };
 
-    const isDifferentCurrency = (selectedCurrency || '').toUpperCase() !== (product.currency || 'NGN').toUpperCase();
+    const isDifferentCurrency = (selectedCurrency || '').toUpperCase() !== (product?.currency || 'NGN').toUpperCase();
 
     useEffect(() => {
         if (!pendingOrderUuid || !isPolling) return;
