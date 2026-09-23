@@ -26,26 +26,29 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="vapid-public-key" content="{{ config('webpush.vapid_public_key') }}">
 
-        <!-- Microsoft Clarity -->
-        <script type="text/javascript">
-            (function(c,l,a,r,i,t,y){
-                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-            })(window, document, "clarity", "script", "yky6jsr41d");
-        </script>
+        @php
+            try {
+                $seoService = app(\App\Services\SeoService::class);
+                $seoMeta = $seoService->resolveForRequest(request());
+                $seoTagsHtml = $seoService->renderHtmlTags(request());
+                $seoHeadTrackingHtml = $seoService->renderHeadTrackingScripts();
+                $seoBodyTrackingHtml = $seoService->renderBodyTrackingScripts();
+                $pageTitle = $seoMeta['title'] ?? config('app.name');
+            } catch (\Throwable $e) {
+                $seoTagsHtml = '<meta name="robots" content="index, follow"><link rel="canonical" href="'.e(url()->current()).'">';
+                $seoHeadTrackingHtml = '';
+                $seoBodyTrackingHtml = '';
+                $pageTitle = config('app.name');
+            }
+        @endphp
 
-        @if(request()->is('admin*', 'app*'))
-        <meta name="robots" content="noindex, nofollow">
-        @else
-        <meta name="robots" content="index, follow">
-        @endif
-        <link rel="canonical" href="{{ url()->current() }}">
+        {!! $seoTagsHtml !!}
+        {!! $seoHeadTrackingHtml !!}
 
         {{-- config('app.name') is overridden at boot from the admin-configured
              brand name (see BrandingServiceProvider), so this needs no direct
              SystemSetting lookup. --}}
-        <title inertia>{{ config('app.name') }}</title>
+        <title inertia>{{ $pageTitle }}</title>
         @php
             try {
                 $faviconPath = \App\Models\SystemSetting::get('app_favicon_path');
@@ -258,6 +261,7 @@
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
+        {!! $seoBodyTrackingHtml !!}
         @inertia
     </body>
 </html>

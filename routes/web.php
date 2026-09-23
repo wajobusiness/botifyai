@@ -42,65 +42,14 @@ Route::get('/integrations', [LandingController::class, 'integrations'])->name('i
 // CMS pages (e.g. /p/privacy, /p/terms)
 Route::get('/p/{slug}', [CmsPageController::class, 'show'])->name('cms-page.show');
 
-// Sitemap & robots.txt
-Route::get('/sitemap.xml', function () {
-    $landingEnabled = true;
-    try {
-        $landingEnabled = \App\Models\SystemSetting::get('landing.page_enabled', '1') === '1';
-    } catch (Throwable $e) {
-        // table may not exist yet
-    }
+// Sitemap Index & Modular Sub-Sitemaps
+Route::get('/sitemap.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/sitemaps/pages.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'pages'])->name('sitemap.pages');
+Route::get('/sitemaps/cms.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'cms'])->name('sitemap.cms');
+Route::get('/sitemaps/stores.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'stores'])->name('sitemap.stores');
+Route::get('/sitemaps/products.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'products'])->name('sitemap.products');
 
-    $entries = [];
-
-    if ($landingEnabled) {
-        $now = now()->toAtomString();
-        $entries[] = ['loc' => url('/'), 'priority' => '1.0', 'changefreq' => 'daily', 'lastmod' => $now];
-        $entries[] = ['loc' => url('/pricing'), 'priority' => '0.9', 'changefreq' => 'weekly', 'lastmod' => $now];
-        $entries[] = ['loc' => url('/use-cases'), 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $now];
-        $entries[] = ['loc' => url('/integrations'), 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $now];
-        $entries[] = ['loc' => url('/faq'), 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => $now];
-        $entries[] = ['loc' => url('/about'), 'priority' => '0.6', 'changefreq' => 'monthly', 'lastmod' => $now];
-        $entries[] = ['loc' => url('/contact'), 'priority' => '0.5', 'changefreq' => 'monthly', 'lastmod' => $now];
-
-        try {
-            $cmsPages = CmsPage::where('published', true)->get();
-            foreach ($cmsPages as $page) {
-                $entries[] = [
-                    'loc' => route('cms-page.show', $page->slug),
-                    'priority' => '0.5',
-                    'changefreq' => 'monthly',
-                    'lastmod' => ($page->updated_at ?? now())->toAtomString(),
-                ];
-            }
-        } catch (Throwable $e) {
-            // table may not exist yet
-        }
-    }
-
-    $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
-    foreach ($entries as $entry) {
-        $xml .= '  <url>'."\n";
-        $xml .= '    <loc>'.htmlspecialchars($entry['loc']).'</loc>'."\n";
-        $xml .= '    <lastmod>'.$entry['lastmod'].'</lastmod>'."\n";
-        $xml .= '    <changefreq>'.$entry['changefreq'].'</changefreq>'."\n";
-        $xml .= '    <priority>'.$entry['priority'].'</priority>'."\n";
-        $xml .= '  </url>'."\n";
-    }
-    $xml .= '</urlset>';
-
-    return response($xml, 200)->header('Content-Type', 'application/xml');
-})->name('sitemap');
-
-Route::get('/robots.txt', function () {
-    $sitemap = route('sitemap');
-
-    return response(
-        "User-agent: *\nDisallow: /admin/\nDisallow: /app/\nDisallow: /webhooks/\nDisallow: /broadcasting/\nDisallow: /api/\nAllow: /\n\nSitemap: {$sitemap}",
-        200
-    )->header('Content-Type', 'text/plain');
-})->name('robots');
+Route::get('/robots.txt', \App\Http\Controllers\Seo\RobotsController::class)->name('robots');
 
 // Webhooks (no auth, verified by gateway signature)
 Route::middleware('throttle:webhooks')->group(function () {

@@ -109,6 +109,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // Runs before the DB-querying middleware below so a fresh deploy is
             // redirected to /install without touching the (empty) database.
             EnsureInstalled::class,
+            \App\Http\Middleware\HandleRedirects::class,
             AddLinkHeadersForPreloadedAssets::class,
             SetLocale::class,
             HandleInertiaRequests::class,

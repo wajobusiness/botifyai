@@ -162,6 +162,14 @@ Route::post('/cms-pages', [CmsPageController::class, 'store'])->name('cms-pages.
 Route::put('/cms-pages/{cmsPage}', [CmsPageController::class, 'update'])->name('cms-pages.update')->middleware('permission:manage_settings');
 Route::delete('/cms-pages/{cmsPage}', [CmsPageController::class, 'destroy'])->name('cms-pages.destroy')->middleware('permission:manage_settings');
 
+// SEO & Tracking Settings
+Route::get('/seo', [\App\Http\Controllers\Admin\SeoSettingsController::class, 'index'])->name('seo.index')->middleware('permission:view_settings');
+Route::put('/seo', [\App\Http\Controllers\Admin\SeoSettingsController::class, 'update'])->name('seo.update')->middleware('permission:manage_settings');
+Route::post('/seo/clear-sitemap-cache', [\App\Http\Controllers\Admin\SeoSettingsController::class, 'clearSitemapCache'])->name('seo.clear-sitemap-cache')->middleware('permission:manage_settings');
+Route::post('/seo/redirects', [\App\Http\Controllers\Admin\SeoSettingsController::class, 'storeRedirect'])->name('seo.redirects.store')->middleware('permission:manage_settings');
+Route::put('/seo/redirects/{redirect}', [\App\Http\Controllers\Admin\SeoSettingsController::class, 'updateRedirect'])->name('seo.redirects.update')->middleware('permission:manage_settings');
+Route::delete('/seo/redirects/{redirect}', [\App\Http\Controllers\Admin\SeoSettingsController::class, 'destroyRedirect'])->name('seo.redirects.destroy')->middleware('permission:manage_settings');
+
 // Support Tickets (admin inbox)
 Route::get('/support', [SupportTicketController::class, 'index'])->name('support.index')->middleware('permission:view_settings');
 Route::get('/support/create', [SupportTicketController::class, 'create'])->name('support.create')->middleware('permission:manage_settings');

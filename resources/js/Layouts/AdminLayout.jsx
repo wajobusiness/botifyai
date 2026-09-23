@@ -29,6 +29,7 @@ import {
     LogOut,
     Wallet,
     ShoppingBag,
+    Search,
 } from 'lucide-react';
 
 /** Nav item: { labelKey, route, href, icon, permission } - show only if user has permission (or no permission required). Order follows typical admin usage frequency. */
@@ -51,6 +52,7 @@ const ADMIN_NAV_ITEMS = [
     { labelKey: 'admin.nav.admins', route: 'admin.admins.index', href: () => route('admin.admins.index'), icon: UserCog, permission: 'view_admins' },
     { labelKey: 'admin.landing_page', route: 'admin.landing-page.index', href: () => route('admin.landing-page.index'), icon: FileText, permission: 'view_settings' },
     { labelKey: 'admin.cms_pages', route: 'admin.cms-pages.index', href: () => route('admin.cms-pages.index'), icon: FileText, permission: 'view_settings' },
+    { labelKey: 'admin.seo_tracking', labelFallback: 'SEO & Tracking', route: 'admin.seo.index', href: () => { try { return route('admin.seo.index'); } catch (_) { return '/admin/seo'; } }, icon: Search, permission: 'view_settings' },
     { labelKey: 'admin.nav.queue', route: 'admin.queue.index', href: () => route('admin.queue.index'), icon: Server, permission: 'view_settings' },
     { labelKey: 'admin.cron_setup', route: 'admin.cron-setup.index', href: () => route('admin.cron-setup.index'), icon: Clock, permission: 'view_settings' },
     { labelKey: 'admin.pusher_settings', route: 'admin.pusher-settings.index', href: () => route('admin.pusher-settings.index'), icon: Radio, permission: 'manage_settings' },
