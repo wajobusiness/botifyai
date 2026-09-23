@@ -50,6 +50,10 @@ Route::get('/sitemaps/stores.xml', [\App\Http\Controllers\Seo\SitemapController:
 Route::get('/sitemaps/products.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'products'])->name('sitemap.products');
 
 Route::get('/robots.txt', \App\Http\Controllers\Seo\RobotsController::class)->name('robots');
+Route::get('/ads.txt', function () {
+    return response("google.com, pub-8605497211981606, DIRECT, f08c47fec0942fa0\n", 200)
+        ->header('Content-Type', 'text/plain');
+})->name('ads.txt');
 
 // Webhooks (no auth, verified by gateway signature)
 Route::middleware('throttle:webhooks')->group(function () {
