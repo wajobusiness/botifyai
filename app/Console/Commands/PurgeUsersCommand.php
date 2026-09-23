@@ -131,10 +131,6 @@ class PurgeUsersCommand extends Command
         'merchant_payout_requests',
         'iyzico_checkout_sessions',
         'iyzico_pricing_plans',
-
-        // 9. Integrations
-        'integration_configs',
-        'integration_audit_logs',
     ];
 
     /**
@@ -147,6 +143,8 @@ class PurgeUsersCommand extends Command
         'role_permission',
         'admin_role',
         'system_settings',
+        'integration_configs',
+        'integration_audit_logs',
         'plans',
         'currencies',
         'locales',
@@ -263,3 +261,4 @@ class PurgeUsersCommand extends Command
         };
     }
 }
+
