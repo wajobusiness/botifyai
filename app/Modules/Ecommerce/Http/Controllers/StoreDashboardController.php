@@ -132,7 +132,7 @@ class StoreDashboardController extends Controller
             ]);
 
         // Available AI Bots in workspace for connection modal
-        $availableBots = AiChatbot::where('workspace_id', $workspaceId)->get(['id', 'name', 'model', 'status']);
+        $availableBots = AiChatbot::where('workspace_id', $workspaceId)->get(['id', 'name', 'purpose', 'enabled', 'is_default']);
 
         // Linked bank account for settlement
         $bankAccount = $currentStore->bankAccount;

@@ -26,7 +26,7 @@ class StoreWizardController extends Controller
             ->get(['id', 'bank_name', 'account_number', 'account_name', 'is_primary']);
 
         $bots = AiChatbot::where('workspace_id', $workspaceId)
-            ->get(['id', 'name', 'model', 'status']);
+            ->get(['id', 'name', 'purpose', 'enabled', 'is_default']);
 
         return Inertia::render('Ecommerce/Stores/Wizard', [
             'store' => null,
@@ -49,7 +49,7 @@ class StoreWizardController extends Controller
             ->get(['id', 'bank_name', 'account_number', 'account_name', 'is_primary']);
 
         $bots = AiChatbot::where('workspace_id', $workspaceId)
-            ->get(['id', 'name', 'model', 'status']);
+            ->get(['id', 'name', 'purpose', 'enabled', 'is_default']);
 
         $storeBots = $store->bots()->pluck('ai_chatbots.id')->all();
 
