@@ -719,7 +719,7 @@ class SeoService
     }
 
     /**
-     * Clean tracking parameters from canonical URLs.
+     * Clean tracking parameters from canonical URLs and normalize scheme/host.
      */
     public function sanitizeCanonicalUrl(string $url): string
     {
@@ -728,10 +728,22 @@ class SeoService
             return $url;
         }
 
-        $scheme = $parsed['scheme'];
+        $appUrl = config('app.url');
+        $appParsed = is_string($appUrl) ? parse_url($appUrl) : null;
+
+        // Enforce HTTPS if APP_URL is HTTPS or in production
+        $scheme = ($appParsed && ($appParsed['scheme'] ?? '') === 'https') ? 'https' : $parsed['scheme'];
         $host = $parsed['host'];
         $port = isset($parsed['port']) ? ':'.$parsed['port'] : '';
         $path = $parsed['path'] ?? '';
+
+        // If APP_URL specifies a host, align non-custom-domain marketing routes with APP_URL host
+        if ($appParsed && ! empty($appParsed['host']) && ! in_array($host, ['localhost', '127.0.0.1'], true)) {
+            // If the current host is www.domain and APP_URL is domain (or vice versa), use APP_URL host
+            if (str_ends_with($host, $appParsed['host']) || str_ends_with($appParsed['host'], $host)) {
+                $host = $appParsed['host'];
+            }
+        }
 
         $cleanUrl = "{$scheme}://{$host}{$port}{$path}";
 

@@ -19,9 +19,10 @@ export default function SeoHead({ title, description, keywords, image, canonical
     const { appName, faviconUrl } = useBranding();
     const fullTitle = title || appName;
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const url =
+    const rawUrl =
         canonical ||
         (typeof window !== 'undefined' ? window.location.href.split(/[?#]/)[0] : undefined);
+    const url = rawUrl && rawUrl.length > 8 && rawUrl.endsWith('/') ? rawUrl.replace(/\/+$/, '') : rawUrl;
 
     // Fall back to the brand icon when a page doesn't supply its own og:image.
     // A page-provided `image` is assumed wide (2:1), so it gets a large card;
