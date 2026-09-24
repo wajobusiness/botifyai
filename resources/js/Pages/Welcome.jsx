@@ -115,6 +115,26 @@ function ChannelIcon({ name, className = 'h-6 w-6' }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
             </svg>
         ),
+        'linkedin': (
+            <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.6a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" />
+            </svg>
+        ),
+        'twitter': (
+            <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+        ),
+        'x': (
+            <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+        ),
+        'tiktok': (
+            <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-1.01-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+            </svg>
+        ),
     };
     return icons[name] || icons['email'];
 }
@@ -125,6 +145,10 @@ const CHANNEL_STYLES = {
     'instagram': { bg: 'bg-[#E1306C]/12', text: 'text-[#E1306C]' },
     'sms':       { bg: 'bg-brand-500/15', text: 'text-brand-600 dark:text-brand-500' },
     'email':     { bg: 'bg-[#F59E0B]/12', text: 'text-[#F59E0B]' },
+    'linkedin':  { bg: 'bg-[#0A66C2]/12', text: 'text-[#0A66C2]' },
+    'twitter':   { bg: 'bg-[#1DA1F2]/12', text: 'text-[#1DA1F2]' },
+    'x':         { bg: 'bg-neutral-500/15', text: 'text-neutral-900 dark:text-white' },
+    'tiktok':    { bg: 'bg-pink-500/15', text: 'text-pink-600 dark:text-pink-400' },
 };
 
 // ─── Section Badge ─────────────────────────────────────────────────────────────
@@ -342,7 +366,7 @@ function FeaturesSection({ landing }) {
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
     if (s('features_enabled') !== '1') return null;
 
-    const features = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => ({
+    const features = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => ({
         icon: s(`feature_${i}_icon`, 'zap'),
         title: s(`feature_${i}_title`),
         desc: s(`feature_${i}_desc`),
@@ -685,7 +709,7 @@ function FaqSection({ landing }) {
     const [open, setOpen] = useState(null);
     if (s('faq_enabled') !== '1') return null;
 
-    const faqs = [1, 2, 3, 4, 5].map((i) => ({
+    const faqs = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({
         q: s(`faq_${i}_q`),
         a: s(`faq_${i}_a`),
     })).filter((f) => f.q && f.a);
@@ -832,7 +856,7 @@ function ChannelsSection({ landing }) {
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
     if (s('channels_enabled') !== '1') return null;
 
-    const channels = [1, 2, 3, 4, 5].map((i) => ({
+    const channels = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({
         key: s(`channel_${i}_key`, 'email'),
         title: s(`channel_${i}_title`),
         desc: s(`channel_${i}_desc`),
@@ -978,7 +1002,7 @@ export default function Welcome({ auth, canLogin, canRegister, landing = {}, pla
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
     // ── JSON-LD structured data ────────────────────────────────────────────────
-    const faqs = [1, 2, 3, 4, 5]
+    const faqs = [1, 2, 3, 4, 5, 6, 7, 8]
         .map((i) => ({ q: s(`faq_${i}_q`), a: s(`faq_${i}_a`) }))
         .filter((f) => f.q && f.a);
 
