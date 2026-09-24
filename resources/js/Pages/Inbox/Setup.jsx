@@ -1238,6 +1238,7 @@ function AddInstagramForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                 },
                 body: JSON.stringify({
                     code,
+                    redirect_uri: window.location.href.split('#')[0],
                 }),
                 signal: controller.signal,
             });
@@ -1343,6 +1344,7 @@ function AddMessengerForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                 },
                 body: JSON.stringify({
                     code,
+                    redirect_uri: window.location.href.split('#')[0],
                 }),
                 signal: controller.signal,
             });

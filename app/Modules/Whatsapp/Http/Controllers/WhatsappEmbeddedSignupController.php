@@ -37,12 +37,12 @@ class WhatsappEmbeddedSignupController extends Controller
         // redirect_uri parameter passed to oauth/access_token matches the dialog request;
         // if a URL is provided, Meta rejects the exchange (error 100/36008) AND burns the
         // single-use authorization code immediately.
-        // Therefore, omitting redirect_uri ('__OMIT__') and empty string ('') MUST be
-        // candidate #1 and #2.
-        $candidates = ['__OMIT__', ''];
-        if (! empty($validated['redirect_uri']) && ! in_array($validated['redirect_uri'], $candidates, true)) {
+        $candidates = [];
+        if (! empty($validated['redirect_uri']) && $validated['redirect_uri'] !== '__OMIT__') {
             $candidates[] = trim($validated['redirect_uri']);
         }
+        $candidates[] = '__OMIT__';
+        $candidates[] = '';
         $appUrl = rtrim((string) config('app.url'), '/');
         if ($appUrl !== '') {
             $candidates[] = $appUrl . '/app/inbox/setup';

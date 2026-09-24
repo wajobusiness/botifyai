@@ -603,17 +603,10 @@ class InboxSetupController extends Controller
             return [null, 'Meta App ID or App Secret is not configured in Admin → Integrations → Meta App.'];
         }
 
-        // Codes obtained via Meta Embedded Signup (window.FB.login) do NOT have a
-        // redirect URI in their OAuth dialog request. Meta strictly checks that any
-        // redirect_uri parameter passed to oauth/access_token matches the dialog request;
-        // if a URL is provided, Meta rejects the exchange (error 100/36008) AND burns the
-        // single-use authorization code immediately.
-        // Therefore, omitting redirect_uri ('__OMIT__') and empty string ('') MUST be
-        // candidate #1 and #2.
-        $candidates = ['__OMIT__', ''];
+        $candidates = [];
 
-        // 1. Client's exact URI from request if explicitly passed
-        if (! empty($clientRedirectUri) && ! in_array($clientRedirectUri, $candidates, true)) {
+        // 1. Client's exact URI from browser request if explicitly passed (matches window.FB.login OAuth dialog)
+        if (! empty($clientRedirectUri) && $clientRedirectUri !== '__OMIT__') {
             $candidates[] = trim($clientRedirectUri);
         }
 
@@ -631,6 +624,10 @@ class InboxSetupController extends Controller
             $candidates[] = $appUrl . '/inbox/setup';
             $candidates[] = $appUrl;
         }
+
+        // 4. Omit redirect_uri (for flows where OAuth dialog didn't specify one)
+        $candidates[] = '__OMIT__';
+        $candidates[] = '';
 
         $candidates = array_values(array_unique($candidates));
 
