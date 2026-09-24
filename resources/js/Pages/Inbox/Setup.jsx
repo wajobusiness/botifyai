@@ -994,7 +994,7 @@ function EmbeddedSignupButton({ configId, appId, channel, label, color, onCode, 
             },
             {
                 config_id: configId,
-                response_type: isWhatsapp ? 'code' : 'code,token',
+                response_type: 'code,token',
                 override_default_response_type: true,
                 extras: extrasMap[channel] ?? {},
             },

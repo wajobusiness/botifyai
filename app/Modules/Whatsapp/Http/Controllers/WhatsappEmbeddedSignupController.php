@@ -40,16 +40,23 @@ class WhatsappEmbeddedSignupController extends Controller
         $accessToken = $validated['access_token'] ?? null;
 
         if (! $accessToken && ! empty($validated['code'])) {
-            // For WhatsApp Embedded Signup (sessionInfoVersion: 3), Meta requires omitting redirect_uri.
-            $candidates = ['__OMIT__', ''];
-            if (! empty($validated['redirect_uri']) && ! in_array($validated['redirect_uri'], $candidates, true)) {
+            $candidates = [];
+            if (! empty($validated['redirect_uri']) && $validated['redirect_uri'] !== '__OMIT__') {
                 $candidates[] = trim($validated['redirect_uri']);
+            }
+            try {
+                $candidates[] = route('client.inbox.setup');
+            } catch (\Throwable) {
+                // ignore
             }
             $appUrl = rtrim((string) config('app.url'), '/');
             if ($appUrl !== '') {
                 $candidates[] = $appUrl . '/app/inbox/setup';
+                $candidates[] = $appUrl . '/inbox/setup';
                 $candidates[] = $appUrl;
             }
+            $candidates[] = '__OMIT__';
+            $candidates[] = '';
             $candidates = array_values(array_unique($candidates));
 
             $tokenRes = null;
