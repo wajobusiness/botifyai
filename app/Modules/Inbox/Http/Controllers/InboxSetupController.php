@@ -90,9 +90,14 @@ class InboxSetupController extends Controller
     public function embeddedSignupInstagram(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:2048'],
+            'code' => ['nullable', 'string', 'max:2048'],
+            'access_token' => ['nullable', 'string', 'max:2048'],
             'redirect_uri' => ['nullable', 'string', 'max:500'],
         ]);
+
+        if (empty($validated['code']) && empty($validated['access_token'])) {
+            return response()->json(['message' => 'Neither authorization code nor access token was provided by Meta.'], 422);
+        }
 
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
 
@@ -102,7 +107,11 @@ class InboxSetupController extends Controller
 
         $warnings = [];
 
-        [$accessToken, $exchangeError] = $this->exchangeCodeForToken($validated['code'], $validated['redirect_uri'] ?? null);
+        $accessToken = $validated['access_token'] ?? null;
+        if (! $accessToken && ! empty($validated['code'])) {
+            [$accessToken, $exchangeError] = $this->exchangeCodeForToken($validated['code'], $validated['redirect_uri'] ?? null);
+        }
+
         if (! $accessToken) {
             return response()->json([
                 'message' => 'Failed to exchange authorization code with Meta: '.($exchangeError ?? 'The code may have expired or Meta app credentials are invalid.'),
@@ -230,9 +239,14 @@ class InboxSetupController extends Controller
     public function embeddedSignupMessenger(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:2048'],
+            'code' => ['nullable', 'string', 'max:2048'],
+            'access_token' => ['nullable', 'string', 'max:2048'],
             'redirect_uri' => ['nullable', 'string', 'max:500'],
         ]);
+
+        if (empty($validated['code']) && empty($validated['access_token'])) {
+            return response()->json(['message' => 'Neither authorization code nor access token was provided by Meta.'], 422);
+        }
 
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
 
@@ -242,7 +256,11 @@ class InboxSetupController extends Controller
 
         $warnings = [];
 
-        [$accessToken, $exchangeError] = $this->exchangeCodeForToken($validated['code'], $validated['redirect_uri'] ?? null);
+        $accessToken = $validated['access_token'] ?? null;
+        if (! $accessToken && ! empty($validated['code'])) {
+            [$accessToken, $exchangeError] = $this->exchangeCodeForToken($validated['code'], $validated['redirect_uri'] ?? null);
+        }
+
         if (! $accessToken) {
             return response()->json([
                 'message' => 'Failed to exchange authorization code with Meta: '.($exchangeError ?? 'The code may have expired or Meta app credentials are invalid.'),

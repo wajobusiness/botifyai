@@ -973,18 +973,19 @@ function EmbeddedSignupButton({ configId, appId, channel, label, color, onCode, 
 
         window.FB.login(
             (response) => {
-                if (response.authResponse && response.authResponse.code) {
-                    const code = response.authResponse.code;
+                if (response.authResponse) {
+                    const code = response.authResponse.code ?? null;
+                    const accessToken = response.authResponse.accessToken ?? null;
                     if (isWhatsapp) {
                         sessionInfoPromise
                             .then((info) => {
                                 setLoading(false);
-                                onCode(code, info?.waba_id ?? null, info?.phone_number_id ?? null);
+                                onCode(code, info?.waba_id ?? null, info?.phone_number_id ?? null, accessToken);
                             })
-                            .catch(() => { setLoading(false); onCode(code, null, null); });
+                            .catch(() => { setLoading(false); onCode(code, null, null, accessToken); });
                     } else {
                         setLoading(false);
-                        onCode(code);
+                        onCode(code, accessToken);
                     }
                 } else {
                     setLoading(false);
@@ -995,7 +996,7 @@ function EmbeddedSignupButton({ configId, appId, channel, label, color, onCode, 
             },
             {
                 config_id: configId,
-                response_type: 'code',
+                response_type: isWhatsapp ? 'code' : 'code,token',
                 override_default_response_type: true,
                 extras: extrasMap[channel] ?? {},
             },
@@ -1222,7 +1223,7 @@ function AddInstagramForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
     const [method, setMethod] = useState(metaConfigIdSocial ? 'meta' : 'manual');
     const configMismatch = metaConfigIdSocial && metaConfigIdWhatsapp && metaConfigIdSocial === metaConfigIdWhatsapp;
 
-    const handleEmbeddedCode = useCallback(async (code) => {
+    const handleEmbeddedCode = useCallback(async (code, accessToken = null) => {
         setApiError(null);
         setApiWarnings([]);
         setSubmitting(true);
@@ -1238,6 +1239,7 @@ function AddInstagramForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                 },
                 body: JSON.stringify({
                     code,
+                    access_token: accessToken,
                     redirect_uri: window.location.href.split('#')[0],
                 }),
                 signal: controller.signal,
@@ -1328,7 +1330,7 @@ function AddMessengerForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
     const [method, setMethod] = useState(metaConfigIdSocial ? 'meta' : 'manual');
     const configMismatch = metaConfigIdSocial && metaConfigIdWhatsapp && metaConfigIdSocial === metaConfigIdWhatsapp;
 
-    const handleEmbeddedCode = useCallback(async (code) => {
+    const handleEmbeddedCode = useCallback(async (code, accessToken = null) => {
         setApiError(null);
         setApiWarnings([]);
         setSubmitting(true);
@@ -1344,6 +1346,7 @@ function AddMessengerForm({ onSuccess, metaConfigIdSocial, metaAppId, metaConfig
                 },
                 body: JSON.stringify({
                     code,
+                    access_token: accessToken,
                     redirect_uri: window.location.href.split('#')[0],
                 }),
                 signal: controller.signal,
