@@ -19,11 +19,16 @@ class WhatsappEmbeddedSignupController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'code'             => ['required', 'string', 'max:2048'],
-            'waba_id'          => ['required', 'string', 'max:64'],
+            'code'             => ['nullable', 'string', 'max:2048'],
+            'access_token'     => ['nullable', 'string', 'max:2048'],
+            'waba_id'          => ['nullable', 'string', 'max:64'],
             'phone_number_id'  => ['nullable', 'string', 'max:64'],
             'redirect_uri'     => ['nullable', 'string', 'max:500'],
         ]);
+
+        if (empty($validated['code']) && empty($validated['access_token'])) {
+            return response()->json(['message' => 'Neither authorization code nor access token was provided by Meta.'], 422);
+        }
 
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
 
@@ -32,79 +37,117 @@ class WhatsappEmbeddedSignupController extends Controller
             return response()->json(['message' => 'Meta App credentials are not configured. Please ask your administrator to configure them in Admin → Integrations → Meta App.'], 422);
         }
 
-        // Codes obtained via Meta Embedded Signup (window.FB.login) do NOT have a
-        // redirect URI in their OAuth dialog request. Meta strictly checks that any
-        // redirect_uri parameter passed to oauth/access_token matches the dialog request;
-        // if a URL is provided, Meta rejects the exchange (error 100/36008) AND burns the
-        // single-use authorization code immediately.
-        $candidates = [];
-        if (! empty($validated['redirect_uri']) && $validated['redirect_uri'] !== '__OMIT__') {
-            $candidates[] = trim($validated['redirect_uri']);
-        }
-        $candidates[] = '__OMIT__';
-        $candidates[] = '';
-        $appUrl = rtrim((string) config('app.url'), '/');
-        if ($appUrl !== '') {
-            $candidates[] = $appUrl . '/app/inbox/setup';
-            $candidates[] = $appUrl;
-        }
-        $candidates = array_values(array_unique($candidates));
+        $accessToken = $validated['access_token'] ?? null;
 
-        $tokenRes = null;
-        foreach ($candidates as $uri) {
-            $tokenParams = [
-                'client_id'     => $meta->appId(),
-                'client_secret' => $meta->appSecret(),
-                'code'          => $validated['code'],
-            ];
-            if ($uri !== '__OMIT__') {
-                $tokenParams['redirect_uri'] = $uri;
+        if (! $accessToken && ! empty($validated['code'])) {
+            $candidates = [];
+            if (! empty($validated['redirect_uri']) && $validated['redirect_uri'] !== '__OMIT__') {
+                $candidates[] = trim($validated['redirect_uri']);
+            }
+            $candidates[] = '__OMIT__';
+            $candidates[] = '';
+            $appUrl = rtrim((string) config('app.url'), '/');
+            if ($appUrl !== '') {
+                $candidates[] = $appUrl . '/app/inbox/setup';
+                $candidates[] = $appUrl;
+            }
+            $candidates = array_values(array_unique($candidates));
+
+            $tokenRes = null;
+            foreach ($candidates as $uri) {
+                $tokenParams = [
+                    'client_id'     => $meta->appId(),
+                    'client_secret' => $meta->appSecret(),
+                    'code'          => $validated['code'],
+                ];
+                if ($uri !== '__OMIT__') {
+                    $tokenParams['redirect_uri'] = $uri;
+                }
+
+                $tokenRes = Http::timeout(15)->connectTimeout(5)
+                    ->get('https://graph.facebook.com/v20.0/oauth/access_token', $tokenParams);
+
+                if ($tokenRes->successful() && ! empty($tokenRes->json('access_token'))) {
+                    break;
+                }
             }
 
-            $tokenRes = Http::timeout(15)->connectTimeout(5)
-                ->get('https://graph.facebook.com/v20.0/oauth/access_token', $tokenParams);
+            if (! $tokenRes?->successful() || empty($tokenRes->json('access_token'))) {
+                Log::warning('WhatsApp embedded signup: code exchange failed', [
+                    'workspace_id' => $workspaceId,
+                    'response'     => $tokenRes?->json(),
+                    'candidates_tried' => $candidates,
+                ]);
 
-            if ($tokenRes->successful() && ! empty($tokenRes->json('access_token'))) {
-                break;
+                return response()->json([
+                    'message' => 'Failed to exchange authorization code: ' . ($tokenRes?->json('error.message') ?? 'unknown error'),
+                ], 422);
             }
-        }
 
-        if (! $tokenRes?->successful() || empty($tokenRes->json('access_token'))) {
-            Log::warning('WhatsApp embedded signup: code exchange failed', [
-                'workspace_id' => $workspaceId,
-                'response'     => $tokenRes?->json(),
-                'candidates_tried' => $candidates,
+            $shortToken = $tokenRes->json('access_token');
+
+            // Exchange short-lived token for a long-lived token
+            $longTokenRes = Http::get('https://graph.facebook.com/v20.0/oauth/access_token', [
+                'grant_type'        => 'fb_exchange_token',
+                'client_id'         => $meta->appId(),
+                'client_secret'     => $meta->appSecret(),
+                'fb_exchange_token' => $shortToken,
             ]);
 
+            $accessToken = $longTokenRes->successful() && $longTokenRes->json('access_token')
+                ? $longTokenRes->json('access_token')
+                : $shortToken;
+        } else {
+            // Upgrade direct access_token to long-lived token
+            $longTokenRes = Http::get('https://graph.facebook.com/v20.0/oauth/access_token', [
+                'grant_type'        => 'fb_exchange_token',
+                'client_id'         => $meta->appId(),
+                'client_secret'     => $meta->appSecret(),
+                'fb_exchange_token' => $accessToken,
+            ]);
+            if ($longTokenRes->successful() && $longTokenRes->json('access_token')) {
+                $accessToken = $longTokenRes->json('access_token');
+            }
+        }
+
+        // Auto-discover WABA ID if not captured in the browser postMessage
+        $wabaId = ! empty($validated['waba_id']) ? (string) $validated['waba_id'] : null;
+        if (! $wabaId) {
+            $wabaListRes = Http::timeout(10)->connectTimeout(5)->withToken($accessToken)
+                ->get('https://graph.facebook.com/v20.0/me/whatsapp_business_accounts');
+            $wabaId = (string) ($wabaListRes->json('data.0.id') ?? '');
+        }
+
+        if (! $wabaId) {
+            $debugRes = Http::timeout(10)->connectTimeout(5)->get('https://graph.facebook.com/v20.0/debug_token', [
+                'input_token'  => $accessToken,
+                'access_token' => $meta->appId() . '|' . $meta->appSecret(),
+            ]);
+            $scopes = $debugRes->json('data.granular_scopes', []);
+            foreach ($scopes as $scope) {
+                if (($scope['scope'] ?? '') === 'whatsapp_business_management' && ! empty($scope['target_ids'])) {
+                    $wabaId = (string) $scope['target_ids'][0];
+                    break;
+                }
+            }
+        }
+
+        if (! $wabaId) {
             return response()->json([
-                'message' => 'Failed to exchange authorization code: ' . ($tokenRes?->json('error.message') ?? 'unknown error'),
+                'message' => 'Connected to Meta, but could not detect your WhatsApp Business Account (WABA). Please ensure you have created a WhatsApp Business Account in Meta Business Manager, or connect manually via the Manual setup tab.',
             ], 422);
         }
 
-        $shortToken = $tokenRes->json('access_token');
-
-        // Exchange short-lived token for a long-lived token
-        $longTokenRes = Http::get('https://graph.facebook.com/v20.0/oauth/access_token', [
-            'grant_type'        => 'fb_exchange_token',
-            'client_id'         => $meta->appId(),
-            'client_secret'     => $meta->appSecret(),
-            'fb_exchange_token' => $shortToken,
-        ]);
-
-        $accessToken = $longTokenRes->successful() && $longTokenRes->json('access_token')
-            ? $longTokenRes->json('access_token')
-            : $shortToken;
-
         // Fetch WABA details from Meta
         $wabaRes = Http::withToken($accessToken)
-            ->get("https://graph.facebook.com/v20.0/{$validated['waba_id']}", [
+            ->get("https://graph.facebook.com/v20.0/{$wabaId}", [
                 'fields' => 'id,name,currency,timezone_id',
             ]);
 
         if (! $wabaRes->successful()) {
             Log::warning('WhatsApp embedded signup: WABA fetch failed', [
                 'workspace_id' => $workspaceId,
-                'waba_id'      => $validated['waba_id'],
+                'waba_id'      => $wabaId,
                 'response'     => $wabaRes->json(),
             ]);
 
@@ -115,20 +158,20 @@ class WhatsappEmbeddedSignupController extends Controller
 
         $wabaData = $wabaRes->json();
 
-        if (WhatsappBusinessAccount::where('waba_id', $validated['waba_id'])
+        if (WhatsappBusinessAccount::where('waba_id', $wabaId)
             ->where('workspace_id', '!=', $workspaceId)
             ->exists()) {
             return response()->json(['message' => 'This WhatsApp Business Account is already connected to another workspace.'], 409);
         }
 
-        $existing = WhatsappBusinessAccount::where('waba_id', $validated['waba_id'])
+        $existing = WhatsappBusinessAccount::where('waba_id', $wabaId)
             ->where('workspace_id', $workspaceId)
             ->first();
 
         $verifyToken = $existing?->webhook_verify_token ?? Str::random(48);
 
         $waba = WhatsappBusinessAccount::updateOrCreate(
-            ['waba_id' => $validated['waba_id'], 'workspace_id' => $workspaceId],
+            ['waba_id' => $wabaId, 'workspace_id' => $workspaceId],
             [
                 'credentials' => [
                     'system_user_token' => $accessToken,
@@ -138,7 +181,7 @@ class WhatsappEmbeddedSignupController extends Controller
                 'webhook_verify_token' => $verifyToken,
                 'status'               => 'active',
                 'meta_json'            => array_merge($existing?->meta_json ?? [], [
-                    'display_name'  => $wabaData['name'] ?? $validated['waba_id'],
+                    'display_name'  => $wabaData['name'] ?? $wabaId,
                     'currency'      => $wabaData['currency'] ?? null,
                     'timezone_id'   => $wabaData['timezone_id'] ?? null,
                     'connected_via' => 'embedded_signup',
@@ -147,7 +190,7 @@ class WhatsappEmbeddedSignupController extends Controller
         );
 
         // Subscribe the app to this WABA for webhooks and register callback URL
-        $webhookError = $this->subscribeWabaWebhooks($validated['waba_id'], $accessToken, $waba->webhook_verify_token, $meta);
+        $webhookError = $this->subscribeWabaWebhooks($wabaId, $accessToken, $waba->webhook_verify_token, $meta);
 
         // Sync phone numbers (try user token, then app token, then admin system user)
         $phoneCount = 0;

@@ -556,12 +556,8 @@ function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookToken
     const [waSubmitting, setWaSubmitting] = useState(false);
     const [waMethod, setWaMethod] = useState(metaConfigIdWhatsapp ? 'meta' : 'manual');
 
-    const handleWaEmbeddedCode = useCallback(async (code, wabaId, phoneNumberId = null) => {
+    const handleWaEmbeddedCode = useCallback(async (code, wabaId = null, phoneNumberId = null, accessToken = null) => {
         setWaApiError(null);
-        if (!wabaId) {
-            setWaApiError(t('inbox.could_not_detect_waba'));
-            return;
-        }
         setWaSubmitting(true);
         try {
             const res = await fetch(route('client.whatsapp.setup.embedded-signup'), {
@@ -573,8 +569,10 @@ function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookToken
                 },
                 body: JSON.stringify({
                     code,
+                    access_token: accessToken,
                     waba_id: wabaId,
                     phone_number_id: phoneNumberId,
+                    redirect_uri: window.location.href.split('#')[0],
                 }),
             });
             const json = await res.json();
@@ -815,15 +813,15 @@ function AccountRow({ account, channel, chatbots }) {
  * Listens for the WA_EMBEDDED_SIGNUP postMessage that Meta sends when
  * sessionInfoVersion:'3' is set. Resolves with { waba_id, phone_number_id }.
  */
-function waitForWabaSessionInfo(timeout = 120000) {
-    return new Promise((resolve, reject) => {
+function waitForWabaSessionInfo(timeout = 60000) {
+    return new Promise((resolve) => {
         const timer = setTimeout(() => {
             window.removeEventListener('message', handler);
-            reject(new Error('Timed out waiting for WABA session info'));
+            resolve({});
         }, timeout);
 
         function handler(event) {
-            if (event.origin !== 'https://www.facebook.com') return;
+            if (!event.origin || !event.origin.includes('facebook.com')) return;
             try {
                 const parsed = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                 if (parsed?.type === 'WA_EMBEDDED_SIGNUP') {
