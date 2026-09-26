@@ -21,24 +21,30 @@ class AffiliatePortalController extends Controller
         // Ensure user has affiliate code
         $referralCode = 'AFF-' . strtoupper(substr(md5($user->id . $user->email), 0, 8));
 
-        // Marketplace products eligible for promotion
+        // Marketplace products eligible for promotion (only where seller enabled affiliate promotion)
         $marketplaceProducts = EcommerceProduct::where('status', 'active')
             ->where('is_published', true)
+            ->where('affiliate_enabled', true)
             ->with('store')
             ->latest()
-            ->take(12)
+            ->take(18)
             ->get()
-            ->map(fn (EcommerceProduct $p) => [
-                'id' => $p->id,
-                'name' => $p->name,
-                'store_name' => $p->store?->name ?? 'Botify Store',
-                'price' => (float) $p->price,
-                'currency' => $p->currency ?: 'NGN',
-                'commission_rate' => 15, // 15% standard commission
-                'estimated_commission' => round((float) $p->price * 0.15, 2),
-                'image_url' => $p->image_url,
-                'affiliate_link' => $p->getCheckoutUrl() . '?ref=' . $referralCode,
-            ]);
+            ->map(function (EcommerceProduct $p) use ($referralCode) {
+                $commissionRate = $p->getAffiliateCommissionPercentage();
+                $estimatedCommission = round(((float) $p->price) * ($commissionRate / 100), 2);
+
+                return [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'store_name' => $p->store?->name ?? 'Botify Store',
+                    'price' => (float) $p->price,
+                    'currency' => $p->currency ?: 'NGN',
+                    'commission_rate' => $commissionRate,
+                    'estimated_commission' => $estimatedCommission,
+                    'image_url' => $p->image_url,
+                    'affiliate_link' => $p->getCheckoutUrl() . '?ref=' . $referralCode,
+                ];
+            });
 
         $stats = [
             'total_clicks' => 0,

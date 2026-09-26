@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
-import { X, Upload, Link as LinkIcon, FileText, Image, AlertCircle } from 'lucide-react';
+import { X, Upload, Link as LinkIcon, FileText, Image, AlertCircle, Sparkles, Award } from 'lucide-react';
 
 export default function CreateEditModal({ isOpen, onClose, product = null, defaultCurrency = 'NGN' }) {
     const isEdit = Boolean(product);
@@ -16,6 +16,8 @@ export default function CreateEditModal({ isOpen, onClose, product = null, defau
         asset_type: 'file_upload',
         external_redirect_url: '',
         is_published: true,
+        affiliate_enabled: false,
+        affiliate_commission_percentage: '15',
     });
 
     const [digitalFile, setDigitalFile] = useState(null);
@@ -36,6 +38,10 @@ export default function CreateEditModal({ isOpen, onClose, product = null, defau
                 asset_type: product.digital_asset?.asset_type || 'file_upload',
                 external_redirect_url: product.digital_asset?.external_redirect_url || '',
                 is_published: product.is_published ?? true,
+                affiliate_enabled: Boolean(product.affiliate_enabled),
+                affiliate_commission_percentage: product.affiliate_commission_percentage != null
+                    ? String(product.affiliate_commission_percentage)
+                    : '15',
             });
         } else {
             setForm({
@@ -49,6 +55,8 @@ export default function CreateEditModal({ isOpen, onClose, product = null, defau
                 asset_type: 'file_upload',
                 external_redirect_url: '',
                 is_published: true,
+                affiliate_enabled: false,
+                affiliate_commission_percentage: '15',
             });
             setDigitalFile(null);
             setCoverImage(null);
@@ -76,6 +84,10 @@ export default function CreateEditModal({ isOpen, onClose, product = null, defau
             payload.append('external_redirect_url', form.external_redirect_url);
         }
         payload.append('is_published', form.is_published ? '1' : '0');
+        payload.append('affiliate_enabled', form.affiliate_enabled ? '1' : '0');
+        if (form.affiliate_enabled && form.affiliate_commission_percentage) {
+            payload.append('affiliate_commission_percentage', form.affiliate_commission_percentage);
+        }
 
         if (digitalFile) {
             payload.append('digital_file', digitalFile);
@@ -335,6 +347,116 @@ export default function CreateEditModal({ isOpen, onClose, product = null, defau
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
                             className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
                         />
+                    </div>
+
+                    {/* Affiliate & Partner Promotion Card */}
+                    <div className="p-4 rounded-xl border border-purple-200 dark:border-purple-900/60 bg-purple-50/40 dark:bg-purple-950/20 space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-start gap-2.5">
+                                <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 shrink-0 mt-0.5">
+                                    <Sparkles className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                                            Allow Affiliates to Promote Product
+                                        </span>
+                                        {form.affiliate_enabled && (
+                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-600 text-white">
+                                                Active ({form.affiliate_commission_percentage || 0}%)
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+                                        Enable to let registered affiliates promote your product and earn commission per sale.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* iOS-style toggle switch */}
+                            <button
+                                type="button"
+                                role="switch"
+                                aria-checked={form.affiliate_enabled}
+                                onClick={() => setForm({ ...form, affiliate_enabled: !form.affiliate_enabled })}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                                    form.affiliate_enabled ? 'bg-purple-600' : 'bg-neutral-300 dark:bg-neutral-700'
+                                }`}
+                            >
+                                <span
+                                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                                        form.affiliate_enabled ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
+                                />
+                            </button>
+                        </div>
+
+                        {form.affiliate_enabled ? (
+                            <div className="pt-3 border-t border-purple-200/60 dark:border-purple-900/40 space-y-3">
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="block text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+                                            Affiliate Commission Percentage (%)
+                                        </label>
+                                        <span className="text-xs font-bold text-purple-700 dark:text-purple-300">
+                                            {form.affiliate_commission_percentage || 0}% per sale
+                                        </span>
+                                    </div>
+
+                                    {/* Preset quick buttons */}
+                                    <div className="flex items-center gap-1.5 mb-2">
+                                        {[10, 15, 20, 25, 30, 50].map((rate) => (
+                                            <button
+                                                key={rate}
+                                                type="button"
+                                                onClick={() => setForm({ ...form, affiliate_commission_percentage: String(rate) })}
+                                                className={`px-2 py-1 rounded-md text-[11px] font-semibold transition ${
+                                                    String(form.affiliate_commission_percentage) === String(rate)
+                                                        ? 'bg-purple-600 text-white shadow-xs'
+                                                        : 'bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                                                }`}
+                                            >
+                                                {rate}%
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            step="0.5"
+                                            required={form.affiliate_enabled}
+                                            placeholder="15"
+                                            value={form.affiliate_commission_percentage}
+                                            onChange={(e) => setForm({ ...form, affiliate_commission_percentage: e.target.value })}
+                                            className="w-full rounded-lg border border-purple-200 dark:border-purple-800/80 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                                        />
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-400">
+                                            %
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Calculated payout preview */}
+                                {Number(form.price) > 0 && Number(form.affiliate_commission_percentage) > 0 && (
+                                    <div className="p-2.5 rounded-lg bg-white/80 dark:bg-neutral-900/80 border border-purple-100 dark:border-purple-900/40 text-xs flex items-center justify-between text-neutral-700 dark:text-neutral-300">
+                                        <span className="flex items-center gap-1 text-purple-900 dark:text-purple-300 font-medium">
+                                            <Award className="h-3.5 w-3.5 text-purple-600" />
+                                            Affiliate payout per sale:
+                                        </span>
+                                        <span className="font-bold text-purple-700 dark:text-purple-300 text-sm">
+                                            {form.currency || 'NGN'} {((Number(form.price) * Number(form.affiliate_commission_percentage)) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="pt-1 text-[11px] text-neutral-400 dark:text-neutral-500">
+                                Affiliate promotion is currently disabled for this product.
+                            </div>
+                        )}
                     </div>
 
                     {/* Live status toggle */}

@@ -40,7 +40,18 @@ export default function ProductCheckout(props = {}) {
         customer_email: '',
         customer_phone: '',
         gateway: gateways[0]?.id || 'paystack',
+        ref: '',
     });
+
+    useEffect(() => {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refParam = urlParams.get('ref') || urlParams.get('referral_code');
+            if (refParam) {
+                setForm((prev) => ({ ...prev, ref: refParam }));
+            }
+        } catch (_) {}
+    }, []);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);

@@ -35,6 +35,8 @@ class NativeProductController extends Controller
             'digital_file' => ['nullable', 'file', 'max:102400'], // Max 100MB
             'cover_image' => ['nullable', 'image', 'max:5120'], // Max 5MB
             'is_published' => ['nullable', 'boolean'],
+            'affiliate_enabled' => ['nullable', 'boolean'],
+            'affiliate_commission_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
         try {
@@ -73,6 +75,8 @@ class NativeProductController extends Controller
             'digital_file' => ['nullable', 'file', 'max:102400'],
             'cover_image' => ['nullable', 'image', 'max:5120'],
             'is_published' => ['nullable', 'boolean'],
+            'affiliate_enabled' => ['nullable', 'boolean'],
+            'affiliate_commission_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
         try {

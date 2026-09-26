@@ -48,6 +48,8 @@ class ProductController extends Controller
                 'inventory_quantity' => $p->inventory_quantity,
                 'status' => $p->status,
                 'is_published' => (bool) $p->is_published,
+                'affiliate_enabled' => (bool) $p->affiliate_enabled,
+                'affiliate_commission_percentage' => $p->affiliate_commission_percentage !== null ? (float) $p->affiliate_commission_percentage : null,
                 'image_url' => $p->image_url,
                 'platform' => $p->platform,
                 'description' => $p->description,

@@ -61,6 +61,10 @@ class NativeProductService
                 'inventory_quantity' => $data['inventory_quantity'] ?? null,
                 'status' => 'active',
                 'is_published' => (bool) ($data['is_published'] ?? true),
+                'affiliate_enabled' => (bool) ($data['affiliate_enabled'] ?? false),
+                'affiliate_commission_percentage' => isset($data['affiliate_commission_percentage']) && $data['affiliate_commission_percentage'] !== ''
+                    ? (float) $data['affiliate_commission_percentage']
+                    : null,
                 'image_url' => $imageUrl,
             ]);
 
@@ -135,6 +139,10 @@ class NativeProductService
                 'compare_at_price' => array_key_exists('compare_at_price', $data) ? ($data['compare_at_price'] ? (float) $data['compare_at_price'] : null) : $product->compare_at_price,
                 'currency' => isset($data['currency']) ? strtoupper((string) $data['currency']) : $product->currency,
                 'is_published' => isset($data['is_published']) ? (bool) $data['is_published'] : $product->is_published,
+                'affiliate_enabled' => array_key_exists('affiliate_enabled', $data) ? (bool) $data['affiliate_enabled'] : $product->affiliate_enabled,
+                'affiliate_commission_percentage' => array_key_exists('affiliate_commission_percentage', $data)
+                    ? ($data['affiliate_commission_percentage'] !== null && $data['affiliate_commission_percentage'] !== '' ? (float) $data['affiliate_commission_percentage'] : null)
+                    : $product->affiliate_commission_percentage,
                 'image_url' => $data['image_url'] ?? $product->image_url,
             ]);
 

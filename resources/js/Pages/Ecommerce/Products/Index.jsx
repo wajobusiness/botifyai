@@ -186,16 +186,28 @@ export default function ProductsIndex({
                                             </div>
                                         </td>
 
-                                        {/* Platform / Type */}
+                                        {/* Platform / Type & Affiliate */}
                                         <td className="px-4 py-3">
                                             <div className="flex flex-col items-start gap-1">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                    isNative
-                                                        ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300'
-                                                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                                                }`}>
-                                                    {isNative ? 'Digital Download' : p.platform}
-                                                </span>
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                        isNative
+                                                            ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300'
+                                                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                                    }`}>
+                                                        {isNative ? 'Digital Download' : p.platform}
+                                                    </span>
+                                                    {p.affiliate_enabled ? (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60">
+                                                            <Sparkles className="h-2.5 w-2.5 text-purple-600 dark:text-purple-400" />
+                                                            {p.affiliate_commission_percentage ?? 15}% Affiliate
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/80">
+                                                            Affiliate Off
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 {p.digital_asset?.file_name && (
                                                     <span className="text-[11px] text-neutral-400 truncate max-w-[160px]">
                                                         📁 {p.digital_asset.file_name}

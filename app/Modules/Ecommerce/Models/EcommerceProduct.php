@@ -35,7 +35,8 @@ class EcommerceProduct extends Model
     protected $fillable = [
         'workspace_id', 'store_id', 'external_id', 'platform', 'name', 'slug',
         'product_type', 'description', 'sku', 'price', 'compare_at_price', 'currency',
-        'inventory_quantity', 'status', 'is_published', 'image_url', 'raw',
+        'inventory_quantity', 'status', 'is_published', 'affiliate_enabled',
+        'affiliate_commission_percentage', 'image_url', 'raw',
         'custom_fields', 'last_seen_at',
     ];
 
@@ -50,8 +51,28 @@ class EcommerceProduct extends Model
             'compare_at_price' => 'decimal:2',
             'inventory_quantity' => 'integer',
             'is_published' => 'boolean',
+            'affiliate_enabled' => 'boolean',
+            'affiliate_commission_percentage' => 'decimal:2',
             'last_seen_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Determine if this product is enabled for affiliate promotion in the marketplace.
+     */
+    public function isAffiliatePromotable(): bool
+    {
+        return (bool) $this->affiliate_enabled && (bool) $this->is_published && $this->status === 'active';
+    }
+
+    /**
+     * Get the affiliate commission percentage configured by the merchant.
+     */
+    public function getAffiliateCommissionPercentage(): float
+    {
+        return $this->affiliate_commission_percentage !== null
+            ? (float) $this->affiliate_commission_percentage
+            : 15.0;
     }
 
     public function store(): BelongsTo

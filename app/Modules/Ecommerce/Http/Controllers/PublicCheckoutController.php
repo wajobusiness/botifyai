@@ -191,6 +191,8 @@ class PublicCheckoutController extends Controller
             'customer_email' => ['required', 'email', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:50'],
             'gateway' => ['required', 'string', 'in:paystack,stripe'],
+            'ref' => ['nullable', 'string', 'max:64'],
+            'referral_code' => ['nullable', 'string', 'max:64'],
         ]);
 
         $currency = strtoupper($product->currency ?: 'NGN');
@@ -198,6 +200,19 @@ class PublicCheckoutController extends Controller
 
         // Generate unique order reference
         $reference = 'ORD-'.strtoupper(Str::random(12));
+
+        // Track affiliate referral if enabled on the product by the merchant
+        $refCode = $validated['referral_code'] ?? $validated['ref'] ?? $request->query('ref');
+        $orderMetadata = [];
+        if ($refCode && $product->affiliate_enabled) {
+            $commissionPercentage = $product->getAffiliateCommissionPercentage();
+            $commissionAmount = round($grossTotal * ($commissionPercentage / 100), 2);
+            $orderMetadata['affiliate'] = [
+                'referral_code' => (string) $refCode,
+                'commission_percentage' => $commissionPercentage,
+                'commission_amount' => $commissionAmount,
+            ];
+        }
 
         // Create pending order with payment_status = pending
         $order = EcommerceOrder::create([
@@ -216,6 +231,7 @@ class PublicCheckoutController extends Controller
             'total' => $grossTotal,
             'payment_gateway' => $validated['gateway'],
             'payment_reference' => $reference,
+            'metadata' => ! empty($orderMetadata) ? $orderMetadata : null,
             'line_items' => [
                 [
                     'product_id' => $product->id,
