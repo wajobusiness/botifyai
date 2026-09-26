@@ -161,6 +161,7 @@ class StoreWizardController extends Controller
             $syncData = [];
             foreach ($validated['connected_bot_ids'] as $index => $botId) {
                 $syncData[$botId] = [
+                    'workspace_id' => $store->workspace_id,
                     'is_store_default' => ($index === 0),
                     'enable_catalog_search' => true,
                     'enable_cart_creation' => true,

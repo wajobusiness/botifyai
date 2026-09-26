@@ -162,6 +162,7 @@ class EcommerceStore extends Model
             'store_id',
             'chatbot_id'
         )->withPivot([
+            'workspace_id',
             'is_store_default',
             'enable_catalog_search',
             'enable_cart_creation',

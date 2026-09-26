@@ -124,6 +124,7 @@ class AiChatbot extends Model
             'chatbot_id',
             'store_id'
         )->withPivot([
+            'workspace_id',
             'is_store_default',
             'enable_catalog_search',
             'enable_cart_creation',
