@@ -98,6 +98,42 @@ class LandingController extends Controller
         ]);
     }
 
+    public function affiliates(Request $request): Response|RedirectResponse
+    {
+        $user = $request->user();
+        if ($user && $user->hasActiveAffiliateAccess()) {
+            return redirect()->route('client.affiliates.index');
+        }
+
+        if ($redirect = $this->landingDisabledRedirect()) {
+            return $redirect;
+        }
+
+        $accessFee = (float) (SystemSetting::get('affiliate_access_fee') ?? 0);
+        $accessCurrency = SystemSetting::get('affiliate_access_currency') ?? 'USD';
+        $accessCycle = SystemSetting::get('affiliate_access_cycle') ?? 'yearly';
+
+        $joinUrl = $user
+            ? route('client.affiliates.join')
+            : (Route::has('register') ? route('register', ['redirect' => route('client.affiliates.join', [], false)]) : route('login'));
+
+        $loginUrl = Route::has('login')
+            ? route('login', ['redirect' => route('client.affiliates.index', [], false)])
+            : '/login';
+
+        return Inertia::render('marketing/Affiliates', [
+            'canLogin' => Route::has('login'),
+            'canRegister' => Route::has('register'),
+            'landing' => LandingPageController::getPublicSettings(),
+            'accessFee' => $accessFee,
+            'accessCurrency' => $accessCurrency,
+            'accessCycle' => $accessCycle,
+            'isLoggedIn' => (bool) $user,
+            'joinUrl' => $joinUrl,
+            'loginUrl' => $loginUrl,
+        ]);
+    }
+
     public function pricing(Request $request): Response|RedirectResponse
     {
         if ($redirect = $this->landingDisabledRedirect()) {

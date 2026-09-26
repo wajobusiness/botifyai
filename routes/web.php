@@ -33,6 +33,7 @@ Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 // Public marketing landing pages
+Route::get('/affiliates', [LandingController::class, 'affiliates'])->name('public.affiliates');
 Route::get('/pricing', [LandingController::class, 'pricing'])->name('pricing');
 Route::get('/faq', [LandingController::class, 'faq'])->name('faq');
 Route::get('/use-cases', [LandingController::class, 'useCases'])->name('use-cases');

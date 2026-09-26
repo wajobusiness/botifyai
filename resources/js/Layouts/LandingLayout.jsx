@@ -46,6 +46,7 @@ export default function LandingLayout({ children }) {
         { label: t('nav.features'),     href: '/#features' },
         { label: t('nav.use_cases'),    href: '/use-cases' },
         { label: t('nav.integrations', { defaultValue: 'Integrations' }), href: '/integrations' },
+        { label: t('nav.affiliates', { defaultValue: 'Affiliates' }), href: '/affiliates' },
         { label: t('nav.pricing'),      href: '/pricing' },
         { label: t('nav.faq'),          href: '/faq' },
         { label: t('nav.contact'),      href: '/contact' },
@@ -406,6 +407,7 @@ export default function LandingLayout({ children }) {
                                 {[
                                     { label: t('nav.features'), href: '/#features' },
                                     { label: t('nav.integrations', { defaultValue: 'Integrations' }), href: '/integrations' },
+                                    { label: t('nav.affiliates', { defaultValue: 'Affiliate Network' }), href: '/affiliates' },
                                     { label: t('nav.pricing'), href: '/pricing' },
                                     { label: t('nav.faq'), href: '/faq' },
                                 ].map((l) => (
