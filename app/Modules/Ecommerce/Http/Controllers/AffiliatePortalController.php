@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class AffiliatePortalController extends Controller
 {
@@ -187,7 +188,7 @@ class AffiliatePortalController extends Controller
     /**
      * Initiate payment checkout for affiliate access subscription.
      */
-    public function checkout(Request $request): JsonResponse|RedirectResponse
+    public function checkout(Request $request): SymfonyResponse
     {
         $user = $request->user();
 
