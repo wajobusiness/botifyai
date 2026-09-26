@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\TaxRateController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\TranslationController;
 use App\Http\Controllers\Admin\PusherSettingsController;
+use App\Http\Controllers\Admin\AdminAffiliateController;
 use App\Modules\Ecommerce\Http\Controllers\AdminOrderController;
 use App\Modules\Ecommerce\Http\Controllers\AdminPayoutController;
 use App\Modules\Integrations\Http\Controllers\IntegrationConfigController;
@@ -83,6 +84,13 @@ Route::post('/ecommerce/orders/{order}/fulfill', [AdminOrderController::class, '
 Route::get('/ecommerce/payouts', [AdminPayoutController::class, 'index'])->name('ecommerce.payouts.index')->middleware('permission:view_payment_gateways');
 Route::post('/ecommerce/payouts/{payout}/approve', [AdminPayoutController::class, 'approve'])->name('ecommerce.payouts.approve')->middleware('permission:manage_payment_gateways');
 Route::post('/ecommerce/payouts/{payout}/reject', [AdminPayoutController::class, 'reject'])->name('ecommerce.payouts.reject')->middleware('permission:manage_payment_gateways');
+
+// Affiliate Program & Access Fee Management
+Route::get('/affiliates', [AdminAffiliateController::class, 'index'])->name('affiliates.index')->middleware('permission:view_settings');
+Route::post('/affiliates/settings', [AdminAffiliateController::class, 'updateSettings'])->name('affiliates.settings.update')->middleware('permission:manage_settings');
+Route::post('/affiliates/users/{user}/comp', [AdminAffiliateController::class, 'compUser'])->name('affiliates.users.comp')->middleware('permission:manage_settings');
+Route::post('/affiliates/users/{user}/extend', [AdminAffiliateController::class, 'extendExpiry'])->name('affiliates.users.extend')->middleware('permission:manage_settings');
+Route::post('/affiliates/users/{user}/revoke', [AdminAffiliateController::class, 'revokeAccess'])->name('affiliates.users.revoke')->middleware('permission:manage_settings');
 
 // Coupons
 Route::get('/coupons', [CouponController::class, 'index'])->name('coupons.index')->middleware('permission:view_plans');

@@ -133,6 +133,9 @@ Route::middleware(['verified'])->group(function () {
     // Multi-Role SSO Switcher
     Route::post('/role/switch', [RoleContextController::class, 'switchRole'])->name('role.switch');
 
-    // Affiliate Portal Foundation
+    // Affiliate Portal & Paid Access Layer
     Route::get('/affiliates', [AffiliatePortalController::class, 'index'])->name('affiliates.index');
+    Route::get('/affiliates/join', [AffiliatePortalController::class, 'join'])->name('affiliates.join');
+    Route::post('/affiliates/join/checkout', [AffiliatePortalController::class, 'checkout'])->name('affiliates.join.checkout');
+    Route::get('/affiliates/join/verify', [AffiliatePortalController::class, 'verify'])->name('affiliates.join.verify');
 });

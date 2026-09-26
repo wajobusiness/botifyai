@@ -251,7 +251,39 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isAffiliate(): bool
     {
-        return $this->getActiveRole() === 'affiliate' || $this->affiliate_status === 'active';
+        return $this->getActiveRole() === 'affiliate' || $this->hasActiveAffiliateAccess();
+    }
+
+    public function affiliateSubscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AffiliateSubscription::class, 'user_id');
+    }
+
+    public function latestAffiliateSubscription(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(AffiliateSubscription::class, 'user_id')->latestOfMany();
+    }
+
+    /**
+     * Check if user has active access to the affiliate hub (free or paid).
+     */
+    public function hasActiveAffiliateAccess(): bool
+    {
+        $fee = (float) (\App\Models\SystemSetting::get('affiliate_access_fee') ?? 0);
+        if ($fee <= 0) {
+            return true;
+        }
+
+        if ($this->affiliate_status === 'comped') {
+            return true;
+        }
+
+        $latestSub = $this->latestAffiliateSubscription;
+        if ($latestSub && $latestSub->isActive()) {
+            return true;
+        }
+
+        return false;
     }
 
     public function hasUserRole(string $role): bool

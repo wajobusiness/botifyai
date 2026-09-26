@@ -30,6 +30,7 @@ import {
     Wallet,
     ShoppingBag,
     Search,
+    Award,
 } from 'lucide-react';
 
 /** Nav item: { labelKey, route, href, icon, permission } - show only if user has permission (or no permission required). Order follows typical admin usage frequency. */
@@ -41,6 +42,7 @@ const ADMIN_NAV_ITEMS = [
     { labelKey: 'admin.nav.payments', route: 'admin.payments.index', href: () => route('admin.payments.index'), icon: Receipt, permission: 'view_payment_gateways' },
     { labelKey: 'admin.nav.commerce_orders', labelFallback: 'Commerce Orders', route: 'admin.ecommerce.orders.index', href: () => { try { return route('admin.ecommerce.orders.index'); } catch (_) { return '/admin/ecommerce/orders'; } }, icon: ShoppingBag, permission: 'view_payment_gateways' },
     { labelKey: 'admin.nav.merchant_payouts', labelFallback: 'Merchant Payouts', route: 'admin.ecommerce.payouts.index', href: () => { try { return route('admin.ecommerce.payouts.index'); } catch (_) { return '/admin/ecommerce/payouts'; } }, icon: Wallet, permission: 'view_payment_gateways' },
+    { labelKey: 'admin.nav.affiliates', labelFallback: 'Affiliate Program', route: 'admin.affiliates.index', href: () => { try { return route('admin.affiliates.index'); } catch (_) { return '/admin/affiliates'; } }, icon: Award, permission: 'view_settings' },
     { labelKey: 'admin.nav.plans', route: 'admin.plans.index', href: () => route('admin.plans.index'), icon: Package, permission: 'view_plans' },
     { labelKey: 'admin.nav.coupons', route: 'admin.coupons.index', href: () => route('admin.coupons.index'), icon: Tag, permission: 'view_plans' },
     { labelKey: 'admin.tax_rates', route: 'admin.tax-rates.index', href: () => route('admin.tax-rates.index'), icon: Percent, permission: 'view_plans' },
