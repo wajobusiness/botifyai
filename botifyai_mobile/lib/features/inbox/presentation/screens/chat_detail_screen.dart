@@ -287,55 +287,70 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
             final contactName = conv?.contact.name ?? 'Live Chat';
             final avatarUrl = conv?.contact.avatar;
 
-            return Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
-                  backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                      ? CachedNetworkImageProvider(avatarUrl)
-                      : null,
-                  child: avatarUrl == null || avatarUrl.isEmpty
-                      ? Text(
-                          contactName.isNotEmpty ? contactName[0].toUpperCase() : '?',
-                          style: AppTypography.bodySmall.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        )
-                      : null,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        contactName,
-                        style: AppTypography.bodyRegular.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        subtitle,
-                        style: AppTypography.caption.copyWith(
-                          fontSize: 11,
-                          color: isTyping
-                              ? AppColors.primary
-                              : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
-                          fontWeight: isTyping ? FontWeight.w600 : FontWeight.w400,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+            return InkWell(
+              onTap: () {
+                if (conv != null) {
+                  ContactDetailDrawer.show(
+                    context: context,
+                    profile: ContactProfile(
+                      contact: conv.contact,
+                      labels: conv.labels,
+                      channel: conv.channel,
+                      assignedAgentName: conv.assignedUserName,
+                    ),
+                  );
+                }
+              },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
+                    backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                        ? CachedNetworkImageProvider(avatarUrl)
+                        : null,
+                    child: avatarUrl == null || avatarUrl.isEmpty
+                        ? Text(
+                            contactName.isNotEmpty ? contactName[0].toUpperCase() : '?',
+                            style: AppTypography.bodySmall.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          )
+                        : null,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          contactName,
+                          style: AppTypography.bodyRegular.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          subtitle,
+                          style: AppTypography.caption.copyWith(
+                            fontSize: 11,
+                            color: isTyping
+                                ? AppColors.primary
+                                : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                            fontWeight: isTyping ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         ),
@@ -343,9 +358,29 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
           BlocBuilder<ChatDetailBloc, ChatDetailState>(
             builder: (context, state) {
               if (state is! ChatDetailLoaded) return const SizedBox.shrink();
-              return IconButton(
-                icon: const Icon(LucideIcons.moreVertical, size: 20),
-                onPressed: () => _showStatusDialog(context, state.conversation),
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(LucideIcons.user, size: 20),
+                    tooltip: 'Contact 360',
+                    onPressed: () {
+                      ContactDetailDrawer.show(
+                        context: context,
+                        profile: ContactProfile(
+                          contact: state.conversation.contact,
+                          labels: state.conversation.labels,
+                          channel: state.conversation.channel,
+                          assignedAgentName: state.conversation.assignedUserName,
+                        ),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(LucideIcons.moreVertical, size: 20),
+                    onPressed: () => _showStatusDialog(context, state.conversation),
+                  ),
+                ],
               );
             },
           ),

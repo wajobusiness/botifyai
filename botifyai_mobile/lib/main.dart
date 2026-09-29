@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'app/app.dart';
 import 'core/api/api_client.dart';
+import 'core/notifications/fcm_service.dart';
 import 'core/realtime/pusher_service.dart';
 import 'core/security/biometric_service.dart';
 import 'core/storage/secure_storage_service.dart';
@@ -34,6 +35,7 @@ void main() async {
   final biometricService = BiometricService();
   final apiClient = ApiClient(storageService: secureStorage);
   final pusherService = PusherService();
+  final fcmService = FcmService();
 
   // Initialize Repositories
   final authRemoteDataSource = AuthRemoteDataSourceImpl(apiClient: apiClient);
@@ -69,6 +71,9 @@ void main() async {
                   state.user.workspace?.id.toString() ??
                   '1';
               pusherService.init(workspaceId: workspaceId);
+
+              // Initialize Firebase Cloud Messaging and register device token
+              fcmService.init(apiClient: apiClient);
             } else if (state is AuthUnauthenticated) {
               pusherService.disconnect();
             }
