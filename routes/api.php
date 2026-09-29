@@ -10,9 +10,12 @@ use App\Http\Controllers\Api\V1\ContactApiController;
 use App\Http\Controllers\Api\V1\ConversationApiController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MessageApiController;
+use App\Http\Controllers\Api\V1\MobileAiCopilotApiController;
 use App\Http\Controllers\Api\V1\MobileAuthController;
 use App\Http\Controllers\Api\V1\MobileConversationController;
+use App\Http\Controllers\Api\V1\MobileDeviceApiController;
 use App\Http\Controllers\Api\V1\MobileInboxController;
+use App\Http\Controllers\Api\V1\MobileOrderApiController;
 use App\Http\Controllers\Api\V1\NotificationApiController;
 use App\Http\Controllers\Api\V1\OutboundWebhookApiController;
 use App\Http\Controllers\Api\V1\SegmentApiController;
@@ -81,6 +84,18 @@ Route::prefix('v1/mobile')->middleware(['auth:sanctum', 'throttle:api', 'demo'])
     // Contacts
     Route::get('/contacts/search', [MobileInboxController::class, 'contactSearch']);
     Route::get('/contacts/{id}', [MobileInboxController::class, 'contact']);
+
+    // E-Commerce Orders
+    Route::get('/orders', [MobileOrderApiController::class, 'index']);
+    Route::get('/orders/{id}', [MobileOrderApiController::class, 'show']);
+    Route::patch('/orders/{id}/status', [MobileOrderApiController::class, 'updateStatus']);
+
+    // AI Copilot
+    Route::post('/ai/copilot-draft', [MobileAiCopilotApiController::class, 'draft']);
+
+    // FCM Push Device Registration
+    Route::post('/devices/register-push', [MobileDeviceApiController::class, 'register']);
+    Route::post('/device-token', [MobileDeviceApiController::class, 'register']);
 });
 
 Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api', 'demo'])->group(function () {
