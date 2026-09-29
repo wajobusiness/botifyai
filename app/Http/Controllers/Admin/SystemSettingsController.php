@@ -17,11 +17,13 @@ class SystemSettingsController extends Controller
 {
     public function index(): Response
     {
-        $generalKeys = ['app_name', 'app_tagline', 'support_email', 'primary_color', 'secondary_color', 'font_family'];
+        $generalKeys = ['app_name', 'app_tagline', 'support_email', 'primary_color', 'secondary_color', 'font_family', 'registration_emails_enabled'];
 
         $general = [];
         foreach ($generalKeys as $key) {
-            $general[$key] = SystemSetting::get($key, '');
+            $general[$key] = $key === 'registration_emails_enabled'
+                ? SystemSetting::get($key, '1')
+                : SystemSetting::get($key, '');
         }
 
         $logoPath    = SystemSetting::get('app_logo_path');
@@ -105,18 +107,24 @@ class SystemSettingsController extends Controller
     public function updateGeneral(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'app_name'        => ['nullable', 'string', 'max:128'],
-            'app_tagline'     => ['nullable', 'string', 'max:255'],
-            'support_email'   => ['nullable', 'email', 'max:255'],
-            'primary_color'   => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'secondary_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'app_name'                    => ['nullable', 'string', 'max:128'],
+            'app_tagline'                 => ['nullable', 'string', 'max:255'],
+            'support_email'               => ['nullable', 'email', 'max:255'],
+            'primary_color'               => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'secondary_color'             => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             // Whitelist: the slug reaches a fonts.bunny.net URL and the mapped family
             // name reaches a CSS declaration in app.blade.php.
-            'font_family'     => ['nullable', 'string', Rule::in(array_keys(config('saas.branding.fonts', [])))],
+            'font_family'                 => ['nullable', 'string', Rule::in(array_keys(config('saas.branding.fonts', [])))],
+            'registration_emails_enabled' => ['nullable', 'in:0,1,true,false'],
         ]);
 
         foreach ($validated as $key => $value) {
-            SystemSetting::set($key, $value, false, 'general');
+            if ($key === 'registration_emails_enabled') {
+                $val = in_array($value, ['1', 'true', true, 1], true) ? '1' : '0';
+                SystemSetting::set($key, $val, false, 'general');
+            } else {
+                SystemSetting::set($key, $value, false, 'general');
+            }
         }
 
         return back()->with('success', __('General settings saved.'));

@@ -13,14 +13,18 @@ class SendWelcomeNotification
     {
         $user = $event->user;
 
-        try {
-            app(MailService::class)->sendWithTemplate('welcome', $user->email, [
-                'app_name'  => config('app.name'),
-                'user_name' => $user->name,
-                'login_url' => route('login'),
-            ]);
-        } catch (\Throwable $e) {
-            Log::warning('SendWelcomeNotification: mail failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+        $registrationEmailsEnabled = \App\Models\SystemSetting::get('registration_emails_enabled', '1') === '1';
+
+        if ($registrationEmailsEnabled) {
+            try {
+                app(MailService::class)->sendWithTemplate('welcome', $user->email, [
+                    'app_name'  => config('app.name'),
+                    'user_name' => $user->name,
+                    'login_url' => route('login'),
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('SendWelcomeNotification: mail failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            }
         }
 
         try {

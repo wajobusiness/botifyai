@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Plan;
 use App\Models\SmtpConfiguration;
+use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -59,6 +60,8 @@ class RegisteredUserController extends Controller
                 // Currency left null: inherit the platform default currency.
             ]);
 
+            $registrationEmailsEnabled = SystemSetting::get('registration_emails_enabled', '1') === '1';
+
             return User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -68,9 +71,9 @@ class RegisteredUserController extends Controller
                 'client_id' => $client->id,
                 'client_role' => User::CLIENT_ROLE_ADMINISTRATOR,
                 'timezone' => $timezone,
-                // No active SMTP config = app cannot send verification mail,
-                // so auto-verify the account instead of trapping the user.
-                'email_verified_at' => SmtpConfiguration::isConfigured() ? null : now(),
+                // When registration emails are enabled and SMTP is configured, require verification (null).
+                // If registration emails are disabled or SMTP is not configured, auto-verify immediately (now()).
+                'email_verified_at' => ($registrationEmailsEnabled && SmtpConfiguration::isConfigured()) ? null : now(),
             ]);
         });
 

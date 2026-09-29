@@ -6,7 +6,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     Upload, X, Image, Globe, Palette, Settings2, Code2, Flame,
     Search, BarChart2, Shield, Code, ArrowRightLeft, RefreshCw,
-    Plus, Trash2, Edit2, ExternalLink, CheckCircle2
+    Plus, Trash2, Edit2, ExternalLink, CheckCircle2, Mail
 } from 'lucide-react';
 
 // ─── Appearance controls ──────────────────────────────────────────────────────
@@ -91,12 +91,13 @@ function ThemePreview({ primary, secondary, fontSlug, fontName }) {
 function GeneralTab({ general, fonts, flash }) {
     const { t } = useTranslation();
     const { data, setData, put, processing, errors } = useForm({
-        app_name:        general?.app_name        ?? '',
-        app_tagline:     general?.app_tagline     ?? '',
-        support_email:   general?.support_email   ?? '',
-        primary_color:   general?.primary_color   ?? '#467235',
-        secondary_color: general?.secondary_color ?? '#283f24',
-        font_family:     general?.font_family     ?? 'space-grotesk',
+        app_name:                    general?.app_name                    ?? '',
+        app_tagline:                 general?.app_tagline                 ?? '',
+        support_email:               general?.support_email               ?? '',
+        primary_color:               general?.primary_color               ?? '#467235',
+        secondary_color:             general?.secondary_color             ?? '#283f24',
+        font_family:                 general?.font_family                 ?? 'space-grotesk',
+        registration_emails_enabled: general?.registration_emails_enabled ?? '1',
     });
 
     const fontEntries = Object.entries(fonts ?? {});
@@ -169,6 +170,38 @@ function GeneralTab({ general, fonts, flash }) {
                                 />
                                 {errors.app_tagline && <p className="text-xs text-red-500">{errors.app_tagline}</p>}
                             </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 pb-4 pt-2 border-b border-neutral-100 dark:border-neutral-800">
+                            <Mail className="h-5 w-5 text-brand-500" />
+                            <div>
+                                <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">User Registration & Emails</h3>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400">Control automatic notification emails sent during user signup.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-soft border border-neutral-200 dark:border-neutral-700 px-4 py-3">
+                            <div className="pr-4">
+                                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Registration Emails</p>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                                    When enabled, welcome and verification emails are automatically sent to new users. When disabled, no registration emails are sent and new users are immediately verified upon signup.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                role="switch"
+                                aria-checked={String(data.registration_emails_enabled) === '1'}
+                                onClick={() => setData('registration_emails_enabled', String(data.registration_emails_enabled) === '1' ? '0' : '1')}
+                                className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
+                                    String(data.registration_emails_enabled) === '1' ? 'bg-brand-500' : 'bg-neutral-300 dark:bg-neutral-600'
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                                        String(data.registration_emails_enabled) === '1' ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                                />
+                            </button>
                         </div>
 
                         <div className="flex items-center gap-3 pb-4 pt-2 border-b border-neutral-100 dark:border-neutral-800">

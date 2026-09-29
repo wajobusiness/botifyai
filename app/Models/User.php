@@ -315,6 +315,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
+        $registrationEmailsEnabled = \App\Models\SystemSetting::get('registration_emails_enabled', '1') === '1';
+        if (! $registrationEmailsEnabled) {
+            return;
+        }
+
         $mailService = app(MailService::class);
         $url = URL::temporarySignedRoute(
             'verification.verify',
