@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,15 +8,26 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/realtime/pusher_service.dart';
+import '../../../copilot/data/datasources/copilot_remote_data_source.dart';
+import '../../../copilot/data/repositories/copilot_repository_impl.dart';
+import '../../../copilot/presentation/bloc/copilot_bloc.dart';
+import '../../../copilot/presentation/bloc/copilot_event.dart';
+import '../../../copilot/presentation/bloc/copilot_state.dart';
+import '../../../copilot/presentation/widgets/copilot_drawer.dart';
+import '../../../copilot/presentation/widgets/copilot_keyboard_bar.dart';
 import '../../data/datasources/inbox_remote_data_source.dart';
 import '../../data/repositories/inbox_repository_impl.dart';
 import '../../domain/entities/conversation.dart';
+import '../../domain/repositories/inbox_repository.dart';
 import '../bloc/chat/chat_detail_bloc.dart';
 import '../bloc/chat/chat_detail_event.dart';
 import '../bloc/chat/chat_detail_state.dart';
+import '../widgets/attachment_picker_sheet.dart';
+import '../widgets/canned_replies_sheet.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/message_bubble.dart';
-import '../widgets/whatsapp_window_banner.dart';
+import '../widgets/template_picker_sheet.dart';
+import '../widgets/whatsapp_window_countdown.dart';
 
 class ChatDetailScreen extends StatelessWidget {
   final String conversationUuid;
@@ -29,23 +41,33 @@ class ChatDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<ChatDetailBloc>(
-      create: (context) {
-        final apiClient = RepositoryProvider.of<ApiClient>(context);
-        final remoteSource = InboxRemoteDataSourceImpl(apiClient: apiClient);
-        final repository = InboxRepositoryImpl(remoteDataSource: remoteSource);
-        final pusherService = PusherService();
+    final apiClient = RepositoryProvider.of<ApiClient>(context);
+    final remoteSource = InboxRemoteDataSourceImpl(apiClient: apiClient);
+    final inboxRepository = InboxRepositoryImpl(remoteDataSource: remoteSource);
+    final copilotRemoteSource = CopilotRemoteDataSourceImpl(apiClient: apiClient);
+    final copilotRepository = CopilotRepositoryImpl(remoteDataSource: copilotRemoteSource);
+    final pusherService = PusherService();
 
-        final bloc = ChatDetailBloc(
-          repository: repository,
-          pusherService: pusherService,
-        );
-        bloc.add(LoadChatDetailEvent(conversationUuid));
-        return bloc;
-      },
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ChatDetailBloc>(
+          create: (context) {
+            final bloc = ChatDetailBloc(
+              repository: inboxRepository,
+              pusherService: pusherService,
+            );
+            bloc.add(LoadChatDetailEvent(conversationUuid));
+            return bloc;
+          },
+        ),
+        BlocProvider<CopilotBloc>(
+          create: (context) => CopilotBloc(repository: copilotRepository),
+        ),
+      ],
       child: _ChatDetailView(
         conversationUuid: conversationUuid,
         initialConversation: initialConversation,
+        inboxRepository: inboxRepository,
       ),
     );
   }
@@ -54,10 +76,12 @@ class ChatDetailScreen extends StatelessWidget {
 class _ChatDetailView extends StatefulWidget {
   final String conversationUuid;
   final Conversation? initialConversation;
+  final InboxRepository inboxRepository;
 
   const _ChatDetailView({
     required this.conversationUuid,
     this.initialConversation,
+    required this.inboxRepository,
   });
 
   @override
@@ -66,6 +90,7 @@ class _ChatDetailView extends StatefulWidget {
 
 class _ChatDetailViewState extends State<_ChatDetailView> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _inputController = TextEditingController();
 
   @override
   void initState() {
@@ -77,6 +102,7 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _inputController.dispose();
     super.dispose();
   }
 
@@ -138,13 +164,93 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
     );
   }
 
-  void _showTemplatePickerPlaceholder(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('WhatsApp Template Picker will be fully integrated in Sprint 3.'),
-        backgroundColor: AppColors.primary,
-        duration: const Duration(seconds: 2),
-      ),
+  void _triggerAiDraft(BuildContext context) {
+    final copilotBloc = context.read<CopilotBloc>();
+    copilotBloc.add(GenerateCopilotDraftEvent(conversationUuid: widget.conversationUuid));
+    CopilotDrawer.show(
+      context: context,
+      conversationUuid: widget.conversationUuid,
+      copilotBloc: copilotBloc,
+      onInsert: (text) {
+        setState(() {
+          _inputController.text = text;
+        });
+      },
+      onSendDirect: (text) {
+        context.read<ChatDetailBloc>().add(SendTextMessageEvent(text: text));
+      },
+      onSaveNote: (note) {
+        context.read<ChatDetailBloc>().add(SendTextMessageEvent(text: note, isNote: true));
+      },
+    );
+  }
+
+  void _triggerSummarize(BuildContext context) {
+    final copilotBloc = context.read<CopilotBloc>();
+    copilotBloc.add(SummarizeConversationEvent(widget.conversationUuid));
+    CopilotDrawer.show(
+      context: context,
+      conversationUuid: widget.conversationUuid,
+      copilotBloc: copilotBloc,
+      onInsert: (text) {
+        setState(() {
+          _inputController.text = text;
+        });
+      },
+      onSendDirect: (text) {
+        context.read<ChatDetailBloc>().add(SendTextMessageEvent(text: text));
+      },
+      onSaveNote: (note) {
+        context.read<ChatDetailBloc>().add(SendTextMessageEvent(text: note, isNote: true));
+      },
+    );
+  }
+
+  void _openShortcutsSheet(BuildContext context) async {
+    try {
+      final setup = await widget.inboxRepository.getInboxSetup();
+      if (!mounted) return;
+      CannedRepliesSheet.show(
+        context: context,
+        cannedReplies: setup.cannedReplies,
+        onSelect: (body) {
+          setState(() {
+            _inputController.text = body;
+          });
+        },
+      );
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No canned replies available.')),
+      );
+    }
+  }
+
+  void _openTemplatePicker(BuildContext context) {
+    TemplatePickerSheet.show(
+      context: context,
+      inboxRepository: widget.inboxRepository,
+      onSelectTemplate: (template, params, interpolatedBody) {
+        // Send WhatsApp Meta template
+        context.read<ChatDetailBloc>().add(
+              SendTextMessageEvent(text: interpolatedBody),
+            );
+      },
+    );
+  }
+
+  void _openAttachmentPicker(BuildContext context) {
+    AttachmentPickerSheet.show(
+      context: context,
+      onFileSelected: (file, type) {
+        context.read<ChatDetailBloc>().add(
+              SendAttachmentMessageEvent(
+                attachment: file,
+                type: type,
+                caption: '',
+              ),
+            );
+      },
     );
   }
 
@@ -301,18 +407,20 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
           }
 
           if (state is ChatDetailLoaded) {
-            final isLocked = state.conversation.channel.toLowerCase() == 'whatsapp' &&
-                !state.conversation.isWhatsappWindowOpen;
+            final isWhatsApp = state.conversation.channel.toLowerCase() == 'whatsapp';
+            final isLocked = isWhatsApp && !state.conversation.isWhatsappWindowOpen;
 
             return Column(
               children: [
-                // WhatsApp 24-hour expiration banner
-                WhatsAppWindowBanner(
-                  isWindowOpen: state.conversation.isWhatsappWindowOpen,
-                  onSelectTemplate: () => _showTemplatePickerPlaceholder(context),
-                ),
+                // WhatsApp 24-hour dynamic countdown banner
+                if (isWhatsApp)
+                  WhatsAppWindowCountdown(
+                    lastCustomerMessageAt: state.conversation.lastCustomerMessageAt ?? state.conversation.lastMessageAt,
+                    isWindowOpen: state.conversation.isWhatsappWindowOpen,
+                    onOpenTemplatePicker: () => _openTemplatePicker(context),
+                  ),
 
-                // Typing indicator banner
+                // Typing indicator bar
                 if (state.isOtherTyping)
                   Container(
                     width: double.infinity,
@@ -383,8 +491,22 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
                         ),
                 ),
 
-                // Composer Bar
+                // AI Copilot Keyboard Accessory Bar
+                BlocBuilder<CopilotBloc, CopilotState>(
+                  builder: (context, copilotState) {
+                    return CopilotKeyboardBar(
+                      isGenerating: copilotState is CopilotGenerating,
+                      onAiDraft: () => _triggerAiDraft(context),
+                      onSummarize: () => _triggerSummarize(context),
+                      onShortcuts: () => _openShortcutsSheet(context),
+                      onTemplates: () => _openTemplatePicker(context),
+                    );
+                  },
+                ),
+
+                // Main Composer Bar
                 ChatInputBar(
+                  controller: _inputController,
                   isNoteMode: state.isNoteMode,
                   isSending: state.isSending,
                   isWindowLocked: isLocked,
@@ -393,17 +515,20 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
                           SendTextMessageEvent(text: text, isNote: isNote),
                         );
                   },
+                  onSendVoiceNote: (audioFile, duration, isNote) {
+                    context.read<ChatDetailBloc>().add(
+                          SendAttachmentMessageEvent(
+                            attachment: audioFile,
+                            type: 'audio',
+                            caption: '',
+                            isNote: isNote,
+                          ),
+                        );
+                  },
                   onToggleNoteMode: () {
                     context.read<ChatDetailBloc>().add(ToggleNoteModeEvent());
                   },
-                  onAttachmentTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Media picker will be active in Sprint 3.'),
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
-                  },
+                  onAttachmentTap: () => _openAttachmentPicker(context),
                   onTypingChanged: (isTyping) {
                     context.read<ChatDetailBloc>().add(SendUserTypingEvent(isTyping));
                   },

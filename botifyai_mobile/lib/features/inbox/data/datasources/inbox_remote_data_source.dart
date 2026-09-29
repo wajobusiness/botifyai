@@ -7,9 +7,12 @@ import '../../domain/repositories/inbox_repository.dart';
 import '../models/conversation_model.dart';
 import '../models/inbox_setup_model.dart';
 import '../models/message_model.dart';
+import '../models/whatsapp_template_model.dart';
 
 abstract class InboxRemoteDataSource {
   Future<InboxSetupModel> getInboxSetup();
+
+  Future<List<WhatsAppTemplateModel>> getWhatsAppTemplates();
 
   Future<PaginatedList<ConversationModel>> getConversations({
     String folder = 'mine',
@@ -79,6 +82,31 @@ class InboxRemoteDataSourceImpl implements InboxRemoteDataSource {
     } on DioException catch (e) {
       throw ServerFailure(
         e.response?.data?['message']?.toString() ?? 'Failed to load inbox setup',
+      );
+    }
+  }
+
+  @override
+  Future<List<WhatsAppTemplateModel>> getWhatsAppTemplates() async {
+    try {
+      final response = await apiClient.get(ApiEndpoints.inboxTemplates);
+      final dynamic resData = response.data;
+      List<dynamic> list = [];
+      if (resData is Map<String, dynamic>) {
+        if (resData['data'] is List) {
+          list = resData['data'] as List<dynamic>;
+        } else if (resData['templates'] is List) {
+          list = resData['templates'] as List<dynamic>;
+        }
+      } else if (resData is List) {
+        list = resData;
+      }
+      return list
+          .map((e) => WhatsAppTemplateModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerFailure(
+        e.response?.data?['message']?.toString() ?? 'Failed to load WhatsApp templates',
       );
     }
   }

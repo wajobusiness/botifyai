@@ -1,6 +1,7 @@
 import '../entities/conversation.dart';
 import '../entities/inbox_setup.dart';
 import '../entities/message.dart';
+import '../entities/whatsapp_template.dart';
 
 class PaginatedList<T> {
   final List<T> data;
@@ -20,6 +21,8 @@ class PaginatedList<T> {
 
 abstract class InboxRepository {
   Future<InboxSetup> getInboxSetup();
+
+  Future<List<WhatsAppTemplate>> getWhatsAppTemplates();
 
   Future<PaginatedList<Conversation>> getConversations({
     String folder = 'mine',

@@ -1,24 +1,30 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import 'voice_note_recorder_bar.dart';
 
 class ChatInputBar extends StatefulWidget {
+  final TextEditingController controller;
   final bool isNoteMode;
   final bool isSending;
   final bool isWindowLocked;
   final Function(String text, bool isNote) onSend;
+  final Function(File audioFile, Duration duration, bool isNote) onSendVoiceNote;
   final VoidCallback onToggleNoteMode;
   final VoidCallback onAttachmentTap;
   final Function(bool isTyping) onTypingChanged;
 
   const ChatInputBar({
     super.key,
+    required this.controller,
     required this.isNoteMode,
     required this.isSending,
     this.isWindowLocked = false,
     required this.onSend,
+    required this.onSendVoiceNote,
     required this.onToggleNoteMode,
     required this.onAttachmentTap,
     required this.onTypingChanged,
@@ -29,40 +35,55 @@ class ChatInputBar extends StatefulWidget {
 }
 
 class _ChatInputBarState extends State<ChatInputBar> {
-  final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _hasText = false;
+  bool _isRecordingVoice = false;
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(() {
-      final hasNow = _controller.text.trim().isNotEmpty;
-      if (_hasText != hasNow) {
-        setState(() => _hasText = hasNow);
-      }
-      widget.onTypingChanged(hasNow);
-    });
+    _hasText = widget.controller.text.trim().isNotEmpty;
+    widget.controller.addListener(_handleTextChange);
+  }
+
+  void _handleTextChange() {
+    final hasNow = widget.controller.text.trim().isNotEmpty;
+    if (_hasText != hasNow) {
+      setState(() => _hasText = hasNow);
+    }
+    widget.onTypingChanged(hasNow);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    widget.controller.removeListener(_handleTextChange);
     _focusNode.dispose();
     super.dispose();
   }
 
   void _handleSend() {
-    final text = _controller.text.trim();
+    final text = widget.controller.text.trim();
     if (text.isEmpty || widget.isSending) return;
 
     HapticFeedback.lightImpact();
     widget.onSend(text, widget.isNoteMode);
-    _controller.clear();
+    widget.controller.clear();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isRecordingVoice) {
+      return VoiceNoteRecorderBar(
+        onRecorded: (file, duration) {
+          setState(() => _isRecordingVoice = false);
+          widget.onSendVoiceNote(file, duration, widget.isNoteMode);
+        },
+        onCancel: () {
+          setState(() => _isRecordingVoice = false);
+        },
+      );
+    }
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isNote = widget.isNoteMode;
 
@@ -102,7 +123,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Adding Private Internal Note (Visible only to agents)',
+                      'Adding Private Internal Note (Visible only to team)',
                       style: AppTypography.caption.copyWith(
                         color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFB45309),
                         fontWeight: FontWeight.w600,
@@ -172,7 +193,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
                   child: TextField(
-                    controller: _controller,
+                    controller: widget.controller,
                     focusNode: _focusNode,
                     minLines: 1,
                     maxLines: 5,
@@ -198,33 +219,53 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
               const SizedBox(width: 8),
 
-              // Send Action Button
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: (!_hasText || (widget.isWindowLocked && !isNote))
-                      ? (isDark ? Colors.white12 : Colors.black12)
-                      : (isNote ? const Color(0xFFD97706) : AppColors.primary),
-                  shape: BoxShape.circle,
+              // Action Button: Voice Mic or Send Button
+              if (!_hasText && (!widget.isWindowLocked || isNote)) ...[
+                // Mic Button to Start Voice Recording
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isNote ? const Color(0xFFD97706) : AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(LucideIcons.mic, size: 19, color: Colors.white),
+                    onPressed: () {
+                      setState(() => _isRecordingVoice = true);
+                    },
+                    padding: EdgeInsets.zero,
+                  ),
                 ),
-                child: IconButton(
-                  onPressed: (!_hasText || (widget.isWindowLocked && !isNote) || widget.isSending)
-                      ? null
-                      : _handleSend,
-                  icon: widget.isSending
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : const Icon(LucideIcons.send, size: 18, color: Colors.white),
-                  padding: EdgeInsets.zero,
+              ] else ...[
+                // Send Text Button
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: (!_hasText || (widget.isWindowLocked && !isNote))
+                        ? (isDark ? Colors.white12 : Colors.black12)
+                        : (isNote ? const Color(0xFFD97706) : AppColors.primary),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: (!_hasText || (widget.isWindowLocked && !isNote) || widget.isSending)
+                        ? null
+                        : _handleSend,
+                    icon: widget.isSending
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Icon(LucideIcons.send, size: 18, color: Colors.white),
+                    padding: EdgeInsets.zero,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ],

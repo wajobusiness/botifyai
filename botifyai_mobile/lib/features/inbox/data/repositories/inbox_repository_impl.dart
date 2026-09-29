@@ -1,6 +1,7 @@
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/inbox_setup.dart';
 import '../../domain/entities/message.dart';
+import '../../domain/entities/whatsapp_template.dart';
 import '../../domain/repositories/inbox_repository.dart';
 import '../datasources/inbox_remote_data_source.dart';
 
@@ -12,6 +13,11 @@ class InboxRepositoryImpl implements InboxRepository {
   @override
   Future<InboxSetup> getInboxSetup() async {
     return await remoteDataSource.getInboxSetup();
+  }
+
+  @override
+  Future<List<WhatsAppTemplate>> getWhatsAppTemplates() async {
+    return await remoteDataSource.getWhatsAppTemplates();
   }
 
   @override

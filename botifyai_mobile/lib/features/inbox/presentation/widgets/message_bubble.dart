@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../domain/entities/message.dart';
+import 'voice_note_player.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;
@@ -205,6 +206,13 @@ class MessageBubble extends StatelessWidget {
                   ),
                   errorWidget: (_, __, ___) => const Icon(LucideIcons.imageOff),
                 ),
+              ),
+
+            // Voice Note Audio Player
+            if (message.type == MessageType.audio && (message.attachmentUrl != null || message.body.isNotEmpty))
+              VoiceNotePlayer(
+                audioUrl: message.attachmentUrl ?? message.body,
+                isOutbound: isOutbound,
               ),
 
             // Document Attachment Preview
