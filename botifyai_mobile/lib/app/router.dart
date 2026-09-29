@@ -5,6 +5,8 @@ import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/commerce/presentation/screens/commerce_screen.dart';
 import '../features/crm/presentation/screens/crm_screen.dart';
 import '../features/hub/presentation/screens/hub_screen.dart';
+import '../features/inbox/domain/entities/conversation.dart';
+import '../features/inbox/presentation/screens/chat_detail_screen.dart';
 import '../features/inbox/presentation/screens/inbox_screen.dart';
 import '../shared/widgets/main_shell_screen.dart';
 
@@ -32,6 +34,21 @@ class AppRouter {
         path: '/login',
         name: 'login',
         builder: (context, state) => const LoginScreen(),
+      ),
+
+      // Direct Chat Detail Route (Full Screen Overlay)
+      GoRoute(
+        path: '/inbox/chat/:uuid',
+        name: 'chat_detail',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final uuid = state.pathParameters['uuid'] ?? '';
+          final extraConversation = state.extra is Conversation ? state.extra as Conversation : null;
+          return ChatDetailScreen(
+            conversationUuid: uuid,
+            initialConversation: extraConversation,
+          );
+        },
       ),
 
       // 4-Tab Stateful Navigation Shell
