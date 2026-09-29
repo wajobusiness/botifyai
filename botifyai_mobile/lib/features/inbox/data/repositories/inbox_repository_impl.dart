@@ -1,14 +1,26 @@
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/inbox_setup.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/entities/whatsapp_template.dart';
 import '../../domain/repositories/inbox_repository.dart';
 import '../datasources/inbox_remote_data_source.dart';
+import '../../../../core/database/cached_conversation.dart';
+import '../../../../core/database/cached_message.dart';
+import '../../../../core/database/local_database_service.dart';
+import '../../../../core/sync/offline_sync_queue.dart';
 
 class InboxRepositoryImpl implements InboxRepository {
   final InboxRemoteDataSource remoteDataSource;
+  final LocalDatabaseService localDatabase;
+  final OfflineSyncQueue offlineSyncQueue;
 
-  InboxRepositoryImpl({required this.remoteDataSource});
+  InboxRepositoryImpl({
+    required this.remoteDataSource,
+    LocalDatabaseService? localDatabase,
+    OfflineSyncQueue? offlineSyncQueue,
+  })  : localDatabase = localDatabase ?? LocalDatabaseService(),
+        offlineSyncQueue = offlineSyncQueue ?? OfflineSyncQueue();
 
   @override
   Future<InboxSetup> getInboxSetup() async {
@@ -27,12 +39,46 @@ class InboxRepositoryImpl implements InboxRepository {
     String? search,
     int page = 1,
   }) async {
-    return await remoteDataSource.getConversations(
-      folder: folder,
-      channel: channel,
-      search: search,
-      page: page,
-    );
+    try {
+      final remoteList = await remoteDataSource.getConversations(
+        folder: folder,
+        channel: channel,
+        search: search,
+        page: page,
+      );
+
+      // Cache page 1 locally for instant startup & offline viewing
+      if (page == 1 && (search == null || search.isEmpty)) {
+        final cached = remoteList.data
+            .map((c) => CachedConversation.fromDomain(c))
+            .toList();
+        await localDatabase.saveConversations(
+          workspaceId: '1',
+          conversations: cached,
+        );
+      }
+
+      return remoteList;
+    } catch (e) {
+      debugPrint('InboxRepositoryImpl getConversations error (falling back to cache): $e');
+      if (page == 1) {
+        final cached = await localDatabase.getConversations(
+          workspaceId: '1',
+          folder: folder,
+          query: search,
+        );
+        if (cached.isNotEmpty) {
+          final domainList = cached.map((c) => c.toDomain()).toList();
+          return PaginatedList<Conversation>(
+            data: domainList,
+            currentPage: 1,
+            lastPage: 1,
+            total: domainList.length,
+          );
+        }
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -42,7 +88,36 @@ class InboxRepositoryImpl implements InboxRepository {
 
   @override
   Future<PaginatedList<Message>> getMessages(String uuid, {int page = 1}) async {
-    return await remoteDataSource.getMessages(uuid, page: page);
+    try {
+      final remoteList = await remoteDataSource.getMessages(uuid, page: page);
+
+      if (page == 1) {
+        final cached = remoteList.data
+            .map((m) => CachedMessage.fromDomain(m, conversationUuid: uuid))
+            .toList();
+        await localDatabase.saveMessages(
+          conversationUuid: uuid,
+          messages: cached,
+        );
+      }
+
+      return remoteList;
+    } catch (e) {
+      debugPrint('InboxRepositoryImpl getMessages error (falling back to cache): $e');
+      if (page == 1) {
+        final cached = await localDatabase.getMessages(conversationUuid: uuid);
+        if (cached.isNotEmpty) {
+          final domainList = cached.map((m) => m.toDomain()).toList();
+          return PaginatedList<Message>(
+            data: domainList,
+            currentPage: 1,
+            lastPage: 1,
+            total: domainList.length,
+          );
+        }
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -54,14 +129,53 @@ class InboxRepositoryImpl implements InboxRepository {
     Map<String, dynamic>? payload,
     bool isNote = false,
   }) async {
-    return await remoteDataSource.sendMessage(
-      uuid: uuid,
-      body: body,
-      type: type,
-      attachment: attachment,
-      payload: payload,
-      isNote: isNote,
-    );
+    try {
+      final sentMessage = await remoteDataSource.sendMessage(
+        uuid: uuid,
+        body: body,
+        type: type,
+        attachment: attachment,
+        payload: payload,
+        isNote: isNote,
+      );
+
+      // Append to local database
+      await localDatabase.appendMessage(
+        conversationUuid: uuid,
+        message: CachedMessage.fromDomain(sentMessage, conversationUuid: uuid),
+      );
+
+      return sentMessage;
+    } catch (e) {
+      debugPrint('InboxRepositoryImpl sendMessage error (enqueuing for offline sync): $e');
+
+      // Create offline pending message
+      final tempUuid = 'offline_${DateTime.now().millisecondsSinceEpoch}';
+      final offlineCached = CachedMessage(
+        id: 0,
+        uuid: tempUuid,
+        conversationUuid: uuid,
+        senderType: 'agent',
+        senderName: 'You',
+        type: type,
+        body: body,
+        status: 'pending_sync',
+        isInternalNote: isNote,
+        createdAt: DateTime.now().toIso8601String(),
+      );
+
+      // Enqueue to offline sync queue and local message list
+      await offlineSyncQueue.enqueue(
+        workspaceId: '1',
+        message: offlineCached,
+      );
+      await localDatabase.appendMessage(
+        conversationUuid: uuid,
+        message: offlineCached,
+      );
+
+      return offlineCached.toDomain();
+    }
   }
 
   @override

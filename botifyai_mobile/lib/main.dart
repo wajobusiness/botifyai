@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'app/app.dart';
 import 'core/api/api_client.dart';
+import 'core/database/local_database_service.dart';
 import 'core/notifications/fcm_service.dart';
 import 'core/realtime/pusher_service.dart';
 import 'core/security/biometric_service.dart';
+import 'core/security/session_security_manager.dart';
 import 'core/storage/secure_storage_service.dart';
+import 'core/sync/offline_sync_queue.dart';
 import 'features/auth/data/datasources/auth_remote_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
@@ -32,10 +35,20 @@ void main() async {
 
   // Initialize Core Services
   final secureStorage = SecureStorageService();
+  final localDatabase = LocalDatabaseService();
   final biometricService = BiometricService();
+  final offlineSyncQueue = OfflineSyncQueue(databaseService: localDatabase);
   final apiClient = ApiClient(storageService: secureStorage);
   final pusherService = PusherService();
   final fcmService = FcmService();
+
+  // Initialize Session Security Lifecycle
+  final sessionSecurity = SessionSecurityManager(
+    biometricService: biometricService,
+    secureStorage: secureStorage,
+    localDatabase: localDatabase,
+  );
+  sessionSecurity.startListening();
 
   // Initialize Repositories
   final authRemoteDataSource = AuthRemoteDataSourceImpl(apiClient: apiClient);
@@ -49,7 +62,9 @@ void main() async {
       providers: [
         RepositoryProvider<ApiClient>.value(value: apiClient),
         RepositoryProvider<SecureStorageService>.value(value: secureStorage),
+        RepositoryProvider<LocalDatabaseService>.value(value: localDatabase),
         RepositoryProvider<BiometricService>.value(value: biometricService),
+        RepositoryProvider<OfflineSyncQueue>.value(value: offlineSyncQueue),
         RepositoryProvider<PusherService>.value(value: pusherService),
         RepositoryProvider<AuthRepository>.value(value: authRepository),
       ],
@@ -76,6 +91,7 @@ void main() async {
               fcmService.init(apiClient: apiClient);
             } else if (state is AuthUnauthenticated) {
               pusherService.disconnect();
+              sessionSecurity.purgeSession();
             }
           },
           child: const BotifyApp(),
