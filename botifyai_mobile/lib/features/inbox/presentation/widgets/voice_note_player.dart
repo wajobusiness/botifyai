@@ -121,7 +121,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: widget.isOutbound ? Colors.white.withValues(alpha: 0.2) : AppColors.primaryLight.withValues(alpha: 0.2),
+                color: widget.isOutbound ? Colors.white.withOpacity(0.2) : AppColors.primaryLight.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -145,7 +145,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
                     thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
                     overlayShape: const RoundSliderOverlayShape(overlayRadius: 8),
                     activeTrackColor: iconColor,
-                    inactiveTrackColor: iconColor.withValues(alpha: 0.3),
+                    inactiveTrackColor: iconColor.withOpacity(0.3),
                     thumbColor: iconColor,
                   ),
                   child: Slider(
@@ -166,14 +166,14 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
                     children: [
                       Text(
                         _formatDuration(_position),
-                        style: AppTypography.caption.copyWith(
+                        style: AppTypography.caption(
                           fontSize: 10,
                           color: textColor,
                         ),
                       ),
                       Text(
                         _formatDuration(_duration),
-                        style: AppTypography.caption.copyWith(
+                        style: AppTypography.caption(
                           fontSize: 10,
                           color: textColor,
                         ),
@@ -197,7 +197,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
               ),
               child: Text(
                 '${_playbackSpeed.toStringAsFixed(1).replaceAll('.0', '')}x',
-                style: AppTypography.caption.copyWith(
+                style: AppTypography.caption(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                   color: iconColor,

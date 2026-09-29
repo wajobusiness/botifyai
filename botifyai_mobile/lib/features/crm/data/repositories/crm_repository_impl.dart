@@ -1,8 +1,8 @@
-import '../../inbox/domain/entities/contact.dart';
-import '../../inbox/domain/repositories/inbox_repository.dart';
-import '../domain/entities/contact_profile.dart';
-import '../domain/repositories/crm_repository.dart';
-import '../datasources/crm_remote_data_source.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/contact.dart';
+import 'package:botifyai_mobile/features/inbox/domain/repositories/inbox_repository.dart';
+import 'package:botifyai_mobile/features/crm/domain/entities/contact_profile.dart';
+import 'package:botifyai_mobile/features/crm/domain/repositories/crm_repository.dart';
+import 'package:botifyai_mobile/features/crm/data/datasources/crm_remote_data_source.dart';
 
 class CrmRepositoryImpl implements CrmRepository {
   final CrmRemoteDataSource remoteDataSource;

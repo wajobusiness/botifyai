@@ -1,33 +1,34 @@
-import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
-import '../../../../core/api/api_client.dart';
-import '../../../../core/realtime/pusher_service.dart';
-import '../../../copilot/data/datasources/copilot_remote_data_source.dart';
-import '../../../copilot/data/repositories/copilot_repository_impl.dart';
-import '../../../copilot/presentation/bloc/copilot_bloc.dart';
-import '../../../copilot/presentation/bloc/copilot_event.dart';
-import '../../../copilot/presentation/bloc/copilot_state.dart';
-import '../../../copilot/presentation/widgets/copilot_drawer.dart';
-import '../../../copilot/presentation/widgets/copilot_keyboard_bar.dart';
-import '../../data/datasources/inbox_remote_data_source.dart';
-import '../../data/repositories/inbox_repository_impl.dart';
-import '../../domain/entities/conversation.dart';
-import '../../domain/repositories/inbox_repository.dart';
-import '../bloc/chat/chat_detail_bloc.dart';
-import '../bloc/chat/chat_detail_event.dart';
-import '../bloc/chat/chat_detail_state.dart';
-import '../widgets/attachment_picker_sheet.dart';
-import '../widgets/canned_replies_sheet.dart';
-import '../widgets/chat_input_bar.dart';
-import '../widgets/message_bubble.dart';
-import '../widgets/template_picker_sheet.dart';
-import '../widgets/whatsapp_window_countdown.dart';
+import 'package:botifyai_mobile/app/theme/app_colors.dart';
+import 'package:botifyai_mobile/app/theme/app_typography.dart';
+import 'package:botifyai_mobile/core/api/api_client.dart';
+import 'package:botifyai_mobile/core/realtime/pusher_service.dart';
+import 'package:botifyai_mobile/features/copilot/data/datasources/copilot_remote_data_source.dart';
+import 'package:botifyai_mobile/features/copilot/data/repositories/copilot_repository_impl.dart';
+import 'package:botifyai_mobile/features/copilot/presentation/bloc/copilot_bloc.dart';
+import 'package:botifyai_mobile/features/copilot/presentation/bloc/copilot_event.dart';
+import 'package:botifyai_mobile/features/copilot/presentation/bloc/copilot_state.dart';
+import 'package:botifyai_mobile/features/copilot/presentation/widgets/copilot_drawer.dart';
+import 'package:botifyai_mobile/features/copilot/presentation/widgets/copilot_keyboard_bar.dart';
+import 'package:botifyai_mobile/features/inbox/data/datasources/inbox_remote_data_source.dart';
+import 'package:botifyai_mobile/features/inbox/data/repositories/inbox_repository_impl.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/conversation.dart';
+import 'package:botifyai_mobile/features/inbox/domain/repositories/inbox_repository.dart';
+import 'package:botifyai_mobile/features/crm/domain/entities/contact_profile.dart';
+import 'package:botifyai_mobile/features/crm/presentation/widgets/contact_detail_drawer.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/bloc/chat/chat_detail_bloc.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/bloc/chat/chat_detail_event.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/bloc/chat/chat_detail_state.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/widgets/attachment_picker_sheet.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/widgets/canned_replies_sheet.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/widgets/chat_input_bar.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/widgets/message_bubble.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/widgets/template_picker_sheet.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/widgets/whatsapp_window_countdown.dart';
 
 class ChatDetailScreen extends StatelessWidget {
   final String conversationUuid;
@@ -129,7 +130,7 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
               children: [
                 Text(
                   'Change Conversation Status',
-                  style: AppTypography.headingSmall,
+                  style: AppTypography.headingSmall(),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
@@ -305,14 +306,14 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
                 children: [
                   CircleAvatar(
                     radius: 18,
-                    backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
+                    backgroundColor: AppColors.primaryLight.withOpacity(0.2),
                     backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
                         ? CachedNetworkImageProvider(avatarUrl)
                         : null,
                     child: avatarUrl == null || avatarUrl.isEmpty
                         ? Text(
                             contactName.isNotEmpty ? contactName[0].toUpperCase() : '?',
-                            style: AppTypography.bodySmall.copyWith(
+                            style: AppTypography.bodySmall(
                               fontWeight: FontWeight.bold,
                               color: AppColors.primary,
                             ),
@@ -327,7 +328,7 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
                       children: [
                         Text(
                           contactName,
-                          style: AppTypography.bodyRegular.copyWith(
+                          style: AppTypography.bodyRegular(
                             fontWeight: FontWeight.w600,
                             color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                           ),
@@ -336,7 +337,7 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
                         ),
                         Text(
                           subtitle,
-                          style: AppTypography.caption.copyWith(
+                          style: AppTypography.caption(
                             fontSize: 11,
                             color: isTyping
                                 ? AppColors.primary
@@ -413,13 +414,13 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
                     const SizedBox(height: 12),
                     Text(
                       'Failed to load conversation',
-                      style: AppTypography.headingSmall,
+                      style: AppTypography.headingSmall(),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       state.message,
                       textAlign: TextAlign.center,
-                      style: AppTypography.bodySmall,
+                      style: AppTypography.bodySmall(),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
@@ -460,7 +461,7 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    color: AppColors.primaryLight.withValues(alpha: 0.1),
+                    color: AppColors.primaryLight.withOpacity(0.1),
                     child: Row(
                       children: [
                         const SizedBox(
@@ -474,8 +475,9 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
                         const SizedBox(width: 8),
                         Text(
                           '${state.typingUserName ?? "Customer"} is typing a response...',
-                          style: AppTypography.caption.copyWith(
+                          style: AppTypography.caption(
                             color: AppColors.primary,
+                          ).copyWith(
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -489,7 +491,7 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
                       ? Center(
                           child: Text(
                             'No messages in this conversation yet.',
-                            style: AppTypography.bodySmall.copyWith(
+                            style: AppTypography.bodySmall(
                               color: isDark
                                   ? AppColors.darkTextSecondary
                                   : AppColors.lightTextSecondary,

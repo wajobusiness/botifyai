@@ -1,6 +1,6 @@
-import '../../inbox/domain/repositories/inbox_repository.dart';
-import '../domain/entities/order.dart';
-import '../domain/repositories/commerce_repository.dart';
+import 'package:botifyai_mobile/features/inbox/domain/repositories/inbox_repository.dart';
+import '../../domain/entities/order.dart';
+import '../../domain/repositories/commerce_repository.dart';
 import '../datasources/commerce_remote_data_source.dart';
 
 class CommerceRepositoryImpl implements CommerceRepository {

@@ -63,4 +63,8 @@ class SecureStorageService {
     await _storage.delete(key: _kTokenKey);
     await _storage.delete(key: _kActiveWorkspaceIdKey);
   }
+
+  Future<void> clear() async {
+    await clearSession();
+  }
 }

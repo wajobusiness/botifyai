@@ -8,6 +8,7 @@ class LocalDatabaseService {
   static final LocalDatabaseService _instance = LocalDatabaseService._internal();
   factory LocalDatabaseService() => _instance;
   LocalDatabaseService._internal();
+  LocalDatabaseService.test();
 
   static const String _conversationsKeyPrefix = 'botify_cached_conversations_';
   static const String _messagesKeyPrefix = 'botify_cached_messages_';

@@ -4,6 +4,7 @@ import 'package:botifyai_mobile/core/database/local_database_service.dart';
 import 'package:botifyai_mobile/core/sync/offline_sync_queue.dart';
 
 class InMemoryLocalDatabaseService extends LocalDatabaseService {
+  InMemoryLocalDatabaseService() : super.test();
   final Map<String, List<CachedMessage>> _inMemoryQueue = {};
 
   @override

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
-import '../domain/entities/order.dart';
+import 'package:botifyai_mobile/app/theme/app_colors.dart';
+import 'package:botifyai_mobile/app/theme/app_typography.dart';
+import 'package:botifyai_mobile/features/commerce/domain/entities/order.dart';
 import 'order_status_badge.dart';
 
 class OrderCard extends StatelessWidget {
@@ -41,7 +41,7 @@ class OrderCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: Colors.black.withOpacity(0.03),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -55,15 +55,15 @@ class OrderCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  order.orderNumber,
-                  style: AppTypography.bodyRegular.copyWith(
+                  '#${order.orderNumber.replaceAll('#', '')}',
+                  style: AppTypography.bodyRegular(
                     fontWeight: FontWeight.w700,
                     color: isDark ? Colors.white : AppColors.primaryDark,
                   ),
                 ),
                 Text(
                   _formatDate(order.createdAt),
-                  style: AppTypography.caption.copyWith(
+                  style: AppTypography.caption(
                     color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                   ),
                 ),
@@ -78,7 +78,7 @@ class OrderCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     order.customerName,
-                    style: AppTypography.bodyRegular.copyWith(
+                    style: AppTypography.bodyRegular(
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
@@ -87,7 +87,7 @@ class OrderCard extends StatelessWidget {
                 ),
                 Text(
                   '${order.itemsCount} ${order.itemsCount == 1 ? 'item' : 'items'}',
-                  style: AppTypography.caption.copyWith(
+                  style: AppTypography.caption(
                     color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                   ),
                 ),
@@ -103,8 +103,7 @@ class OrderCard extends StatelessWidget {
               children: [
                 Text(
                   currencyFmt.format(order.totalAmount),
-                  style: AppTypography.headingSmall.copyWith(
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.headingSmall(
                     color: isDark ? AppColors.aiAccent : AppColors.primary,
                   ),
                 ),

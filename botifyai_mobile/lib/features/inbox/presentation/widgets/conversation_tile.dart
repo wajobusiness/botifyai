@@ -4,8 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../domain/entities/conversation.dart';
-import '../../../domain/entities/message.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/conversation.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/message.dart';
 
 class ConversationTile extends StatelessWidget {
   final Conversation conversation;
@@ -94,8 +94,8 @@ class ConversationTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: hasUnread
               ? (isDark
-                  ? AppColors.primary.withValues(alpha: 0.08)
-                  : AppColors.primaryLight.withValues(alpha: 0.15))
+                  ? AppColors.primary.withOpacity(0.08)
+                  : AppColors.primaryLight.withOpacity(0.15))
               : Colors.transparent,
         ),
         child: Row(
@@ -118,7 +118,7 @@ class ConversationTile extends StatelessWidget {
                           conversation.contact.name.isNotEmpty
                               ? conversation.contact.name[0].toUpperCase()
                               : '?',
-                          style: AppTypography.headingSmall.copyWith(
+                          style: AppTypography.headingSmall(
                             color: isDark ? Colors.white : AppColors.primary,
                           ),
                         )
@@ -159,7 +159,7 @@ class ConversationTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           conversation.contact.name,
-                          style: AppTypography.bodyRegular.copyWith(
+                          style: AppTypography.bodyRegular(
                             fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w600,
                             color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                           ),
@@ -170,7 +170,7 @@ class ConversationTile extends StatelessWidget {
                       // Timestamp
                       Text(
                         _formatTimestamp(conversation.lastMessageAt),
-                        style: AppTypography.caption.copyWith(
+                        style: AppTypography.caption(
                           color: hasUnread
                               ? AppColors.primary
                               : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
@@ -187,12 +187,11 @@ class ConversationTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           snippet,
-                          style: AppTypography.bodySmall.copyWith(
+                          style: AppTypography.bodySmall(
                             color: hasUnread
                                 ? (isDark ? Colors.white : Colors.black87)
                                 : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
                             fontWeight: hasUnread ? FontWeight.w500 : FontWeight.w400,
-                            fontStyle: lastMsg?.isNote == true ? FontStyle.italic : FontStyle.normal,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -213,7 +212,7 @@ class ConversationTile extends StatelessWidget {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: conversation.isWhatsappWindowOpen
-                                  ? AppColors.whatsapp
+                                  ? const Color(0xFF25D366)
                                   : AppColors.error,
                             ),
                           ),
@@ -229,7 +228,7 @@ class ConversationTile extends StatelessWidget {
                           ),
                           child: Text(
                             conversation.unreadCount > 99 ? '99+' : '${conversation.unreadCount}',
-                            style: AppTypography.caption.copyWith(
+                            style: AppTypography.caption(
                               color: Colors.white,
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
@@ -257,16 +256,16 @@ class ConversationTile extends StatelessWidget {
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: chipColor.withValues(alpha: 0.15),
+                            color: chipColor.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(
-                              color: chipColor.withValues(alpha: 0.4),
+                              color: chipColor.withOpacity(0.4),
                               width: 0.8,
                             ),
                           ),
                           child: Text(
                             label.name,
-                            style: AppTypography.caption.copyWith(
+                            style: AppTypography.caption(
                               fontSize: 9,
                               fontWeight: FontWeight.w600,
                               color: chipColor,

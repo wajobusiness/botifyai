@@ -7,18 +7,22 @@ import 'package:botifyai_mobile/features/auth/domain/repositories/auth_repositor
 import 'package:botifyai_mobile/core/storage/secure_storage_service.dart';
 import 'package:botifyai_mobile/core/security/biometric_service.dart';
 
-// Mock Implementation for AuthRepository
 class MockAuthRepository implements AuthRepository {
   bool shouldSucceed = true;
   User mockUser = const User(
     id: 1,
     name: 'Alex Johnson',
     email: 'alex@botifyai.cloud',
+    role: 'client',
     workspaceId: 1,
   );
 
   @override
-  Future<User> login({required String email, required String password}) async {
+  Future<User> login({
+    required String email,
+    required String password,
+    String? deviceName,
+  }) async {
     if (shouldSucceed) {
       return mockUser;
     } else {
@@ -27,34 +31,46 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<User?> checkAuthStatus() async {
+    return shouldSucceed ? mockUser : null;
+  }
+
+  @override
   Future<void> logout() async {}
 
   @override
-  Future<User?> getCurrentUser() async {
-    return shouldSucceed ? mockUser : null;
-  }
+  Future<void> switchWorkspace(int workspaceId) async {}
 }
 
 class FakeSecureStorageService extends SecureStorageService {
   String? token;
+  String? email;
   @override
-  Future<String?> getAuthToken() async => token;
+  Future<String?> getToken() async => token;
   @override
-  Future<void> setAuthToken(String val) async => token = val;
+  Future<void> saveToken(String val) async => token = val;
+  @override
+  Future<String?> getSavedEmail() async => email;
+  @override
+  Future<void> saveEmail(String val) async => email = val;
   @override
   Future<void> clear() async => token = null;
+  @override
+  Future<void> clearSession() async => token = null;
 }
 
 class FakeBiometricService extends BiometricService {
   @override
-  Future<bool> isBiometricAvailable() async => true;
+  Future<bool> isBiometricsAvailable() async => true;
   @override
   Future<bool> isBiometricEnrolled() async => true;
   @override
-  Future<bool> authenticateWithBiometrics({required String reason}) async => true;
+  Future<bool> authenticateWithBiometrics({String reason = 'Authenticate to access BotifyAI'}) async => true;
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('AuthBloc Unit Tests', () {
     late MockAuthRepository mockAuthRepository;
     late FakeSecureStorageService fakeSecureStorage;
@@ -76,16 +92,16 @@ void main() {
       authBloc.close();
     });
 
-    test('Initial state is AuthInitial', () {
-      expect(authBloc.state, isA<AuthInitial>());
+    test('Initial state is AuthInitialState', () {
+      expect(authBloc.state, isA<AuthInitialState>());
     });
 
-    test('Emits [AuthLoading, AuthAuthenticated] when login succeeds', () async {
+    test('Emits [AuthLoadingState, AuthenticatedState] when login succeeds', () async {
       mockAuthRepository.shouldSucceed = true;
 
       final expectedStates = [
-        isA<AuthLoading>(),
-        isA<AuthAuthenticated>().having((s) => s.user.email, 'email', 'alex@botifyai.cloud'),
+        isA<AuthLoadingState>(),
+        isA<AuthenticatedState>().having((s) => s.user.email, 'email', 'alex@botifyai.cloud'),
       ];
 
       expectLater(authBloc.stream, emitsInOrder(expectedStates));
@@ -96,12 +112,12 @@ void main() {
       ));
     });
 
-    test('Emits [AuthLoading, AuthError] when login fails', () async {
+    test('Emits [AuthLoadingState, AuthErrorState] when login fails', () async {
       mockAuthRepository.shouldSucceed = false;
 
       final expectedStates = [
-        isA<AuthLoading>(),
-        isA<AuthError>(),
+        isA<AuthLoadingState>(),
+        isA<AuthErrorState>(),
       ];
 
       expectLater(authBloc.stream, emitsInOrder(expectedStates));
@@ -112,9 +128,10 @@ void main() {
       ));
     });
 
-    test('Emits [AuthUnauthenticated] on LogoutEvent', () async {
+    test('Emits [AuthLoadingState, UnauthenticatedState] on LogoutEvent', () async {
       final expectedStates = [
-        isA<AuthUnauthenticated>(),
+        isA<AuthLoadingState>(),
+        isA<UnauthenticatedState>(),
       ];
 
       expectLater(authBloc.stream, emitsInOrder(expectedStates));

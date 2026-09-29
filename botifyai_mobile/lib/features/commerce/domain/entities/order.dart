@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'order_item.dart';
+export 'order_item.dart';
 
 class Order extends Equatable {
   final int id;

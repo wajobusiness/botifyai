@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../domain/entities/order.dart';
+import 'package:botifyai_mobile/features/commerce/domain/entities/order.dart';
 
 abstract class OrdersState extends Equatable {
   const OrdersState();

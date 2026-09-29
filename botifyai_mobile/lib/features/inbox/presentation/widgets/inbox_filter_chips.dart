@@ -41,7 +41,7 @@ class InboxFilterChips extends StatelessWidget {
               selected: isSelected,
               label: Text(
                 folder['label']!,
-                style: AppTypography.caption.copyWith(
+                style: AppTypography.caption(
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected
                       ? Colors.white

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
-import '../../../../shared/widgets/botify_button.dart';
-import '../domain/entities/order.dart';
+import 'package:botifyai_mobile/app/theme/app_colors.dart';
+import 'package:botifyai_mobile/app/theme/app_typography.dart';
+import 'package:botifyai_mobile/shared/widgets/botify_button.dart';
+import 'package:botifyai_mobile/features/commerce/domain/entities/order.dart';
 import 'order_status_badge.dart';
 
 class OrderDetailModal extends StatefulWidget {
@@ -61,19 +61,19 @@ class _OrderDetailModalState extends State<OrderDetailModal> {
         final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
         return AlertDialog(
           backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-          title: Text('Mark as Shipped', style: AppTypography.headingSmall),
+          title: Text('Mark as Shipped', style: AppTypography.headingSmall()),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Enter the courier tracking number for ${widget.order.orderNumber}:',
-                style: AppTypography.bodySmall,
+                style: AppTypography.bodySmall(),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: trackingController,
-                style: AppTypography.bodyRegular,
+                style: AppTypography.bodyRegular(),
                 decoration: const InputDecoration(
                   hintText: 'e.g. DHL-984210492 or GIG-1234',
                   isDense: true,
@@ -142,8 +142,8 @@ class _OrderDetailModalState extends State<OrderDetailModal> {
               children: [
                 Text(
                   widget.order.orderNumber,
-                  style: AppTypography.headingSmall.copyWith(
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.headingSmall(
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                   ),
                 ),
                 const Spacer(),
@@ -187,13 +187,13 @@ class _OrderDetailModalState extends State<OrderDetailModal> {
                             const SizedBox(width: 8),
                             Text(
                               widget.order.customerName,
-                              style: AppTypography.bodyRegular.copyWith(fontWeight: FontWeight.bold),
+                              style: AppTypography.bodyRegular(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
                         if (widget.order.customerPhone != null) ...[
                           const SizedBox(height: 4),
-                          Text('Phone: ${widget.order.customerPhone!}', style: AppTypography.caption),
+                          Text('Phone: ${widget.order.customerPhone!}', style: AppTypography.caption()),
                         ],
                         if (widget.order.shippingAddress != null) ...[
                           const SizedBox(height: 6),
@@ -205,7 +205,7 @@ class _OrderDetailModalState extends State<OrderDetailModal> {
                               Expanded(
                                 child: Text(
                                   widget.order.shippingAddress!,
-                                  style: AppTypography.caption,
+                                  style: AppTypography.caption(),
                                 ),
                               ),
                             ],
@@ -216,12 +216,12 @@ class _OrderDetailModalState extends State<OrderDetailModal> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
+                              color: AppColors.primary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               'Tracking: ${widget.order.trackingNumber!}',
-                              style: AppTypography.caption.copyWith(
+                              style: AppTypography.caption(
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.primary,
                               ),
@@ -236,7 +236,7 @@ class _OrderDetailModalState extends State<OrderDetailModal> {
                   // Itemized Line Items
                   Text(
                     'Order Items (${widget.order.items.length})',
-                    style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold),
+                    style: AppTypography.bodySmall(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
                   if (widget.order.items.isEmpty)
@@ -249,8 +249,8 @@ class _OrderDetailModalState extends State<OrderDetailModal> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Standard Items (${widget.order.itemsCount})', style: AppTypography.bodySmall),
-                          Text(currencyFmt.format(widget.order.totalAmount), style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold)),
+                          Text('Standard Items (${widget.order.itemsCount})', style: AppTypography.bodySmall()),
+                          Text(currencyFmt.format(widget.order.totalAmount), style: AppTypography.bodySmall(fontWeight: FontWeight.bold)),
                         ],
                       ),
                     )
@@ -284,18 +284,18 @@ class _OrderDetailModalState extends State<OrderDetailModal> {
                                 children: [
                                   Text(
                                     item.productName,
-                                    style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold),
+                                    style: AppTypography.bodySmall(fontWeight: FontWeight.bold),
                                   ),
                                   Text(
                                     'Qty: ${item.quantity} × ${currencyFmt.format(item.unitPrice)}',
-                                    style: AppTypography.caption,
+                                    style: AppTypography.caption(),
                                   ),
                                 ],
                               ),
                             ),
                             Text(
                               currencyFmt.format(item.totalPrice),
-                              style: AppTypography.bodyRegular.copyWith(fontWeight: FontWeight.bold),
+                              style: AppTypography.bodyRegular(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -307,12 +307,11 @@ class _OrderDetailModalState extends State<OrderDetailModal> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Total Amount', style: AppTypography.headingSmall),
+                      Text('Total Amount', style: AppTypography.headingSmall()),
                       Text(
                         currencyFmt.format(widget.order.totalAmount),
-                        style: AppTypography.headingLarge.copyWith(
+                        style: AppTypography.headingLarge(
                           color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],

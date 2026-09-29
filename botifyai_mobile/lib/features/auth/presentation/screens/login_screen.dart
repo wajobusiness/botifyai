@@ -84,25 +84,36 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Header & Brand Logo
+                      // BotifyAI Robot Logo Header
                       Center(
                         child: Container(
-                          width: 56,
-                          height: 56,
+                          width: 96,
+                          height: 96,
                           decoration: BoxDecoration(
-                            color: AppColors.brandPrimary,
-                            borderRadius: BorderRadius.circular(14),
+                            shape: BoxShape.circle,
+                            color: isDark ? AppColors.surfaceDark : Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.brandPrimary.withOpacity(0.2),
+                                blurRadius: 20,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                              width: 1.5,
+                            ),
                           ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.bubble_chart_rounded,
-                              size: 32,
-                              color: AppColors.aiAccent,
+                          padding: const EdgeInsets.all(4),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       Text(
                         'Welcome to BotifyAI',
                         textAlign: TextAlign.center,
@@ -114,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Sign in to manage your live chats, store orders, and AI assistants on the go.',
+                        'Manage your live conversations, store orders, and AI Copilot.',
                         textAlign: TextAlign.center,
                         style: AppTypography.bodySmall(
                           color: isDark
@@ -184,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // Footer info
                       Text(
-                        'Protected with hardware-encrypted Sanctum token storage.',
+                        'Hardware-encrypted Sanctum token storage enabled.',
                         textAlign: TextAlign.center,
                         style: AppTypography.caption(
                           color: isDark

@@ -9,32 +9,27 @@ class MockCopilotRepository implements CopilotRepository {
   bool shouldFail = false;
 
   final sampleSuggestion = const CopilotSuggestion(
-    draftReply: 'Hello Chioma, yes! We have the item in stock with same-day dispatch.',
+    suggestedText: 'Hello Chioma, yes! We have the item in stock with same-day dispatch.',
     confidenceScore: 0.96,
-    sentiment: 'positive',
-    suggestedAction: 'send_reply',
-    sources: ['Inventory Docs (Section 3)'],
+    instruction: 'draft_reply',
+    sourcesUsed: ['Inventory Docs (Section 3)'],
+    summaryBullets: ['Customer asked about Lagos delivery', 'Agent confirmed price is ₦3,500'],
   );
 
   @override
   Future<CopilotSuggestion> generateDraft({
     required String conversationUuid,
-    required String instruction,
-    String? tone,
+    String instruction = 'draft_reply',
+    String? customPrompt,
   }) async {
     if (shouldFail) throw Exception('Copilot API error');
     return sampleSuggestion;
   }
 
   @override
-  Future<String> summarizeConversation({required String conversationUuid}) async {
+  Future<CopilotSuggestion> summarizeConversation({required String conversationUuid}) async {
     if (shouldFail) throw Exception('Summary error');
-    return '• Customer asked about Lagos delivery\n• Agent confirmed price is ₦3,500\n• Customer requested checkout link';
-  }
-
-  @override
-  Future<List<String>> suggestFollowUpActions({required String conversationUuid}) async {
-    return ['Send Payment Link', 'Attach Catalog'];
+    return sampleSuggestion;
   }
 }
 
@@ -45,7 +40,7 @@ void main() {
 
     setUp(() {
       mockRepo = MockCopilotRepository();
-      copilotBloc = CopilotBloc(copilotRepository: mockRepo);
+      copilotBloc = CopilotBloc(repository: mockRepo);
     });
 
     tearDown(() {
@@ -56,34 +51,34 @@ void main() {
       expect(copilotBloc.state, isA<CopilotInitial>());
     });
 
-    test('RequestCopilotDraftEvent emits [CopilotLoading, CopilotLoaded] on success', () async {
+    test('GenerateCopilotDraftEvent emits [CopilotGenerating, CopilotSuccess] on success', () async {
       final expectedStates = [
-        isA<CopilotLoading>(),
-        isA<CopilotLoaded>().having((s) => s.suggestion.confidenceScore, 'confidence', 0.96),
+        isA<CopilotGenerating>(),
+        isA<CopilotSuccess>().having((s) => s.suggestion.confidenceScore, 'confidence', 0.96),
       ];
 
       expectLater(copilotBloc.stream, emitsInOrder(expectedStates));
 
-      copilotBloc.add(const RequestCopilotDraftEvent(
+      copilotBloc.add(const GenerateCopilotDraftEvent(
         conversationUuid: 'conv-101',
-        instruction: 'draft_reply',
       ));
     });
 
-    test('SummarizeConversationEvent emits [CopilotLoading, CopilotSummaryLoaded]', () async {
+    test('SummarizeConversationEvent emits [CopilotGenerating, CopilotSuccess]', () async {
       final expectedStates = [
-        isA<CopilotLoading>(),
-        isA<CopilotSummaryLoaded>().having((s) => s.summary.contains('Customer asked'), 'summary content', true),
+        isA<CopilotGenerating>(),
+        isA<CopilotSuccess>().having((s) => s.suggestion.suggestedText.isNotEmpty, 'has text', true),
       ];
 
       expectLater(copilotBloc.stream, emitsInOrder(expectedStates));
 
-      copilotBloc.add(const SummarizeConversationEvent(conversationUuid: 'conv-101'));
+      copilotBloc.add(const SummarizeConversationEvent('conv-101'));
     });
 
-    test('ClearCopilotEvent resets state to CopilotInitial', () async {
-      copilotBloc.add(const ClearCopilotEvent());
+    test('ResetCopilotStateEvent resets state to CopilotInitial', () async {
+      copilotBloc.add(ResetCopilotStateEvent());
       await expectLater(copilotBloc.stream, emitsThrough(isA<CopilotInitial>()));
     });
   });
 }
+

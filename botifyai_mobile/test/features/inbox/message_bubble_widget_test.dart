@@ -16,12 +16,14 @@ void main() {
     testWidgets('Renders inbound customer message correctly', (WidgetTester tester) async {
       final customerMessage = Message(
         id: 1,
-        uuid: 'msg-1',
-        senderType: 'customer',
+        localId: 'msg-1',
+        conversationUuid: 'conv-1',
+        direction: MessageDirection.inBound,
+        sentBy: 'customer',
         senderName: 'Chioma Adebayo',
         body: 'Do you deliver to Ikeja?',
-        createdAt: DateTime.now(),
-        status: 'delivered',
+        sentAt: DateTime.now(),
+        status: MessageDeliveryStatus.delivered,
       );
 
       await tester.pumpWidget(createTestWidget(
@@ -35,12 +37,14 @@ void main() {
     testWidgets('Renders outbound agent message with sent status indicator', (WidgetTester tester) async {
       final agentMessage = Message(
         id: 2,
-        uuid: 'msg-2',
-        senderType: 'agent',
+        localId: 'msg-2',
+        conversationUuid: 'conv-1',
+        direction: MessageDirection.outBound,
+        sentBy: 'agent',
         senderName: 'Agent Alex',
         body: 'Yes, delivery is within 24 hours.',
-        createdAt: DateTime.now(),
-        status: 'sent',
+        sentAt: DateTime.now(),
+        status: MessageDeliveryStatus.sent,
       );
 
       await tester.pumpWidget(createTestWidget(
@@ -53,12 +57,14 @@ void main() {
     testWidgets('Renders internal private note with padlock pill', (WidgetTester tester) async {
       final noteMessage = Message(
         id: 3,
-        uuid: 'msg-3',
-        senderType: 'agent',
+        localId: 'msg-3',
+        conversationUuid: 'conv-1',
+        direction: MessageDirection.outBound,
+        sentBy: 'agent',
         senderName: 'Manager Alex',
         body: 'VIP customer. Provide free shipping code if requested.',
-        createdAt: DateTime.now(),
-        isInternalNote: true,
+        sentAt: DateTime.now(),
+        isNote: true,
       );
 
       await tester.pumpWidget(createTestWidget(

@@ -1,6 +1,6 @@
-import '../../inbox/data/models/contact_model.dart';
-import '../../inbox/data/models/inbox_setup_model.dart';
-import '../domain/entities/contact_profile.dart';
+import 'package:botifyai_mobile/features/inbox/data/models/contact_model.dart';
+import 'package:botifyai_mobile/features/inbox/data/models/inbox_setup_model.dart';
+import 'package:botifyai_mobile/features/crm/domain/entities/contact_profile.dart';
 
 class ContactProfileModel extends ContactProfile {
   const ContactProfileModel({

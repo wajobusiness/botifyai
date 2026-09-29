@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/realtime/pusher_service.dart';
-import '../../../domain/entities/conversation.dart';
-import '../../../domain/entities/inbox_setup.dart';
-import '../../../domain/repositories/inbox_repository.dart';
-import '../../data/models/message_model.dart';
+import 'package:botifyai_mobile/core/realtime/pusher_service.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/conversation.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/inbox_setup.dart';
+import 'package:botifyai_mobile/features/inbox/domain/repositories/inbox_repository.dart';
+import 'package:botifyai_mobile/features/inbox/data/models/message_model.dart';
 import 'inbox_event.dart';
 import 'inbox_state.dart';
 
@@ -159,6 +159,10 @@ class InboxBloc extends Bloc<InboxEvent, InboxState> {
       emit(currentState.copyWith(currentFolder: event.folder));
       add(const LoadConversationsEvent());
     } else {
+      emit(InboxLoaded(
+        conversations: const [],
+        currentFolder: event.folder,
+      ));
       add(const LoadConversationsEvent());
     }
   }
@@ -170,6 +174,12 @@ class InboxBloc extends Bloc<InboxEvent, InboxState> {
     final currentState = state;
     if (currentState is InboxLoaded) {
       emit(currentState.copyWith(currentChannel: event.channel));
+      add(const LoadConversationsEvent());
+    } else {
+      emit(InboxLoaded(
+        conversations: const [],
+        currentChannel: event.channel,
+      ));
       add(const LoadConversationsEvent());
     }
   }

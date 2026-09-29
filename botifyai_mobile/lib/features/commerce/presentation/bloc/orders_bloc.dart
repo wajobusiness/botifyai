@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../domain/entities/order.dart';
-import '../domain/repositories/commerce_repository.dart';
+import 'package:botifyai_mobile/features/commerce/domain/entities/order.dart';
+import 'package:botifyai_mobile/features/commerce/domain/repositories/commerce_repository.dart';
 import 'orders_event.dart';
 import 'orders_state.dart';
 

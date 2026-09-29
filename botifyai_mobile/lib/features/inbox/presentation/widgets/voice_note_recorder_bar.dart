@@ -25,10 +25,7 @@ class _VoiceNoteRecorderBarState extends State<VoiceNoteRecorderBar> with Single
   final VoiceRecordService _recordService = VoiceRecordService();
   Timer? _timer;
   int _elapsedSeconds = 0;
-  bool _isLocked = false;
-  bool _isCanceling = false;
-  double _horizontalDrag = 0.0;
-  double _verticalDrag = 0.0;
+  final bool _isLocked = false;
 
   late AnimationController _pulseController;
 
@@ -132,7 +129,7 @@ class _VoiceNoteRecorderBarState extends State<VoiceNoteRecorderBar> with Single
           const SizedBox(width: 8),
           Text(
             _formatDuration(_elapsedSeconds),
-            style: AppTypography.bodyRegular.copyWith(
+            style: AppTypography.bodyRegular(
               fontWeight: FontWeight.w700,
               color: isDark ? Colors.white : Colors.black87,
             ),
@@ -147,7 +144,7 @@ class _VoiceNoteRecorderBarState extends State<VoiceNoteRecorderBar> with Single
                 const Icon(LucideIcons.chevronLeft, size: 14, color: Colors.grey),
                 Text(
                   'Slide to cancel',
-                  style: AppTypography.caption.copyWith(color: Colors.grey),
+                  style: AppTypography.caption(color: Colors.grey),
                 ),
               ],
             )
@@ -155,7 +152,7 @@ class _VoiceNoteRecorderBarState extends State<VoiceNoteRecorderBar> with Single
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.15),
+                color: AppColors.primary.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -164,7 +161,7 @@ class _VoiceNoteRecorderBarState extends State<VoiceNoteRecorderBar> with Single
                   const SizedBox(width: 4),
                   Text(
                     'Hands-free recording',
-                    style: AppTypography.caption.copyWith(
+                    style: AppTypography.caption(
                       color: AppColors.primary,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,

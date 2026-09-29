@@ -1,6 +1,6 @@
-import '../../inbox/domain/entities/contact.dart';
-import '../../inbox/domain/repositories/inbox_repository.dart';
-import '../domain/entities/contact_profile.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/contact.dart';
+import 'package:botifyai_mobile/features/inbox/domain/repositories/inbox_repository.dart';
+import 'package:botifyai_mobile/features/crm/domain/entities/contact_profile.dart';
 
 abstract class CrmRepository {
   Future<PaginatedList<Contact>> getContacts({

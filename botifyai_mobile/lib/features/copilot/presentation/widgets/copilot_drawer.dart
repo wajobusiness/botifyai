@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
-import '../../../../shared/widgets/botify_button.dart';
-import '../bloc/copilot_bloc.dart';
-import '../bloc/copilot_event.dart';
-import '../bloc/copilot_state.dart';
+import 'package:botifyai_mobile/app/theme/app_colors.dart';
+import 'package:botifyai_mobile/app/theme/app_typography.dart';
+import 'package:botifyai_mobile/shared/widgets/botify_button.dart';
+import 'package:botifyai_mobile/features/copilot/presentation/bloc/copilot_bloc.dart';
+import 'package:botifyai_mobile/features/copilot/presentation/bloc/copilot_event.dart';
+import 'package:botifyai_mobile/features/copilot/presentation/bloc/copilot_state.dart';
 
 class CopilotDrawer extends StatefulWidget {
   final String conversationUuid;
@@ -114,7 +113,7 @@ class _CopilotDrawerState extends State<CopilotDrawer> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: AppColors.aiAccent.withValues(alpha: 0.2),
+                    color: AppColors.aiAccent.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(LucideIcons.sparkles, size: 18, color: AppColors.primary),
@@ -122,7 +121,7 @@ class _CopilotDrawerState extends State<CopilotDrawer> {
                 const SizedBox(width: 10),
                 Text(
                   'BotifyAI Copilot',
-                  style: AppTypography.headingSmall.copyWith(
+                  style: AppTypography.headingSmall(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -167,7 +166,7 @@ class _CopilotDrawerState extends State<CopilotDrawer> {
                               state.action == 'summarize'
                                   ? 'Synthesizing conversation summary...'
                                   : 'Generating context-aware reply...',
-                              style: AppTypography.bodyRegular.copyWith(
+                              style: AppTypography.bodyRegular(
                                 color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                               ),
                             ),
@@ -184,12 +183,12 @@ class _CopilotDrawerState extends State<CopilotDrawer> {
                         children: [
                           const Icon(LucideIcons.alertCircle, size: 40, color: AppColors.error),
                           const SizedBox(height: 12),
-                          Text('Failed to generate response', style: AppTypography.headingSmall),
+                          Text('Failed to generate response', style: AppTypography.headingSmall()),
                           const SizedBox(height: 6),
                           Text(
                             state.message,
                             textAlign: TextAlign.center,
-                            style: AppTypography.bodySmall,
+                            style: AppTypography.bodySmall(),
                           ),
                           const SizedBox(height: 16),
                           BotifyButton(
@@ -221,7 +220,7 @@ class _CopilotDrawerState extends State<CopilotDrawer> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: AppColors.aiAccent.withValues(alpha: 0.2),
+                                color: AppColors.aiAccent.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: AppColors.aiAccent,
@@ -235,7 +234,7 @@ class _CopilotDrawerState extends State<CopilotDrawer> {
                                   const SizedBox(width: 4),
                                   Text(
                                     '${(suggestion.confidenceScore * 100).toInt()}% Match',
-                                    style: AppTypography.caption.copyWith(
+                                    style: AppTypography.caption(
                                       fontWeight: FontWeight.w700,
                                       color: AppColors.primary,
                                       fontSize: 10,
@@ -249,8 +248,9 @@ class _CopilotDrawerState extends State<CopilotDrawer> {
                               Expanded(
                                 child: Text(
                                   'Source: ${suggestion.sourcesUsed.first}',
-                                  style: AppTypography.caption.copyWith(
+                                  style: AppTypography.caption(
                                     color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                  ).copyWith(
                                     fontStyle: FontStyle.italic,
                                   ),
                                   maxLines: 1,
@@ -276,7 +276,7 @@ class _CopilotDrawerState extends State<CopilotDrawer> {
                             controller: _editableTextController,
                             maxLines: 6,
                             minLines: 3,
-                            style: AppTypography.bodyRegular.copyWith(
+                            style: AppTypography.bodyRegular(
                               color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                             ),
                             decoration: const InputDecoration(
@@ -304,10 +304,10 @@ class _CopilotDrawerState extends State<CopilotDrawer> {
                                 ),
                                 child: TextField(
                                   controller: _customPromptController,
-                                  style: AppTypography.bodySmall,
+                                  style: AppTypography.bodySmall(),
                                   decoration: InputDecoration(
                                     hintText: 'Refine (e.g. "make it friendlier")...',
-                                    hintStyle: AppTypography.caption,
+                                    hintStyle: AppTypography.caption(),
                                     border: InputBorder.none,
                                     isDense: true,
                                     contentPadding: const EdgeInsets.symmetric(vertical: 8),

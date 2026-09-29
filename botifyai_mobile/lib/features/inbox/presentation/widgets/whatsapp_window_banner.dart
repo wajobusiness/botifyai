@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
+import 'package:botifyai_mobile/app/theme/app_typography.dart';
 
 class WhatsAppWindowBanner extends StatelessWidget {
   final bool isWindowOpen;
@@ -26,11 +25,11 @@ class WhatsAppWindowBanner extends StatelessWidget {
         color: isDark ? const Color(0xFF451A03) : const Color(0xFFFFFBEB),
         border: Border(
           top: BorderSide(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+            color: const Color(0xFFF59E0B).withOpacity(0.3),
             width: 1,
           ),
           bottom: BorderSide(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+            color: const Color(0xFFF59E0B).withOpacity(0.3),
             width: 1,
           ),
         ),
@@ -42,7 +41,7 @@ class WhatsAppWindowBanner extends StatelessWidget {
           Expanded(
             child: Text(
               '24h session window expired. Send an approved template to re-open.',
-              style: AppTypography.caption.copyWith(
+              style: AppTypography.caption(
                 color: isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E),
                 fontWeight: FontWeight.w500,
               ),
@@ -63,7 +62,7 @@ class WhatsAppWindowBanner extends StatelessWidget {
             ),
             child: Text(
               'Templates',
-              style: AppTypography.caption.copyWith(
+              style: AppTypography.caption(
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
                 fontSize: 11,

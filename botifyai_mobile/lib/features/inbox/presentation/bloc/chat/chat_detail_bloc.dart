@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/realtime/pusher_service.dart';
-import '../../../domain/entities/conversation.dart';
-import '../../../domain/entities/message.dart';
-import '../../../domain/repositories/inbox_repository.dart';
-import '../../data/models/message_model.dart';
+import 'package:botifyai_mobile/core/realtime/pusher_service.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/conversation.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/message.dart';
+import 'package:botifyai_mobile/features/inbox/domain/repositories/inbox_repository.dart';
+import 'package:botifyai_mobile/features/inbox/data/models/message_model.dart';
 import 'chat_detail_event.dart';
 import 'chat_detail_state.dart';
 
@@ -361,7 +361,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     } catch (_) {}
   }
 
-  Future<void> _onUpdateChatStatusEvent(
+  Future<void> _onUpdateChatStatus(
     UpdateChatStatusEvent event,
     Emitter<ChatDetailState> emit,
   ) async {

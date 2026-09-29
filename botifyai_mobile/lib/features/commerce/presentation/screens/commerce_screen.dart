@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
-import '../../../../core/api/api_client.dart';
-import '../../inbox/presentation/widgets/inbox_skeleton.dart';
-import '../data/datasources/commerce_remote_data_source.dart';
-import '../data/repositories/commerce_repository_impl.dart';
-import '../domain/entities/order.dart';
-import '../presentation/bloc/orders_bloc.dart';
-import '../presentation/bloc/orders_event.dart';
-import '../presentation/bloc/orders_state.dart';
-import '../presentation/widgets/order_card.dart';
-import '../presentation/widgets/order_detail_modal.dart';
+import 'package:botifyai_mobile/app/theme/app_colors.dart';
+import 'package:botifyai_mobile/app/theme/app_typography.dart';
+import 'package:botifyai_mobile/core/api/api_client.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/widgets/inbox_skeleton.dart';
+import 'package:botifyai_mobile/features/commerce/data/datasources/commerce_remote_data_source.dart';
+import 'package:botifyai_mobile/features/commerce/data/repositories/commerce_repository_impl.dart';
+import 'package:botifyai_mobile/features/commerce/domain/entities/order.dart';
+import 'package:botifyai_mobile/features/commerce/presentation/bloc/orders_bloc.dart';
+import 'package:botifyai_mobile/features/commerce/presentation/bloc/orders_event.dart';
+import 'package:botifyai_mobile/features/commerce/presentation/bloc/orders_state.dart';
+import 'package:botifyai_mobile/features/commerce/presentation/widgets/order_card.dart';
+import 'package:botifyai_mobile/features/commerce/presentation/widgets/order_detail_modal.dart';
 
 class CommerceScreen extends StatelessWidget {
   const CommerceScreen({super.key});
@@ -119,12 +119,12 @@ class _CommerceViewState extends State<_CommerceView> {
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                style: AppTypography.bodyRegular.copyWith(
+                style: AppTypography.bodyRegular(
                   color: isDark ? Colors.white : Colors.black87,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Search order number, customer...',
-                  hintStyle: AppTypography.bodySmall.copyWith(
+                  hintStyle: AppTypography.bodySmall(
                     color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                   ),
                   border: InputBorder.none,
@@ -133,7 +133,7 @@ class _CommerceViewState extends State<_CommerceView> {
                   context.read<OrdersBloc>().add(SearchOrdersEvent(val));
                 },
               )
-            : Text('E-Commerce & Orders', style: AppTypography.headingMedium),
+            : Text('E-Commerce & Orders', style: AppTypography.headingMedium()),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? LucideIcons.x : LucideIcons.search, size: 20),
@@ -184,7 +184,7 @@ class _CommerceViewState extends State<_CommerceView> {
                             width: 1,
                           ),
                         ),
-                        labelStyle: AppTypography.caption.copyWith(
+                        labelStyle: AppTypography.caption(
                           fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
                           color: isSel
                               ? Colors.white
@@ -222,12 +222,12 @@ class _CommerceViewState extends State<_CommerceView> {
                         children: [
                           const Icon(LucideIcons.alertCircle, size: 48, color: AppColors.error),
                           const SizedBox(height: 12),
-                          Text('Failed to load orders', style: AppTypography.headingSmall),
+                          Text('Failed to load orders', style: AppTypography.headingSmall()),
                           const SizedBox(height: 6),
                           Text(
                             state.message,
                             textAlign: TextAlign.center,
-                            style: AppTypography.bodySmall,
+                            style: AppTypography.bodySmall(),
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
@@ -267,13 +267,13 @@ class _CommerceViewState extends State<_CommerceView> {
                                   color: isDark ? Colors.grey[700] : Colors.grey[300],
                                 ),
                                 const SizedBox(height: 16),
-                                Text('No orders found', style: AppTypography.headingSmall),
+                                Text('No orders found', style: AppTypography.headingSmall()),
                                 const SizedBox(height: 6),
                                 Text(
                                   state.searchQuery.isNotEmpty
                                       ? 'No orders match "${state.searchQuery}"'
                                       : 'You currently have no ${state.selectedStatus ?? ''} orders.',
-                                  style: AppTypography.bodySmall,
+                                  style: AppTypography.bodySmall(),
                                 ),
                               ],
                             ),

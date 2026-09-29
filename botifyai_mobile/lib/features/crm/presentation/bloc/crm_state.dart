@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../inbox/domain/entities/contact.dart';
-import '../domain/entities/contact_profile.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/contact.dart';
+import 'package:botifyai_mobile/features/crm/domain/entities/contact_profile.dart';
 
 abstract class CrmState extends Equatable {
   const CrmState();

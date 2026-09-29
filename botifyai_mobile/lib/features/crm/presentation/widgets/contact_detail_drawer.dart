@@ -2,10 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
-import '../../../../shared/widgets/botify_button.dart';
-import '../domain/entities/contact_profile.dart';
+import 'package:botifyai_mobile/app/theme/app_colors.dart';
+import 'package:botifyai_mobile/app/theme/app_typography.dart';
+import 'package:botifyai_mobile/shared/widgets/botify_button.dart';
+import 'package:botifyai_mobile/features/crm/domain/entities/contact_profile.dart';
 
 class ContactDetailDrawer extends StatelessWidget {
   final ContactProfile profile;
@@ -80,8 +80,8 @@ class ContactDetailDrawer extends StatelessWidget {
               children: [
                 Text(
                   'Contact 360 Profile',
-                  style: AppTypography.headingSmall.copyWith(
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.headingSmall(
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                   ),
                 ),
                 const Spacer(),
@@ -108,7 +108,7 @@ class ContactDetailDrawer extends StatelessWidget {
                       children: [
                         CircleAvatar(
                           radius: 36,
-                          backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
+                          backgroundColor: AppColors.primaryLight.withOpacity(0.2),
                           backgroundImage: profile.contact.avatar != null &&
                                   profile.contact.avatar!.isNotEmpty
                               ? CachedNetworkImageProvider(profile.contact.avatar!)
@@ -119,7 +119,7 @@ class ContactDetailDrawer extends StatelessWidget {
                                   profile.contact.name.isNotEmpty
                                       ? profile.contact.name[0].toUpperCase()
                                       : '?',
-                                  style: AppTypography.headingLarge.copyWith(
+                                  style: AppTypography.headingLarge(
                                     color: AppColors.primary,
                                   ),
                                 )
@@ -128,15 +128,13 @@ class ContactDetailDrawer extends StatelessWidget {
                         const SizedBox(height: 10),
                         Text(
                           profile.contact.name,
-                          style: AppTypography.headingSmall.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: AppTypography.headingSmall(),
                         ),
                         if (profile.contact.phone != null) ...[
                           const SizedBox(height: 2),
                           Text(
                             profile.contact.phone!,
-                            style: AppTypography.bodySmall.copyWith(
+                            style: AppTypography.bodySmall(
                               color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                             ),
                           ),
@@ -145,7 +143,7 @@ class ContactDetailDrawer extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             profile.contact.email!,
-                            style: AppTypography.caption.copyWith(
+                            style: AppTypography.caption(
                               color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                             ),
                           ),
@@ -172,13 +170,12 @@ class ContactDetailDrawer extends StatelessWidget {
                           children: [
                             Text(
                               '${profile.totalOrders}',
-                              style: AppTypography.headingMedium.copyWith(
+                              style: AppTypography.headingMedium(
                                 color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text('Lifetime Orders', style: AppTypography.caption),
+                            Text('Lifetime Orders', style: AppTypography.caption()),
                           ],
                         ),
                         Container(
@@ -190,13 +187,12 @@ class ContactDetailDrawer extends StatelessWidget {
                           children: [
                             Text(
                               currencyFmt.format(profile.totalSpend),
-                              style: AppTypography.headingMedium.copyWith(
+                              style: AppTypography.headingMedium(
                                 color: AppColors.success,
-                                fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text('Total Spend', style: AppTypography.caption),
+                            Text('Total Spend', style: AppTypography.caption()),
                           ],
                         ),
                       ],
@@ -207,13 +203,13 @@ class ContactDetailDrawer extends StatelessWidget {
                   // Tags & Labels Section
                   Text(
                     'Customer Labels & Tags',
-                    style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold),
+                    style: AppTypography.bodySmall(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   if (profile.labels.isEmpty)
                     Text(
                       'No tags assigned to this customer.',
-                      style: AppTypography.caption.copyWith(
+                      style: AppTypography.caption(
                         color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                       ),
                     )
@@ -232,12 +228,12 @@ class ContactDetailDrawer extends StatelessWidget {
 
                         return Chip(
                           label: Text(label.name),
-                          backgroundColor: tagColor.withValues(alpha: 0.15),
-                          labelStyle: AppTypography.caption.copyWith(
+                          backgroundColor: tagColor.withOpacity(0.15),
+                          labelStyle: AppTypography.caption(
                             color: tagColor,
                             fontWeight: FontWeight.bold,
                           ),
-                          side: BorderSide(color: tagColor.withValues(alpha: 0.3)),
+                          side: BorderSide(color: tagColor.withOpacity(0.3)),
                           visualDensity: VisualDensity.compact,
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                         );
@@ -249,7 +245,7 @@ class ContactDetailDrawer extends StatelessWidget {
                   if (profile.notes.isNotEmpty) ...[
                     Text(
                       'Internal Notes',
-                      style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold),
+                      style: AppTypography.bodySmall(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     ...profile.notes.map((noteMap) {
@@ -260,7 +256,7 @@ class ContactDetailDrawer extends StatelessWidget {
                           color: isDark ? const Color(0xFF451A03) : const Color(0xFFFEF3C7),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
+                            color: const Color(0xFFF59E0B).withOpacity(0.4),
                           ),
                         ),
                         child: Row(
@@ -271,7 +267,7 @@ class ContactDetailDrawer extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 noteMap['note']?.toString() ?? noteMap['body']?.toString() ?? '',
-                                style: AppTypography.bodySmall.copyWith(
+                                style: AppTypography.bodySmall(
                                   color: isDark ? const Color(0xFFFEF3C7) : const Color(0xFF78350F),
                                 ),
                               ),

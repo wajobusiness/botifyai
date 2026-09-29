@@ -10,6 +10,7 @@ class VoiceRecordService {
   DateTime? _recordingStartTime;
 
   bool get isRecording => _isRecording;
+  String? get currentRecordingPath => _currentRecordingPath;
   Duration get currentDuration => _recordingStartTime != null
       ? DateTime.now().difference(_recordingStartTime!)
       : Duration.zero;

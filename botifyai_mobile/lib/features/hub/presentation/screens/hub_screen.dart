@@ -39,12 +39,77 @@ class HubScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // BotifyAI Brand Banner Card
+              BotifyCard(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDark ? AppColors.surfaceDark : AppColors.brandPrimarySubtle,
+                        border: Border.all(
+                          color: AppColors.brandPrimaryLight,
+                          width: 1.5,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'BotifyAI Mobile',
+                            style: AppTypography.headingSmall(
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Companion App v1.0.0',
+                            style: AppTypography.bodySmall(
+                              color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.aiAccent.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'AI COPILOT ACTIVE',
+                              style: AppTypography.caption(
+                                color: isDark ? AppColors.aiAccent : AppColors.brandPrimaryDark,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // User Profile Card
               BotifyCard(
                 child: Row(
                   children: [
                     CircleAvatar(
-                      radius: 28,
+                      radius: 26,
                       backgroundColor: AppColors.brandPrimary.withOpacity(0.15),
                       child: Text(
                         userName.isNotEmpty ? userName[0].toUpperCase() : 'A',

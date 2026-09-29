@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Design tokens for BotifyAI Mobile Application
+/// Design tokens for BotifyAI Mobile Application (Stitch Design System)
 class AppColors {
   AppColors._();
 
@@ -9,6 +9,12 @@ class AppColors {
   static const Color brandPrimaryLight = Color(0xFF5E9B48);
   static const Color brandPrimaryDark = Color(0xFF283F24);
   static const Color brandPrimarySubtle = Color(0xFFEBF5E7);
+
+  // Aliases for component convenience
+  static const Color primary = brandPrimary;
+  static const Color primaryDark = brandPrimaryDark;
+  static const Color primaryLight = brandPrimaryLight;
+  static const Color primarySubtle = brandPrimarySubtle;
 
   // AI High-Tech Accent (Electric Lime)
   static const Color aiAccent = Color(0xFFACE601);
@@ -22,6 +28,12 @@ class AppColors {
   static const Color borderLight = Color(0xFFE2E8F0);
   static const Color dividerLight = Color(0xFFF1F5F9);
 
+  static const Color lightBackground = backgroundLight;
+  static const Color lightSurface = surfaceLight;
+  static const Color lightCard = cardLight;
+  static const Color lightBorder = borderLight;
+  static const Color lightDivider = dividerLight;
+
   // Dark Mode Surfaces
   static const Color backgroundDark = Color(0xFF0F172A);
   static const Color surfaceDark = Color(0xFF1E293B);
@@ -29,14 +41,28 @@ class AppColors {
   static const Color borderDark = Color(0xFF334155);
   static const Color dividerDark = Color(0xFF1E293B);
 
+  static const Color darkBackground = backgroundDark;
+  static const Color darkSurface = surfaceDark;
+  static const Color darkCard = cardDark;
+  static const Color darkBorder = borderDark;
+  static const Color darkDivider = dividerDark;
+
   // Text Colors
   static const Color textPrimaryLight = Color(0xFF0F172A);
   static const Color textSecondaryLight = Color(0xFF64748B);
   static const Color textMutedLight = Color(0xFF94A3B8);
 
+  static const Color lightTextPrimary = textPrimaryLight;
+  static const Color lightTextSecondary = textSecondaryLight;
+  static const Color lightTextMuted = textMutedLight;
+
   static const Color textPrimaryDark = Color(0xFFF8FAFC);
   static const Color textSecondaryDark = Color(0xFF94A3B8);
   static const Color textMutedDark = Color(0xFF64748B);
+
+  static const Color darkTextPrimary = textPrimaryDark;
+  static const Color darkTextSecondary = textSecondaryDark;
+  static const Color darkTextMuted = textMutedDark;
 
   // Omnichannel Identity Colors
   static const Color channelWhatsApp = Color(0xFF25D366);

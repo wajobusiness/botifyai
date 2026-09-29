@@ -16,6 +16,10 @@ class BiometricService {
     }
   }
 
+  Future<bool> isBiometricEnrolled() async {
+    return isBiometricsAvailable();
+  }
+
   Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
       return await _auth.getAvailableBiometrics();
@@ -40,5 +44,9 @@ class BiometricService {
     } catch (_) {
       return false;
     }
+  }
+
+  Future<bool> authenticateWithBiometrics({String reason = 'Authenticate to access BotifyAI'}) async {
+    return authenticate(reason: reason);
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
+import 'package:botifyai_mobile/app/theme/app_colors.dart';
+import 'package:botifyai_mobile/app/theme/app_typography.dart';
 
 class CopilotKeyboardBar extends StatelessWidget {
   final VoidCallback onAiDraft;
@@ -42,8 +42,8 @@ class CopilotKeyboardBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSpecial
                   ? (isDark
-                      ? AppColors.aiAccent.withValues(alpha: 0.15)
-                      : AppColors.aiAccent.withValues(alpha: 0.2))
+                      ? AppColors.aiAccent.withOpacity(0.15)
+                      : AppColors.aiAccent.withOpacity(0.2))
                   : (isDark ? AppColors.darkSurface : AppColors.lightSurface),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
@@ -66,7 +66,7 @@ class CopilotKeyboardBar extends StatelessWidget {
                 const SizedBox(width: 5),
                 Text(
                   label,
-                  style: AppTypography.caption.copyWith(
+                  style: AppTypography.caption(
                     fontWeight: isSpecial ? FontWeight.w700 : FontWeight.w600,
                     fontSize: 11,
                     color: isSpecial

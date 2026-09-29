@@ -4,31 +4,40 @@ import 'package:botifyai_mobile/features/crm/presentation/bloc/crm_event.dart';
 import 'package:botifyai_mobile/features/crm/presentation/bloc/crm_state.dart';
 import 'package:botifyai_mobile/features/crm/domain/entities/contact_profile.dart';
 import 'package:botifyai_mobile/features/crm/domain/repositories/crm_repository.dart';
-import 'package:botifyai_mobile/features/inbox/domain/entities/conversation.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/contact.dart';
+import 'package:botifyai_mobile/features/inbox/domain/repositories/inbox_repository.dart';
 
 class MockCrmRepository implements CrmRepository {
   bool shouldFail = false;
 
-  final sampleProfile = const ContactProfile(
+  final sampleContact = const Contact(
     id: 1,
     name: 'Chioma Adebayo',
     email: 'chioma@example.com',
     phone: '+2348012345678',
+  );
+
+  final sampleProfile = const ContactProfile(
+    contact: Contact(
+      id: 1,
+      name: 'Chioma Adebayo',
+      email: 'chioma@example.com',
+      phone: '+2348012345678',
+    ),
     channel: 'whatsapp',
-    tags: ['VIP Buyer', 'Urgent'],
     totalOrders: 4,
-    lifetimeSpend: 145000.0,
-    currency: '₦',
+    totalSpend: 145000.0,
+    currencySymbol: '₦',
     notes: [
-      ContactNote(id: 1, authorName: 'Alex', content: 'Prefers morning deliveries.', createdAt: '2026-09-20'),
+      {'id': 1, 'author': 'Alex', 'content': 'Prefers morning deliveries.', 'date': '2026-09-20'},
     ],
   );
 
   @override
-  Future<PaginatedList<ContactProfile>> getContacts({String? search, String? tag, int page = 1}) async {
+  Future<PaginatedList<Contact>> getContacts({String? search, String? tag, int page = 1}) async {
     if (shouldFail) throw Exception('CRM network error');
-    return PaginatedList<ContactProfile>(
-      data: [sampleProfile],
+    return PaginatedList<Contact>(
+      data: [sampleContact],
       currentPage: 1,
       lastPage: 1,
       total: 1,
@@ -42,18 +51,24 @@ class MockCrmRepository implements CrmRepository {
   }
 
   @override
-  Future<ContactProfile> addTag({required int contactId, required String tag}) async {
-    return sampleProfile.copyWith(tags: [...sampleProfile.tags, tag]);
+  Future<Contact> createContact({
+    required String name,
+    String? phone,
+    String? email,
+    Map<String, dynamic>? customFields,
+  }) async {
+    return Contact(id: 2, name: name, phone: phone, email: email);
   }
 
   @override
-  Future<ContactProfile> removeTag({required int contactId, required String tag}) async {
-    return sampleProfile.copyWith(tags: sampleProfile.tags.where((t) => t != tag).toList());
-  }
-
-  @override
-  Future<ContactNote> addNote({required int contactId, required String content}) async {
-    return ContactNote(id: 2, authorName: 'Current User', content: content, createdAt: '2026-09-29');
+  Future<Contact> updateContact({
+    required int id,
+    required String name,
+    String? phone,
+    String? email,
+    Map<String, dynamic>? customFields,
+  }) async {
+    return Contact(id: id, name: name, phone: phone, email: email);
   }
 }
 
@@ -64,7 +79,7 @@ void main() {
 
     setUp(() {
       mockRepo = MockCrmRepository();
-      crmBloc = CrmBloc(crmRepository: mockRepo);
+      crmBloc = CrmBloc(repository: mockRepo);
     });
 
     tearDown(() {
@@ -75,24 +90,33 @@ void main() {
       expect(crmBloc.state, isA<CrmInitial>());
     });
 
-    test('FetchContactsEvent emits [CrmLoading, CrmLoaded] on success', () async {
+    test('LoadContactsEvent emits [CrmLoading, CrmLoaded] on success', () async {
       final expectedStates = [
         isA<CrmLoading>(),
         isA<CrmLoaded>().having((s) => s.contacts.length, 'contacts count', 1),
       ];
 
       expectLater(crmBloc.stream, emitsInOrder(expectedStates));
-      crmBloc.add(const FetchContactsEvent());
+      crmBloc.add(const LoadContactsEvent());
     });
 
-    test('FetchContactProfileEvent loads full profile with order history and tags', () async {
-      final expectedStates = [
-        isA<ContactProfileLoading>(),
-        isA<ContactProfileLoaded>().having((s) => s.profile.lifetimeSpend, 'lifetime spend', 145000.0),
-      ];
+    test('LoadContactProfileEvent loads active profile into CrmLoaded state', () async {
+      // First load contacts to have CrmLoaded state
+      crmBloc.add(const LoadContactsEvent());
+      await expectLater(crmBloc.stream, emitsThrough(isA<CrmLoaded>()));
 
-      expectLater(crmBloc.stream, emitsInOrder(expectedStates));
-      crmBloc.add(const FetchContactProfileEvent(contactId: 1));
+      crmBloc.add(const LoadContactProfileEvent(1));
+
+      await expectLater(
+        crmBloc.stream,
+        emitsThrough(
+          isA<CrmLoaded>().having(
+            (s) => s.activeProfile?.totalSpend,
+            'total spend',
+            145000.0,
+          ),
+        ),
+      );
     });
   });
 }

@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
-import '../../../../core/api/api_client.dart';
-import '../../inbox/presentation/widgets/inbox_skeleton.dart';
-import '../data/datasources/crm_remote_data_source.dart';
-import '../data/repositories/crm_repository_impl.dart';
-import '../domain/entities/contact_profile.dart';
-import '../presentation/bloc/crm_bloc.dart';
-import '../presentation/bloc/crm_event.dart';
-import '../presentation/bloc/crm_state.dart';
-import '../presentation/widgets/contact_detail_drawer.dart';
-import '../presentation/widgets/contact_tile.dart';
+import 'package:botifyai_mobile/app/theme/app_colors.dart';
+import 'package:botifyai_mobile/app/theme/app_typography.dart';
+import 'package:botifyai_mobile/core/api/api_client.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/widgets/inbox_skeleton.dart';
+import 'package:botifyai_mobile/features/crm/data/datasources/crm_remote_data_source.dart';
+import 'package:botifyai_mobile/features/crm/data/repositories/crm_repository_impl.dart';
+import 'package:botifyai_mobile/features/crm/domain/entities/contact_profile.dart';
+import 'package:botifyai_mobile/features/crm/presentation/bloc/crm_bloc.dart';
+import 'package:botifyai_mobile/features/crm/presentation/bloc/crm_event.dart';
+import 'package:botifyai_mobile/features/crm/presentation/bloc/crm_state.dart';
+import 'package:botifyai_mobile/features/crm/presentation/widgets/contact_detail_drawer.dart';
+import 'package:botifyai_mobile/features/crm/presentation/widgets/contact_tile.dart';
 
 class CrmScreen extends StatelessWidget {
   const CrmScreen({super.key});
@@ -79,7 +79,6 @@ class _CrmViewState extends State<_CrmView> {
         context: context,
         profile: currentState.activeProfile ?? fallbackProfile,
         onOpenChat: () {
-          // Navigate to conversations
           context.push('/inbox');
         },
       );
@@ -97,12 +96,12 @@ class _CrmViewState extends State<_CrmView> {
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                style: AppTypography.bodyRegular.copyWith(
+                style: AppTypography.bodyRegular(
                   color: isDark ? Colors.white : Colors.black87,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Search contacts by name, email, phone...',
-                  hintStyle: AppTypography.bodySmall.copyWith(
+                  hintStyle: AppTypography.bodySmall(
                     color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                   ),
                   border: InputBorder.none,
@@ -111,7 +110,7 @@ class _CrmViewState extends State<_CrmView> {
                   context.read<CrmBloc>().add(SearchContactsEvent(val));
                 },
               )
-            : Text('CRM & Contacts', style: AppTypography.headingMedium),
+            : Text('CRM & Contacts', style: AppTypography.headingMedium()),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? LucideIcons.x : LucideIcons.search, size: 20),
@@ -144,12 +143,12 @@ class _CrmViewState extends State<_CrmView> {
                   children: [
                     const Icon(LucideIcons.alertCircle, size: 48, color: AppColors.error),
                     const SizedBox(height: 12),
-                    Text('Failed to load contacts', style: AppTypography.headingSmall),
+                    Text('Failed to load contacts', style: AppTypography.headingSmall()),
                     const SizedBox(height: 6),
                     Text(
                       state.message,
                       textAlign: TextAlign.center,
-                      style: AppTypography.bodySmall,
+                      style: AppTypography.bodySmall(),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
@@ -189,13 +188,13 @@ class _CrmViewState extends State<_CrmView> {
                             color: isDark ? Colors.grey[700] : Colors.grey[300],
                           ),
                           const SizedBox(height: 16),
-                          Text('No contacts found', style: AppTypography.headingSmall),
+                          Text('No contacts found', style: AppTypography.headingSmall()),
                           const SizedBox(height: 6),
                           Text(
                             state.searchQuery.isNotEmpty
                                 ? 'No contacts match "${state.searchQuery}"'
                                 : 'You currently have no contacts in your CRM.',
-                            style: AppTypography.bodySmall,
+                            style: AppTypography.bodySmall(),
                           ),
                         ],
                       ),

@@ -48,7 +48,6 @@ class TemplatePickerSheet extends StatefulWidget {
 
 class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
   bool _isLoading = true;
-  String? _error;
   List<WhatsAppTemplate> _allTemplates = [];
   List<WhatsAppTemplate> _filteredTemplates = [];
   String _selectedCategory = 'ALL';
@@ -74,7 +73,6 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
   Future<void> _loadTemplates() async {
     setState(() {
       _isLoading = true;
-      _error = null;
     });
 
     try {
@@ -198,7 +196,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF25D366).withValues(alpha: 0.15),
+                    color: const Color(0xFF25D366).withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(LucideIcons.messageSquare, size: 18, color: Color(0xFF25D366)),
@@ -206,7 +204,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
                 const SizedBox(width: 10),
                 Text(
                   _selectedTemplate == null ? 'WhatsApp Meta Templates' : 'Configure Template',
-                  style: AppTypography.headingSmall.copyWith(
+                  style: AppTypography.headingSmall(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -253,7 +251,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: TextField(
-            style: AppTypography.bodySmall,
+            style: AppTypography.bodySmall(),
             decoration: InputDecoration(
               hintText: 'Search templates...',
               prefixIcon: const Icon(LucideIcons.search, size: 16),
@@ -291,7 +289,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
                   selectedColor: AppColors.primary,
                   checkmarkColor: Colors.white,
                   showCheckmark: false,
-                  labelStyle: AppTypography.caption.copyWith(
+                  labelStyle: AppTypography.caption(
                     color: isSel ? Colors.white : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
                     fontSize: 10,
                     fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
@@ -314,7 +312,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
               ? Center(
                   child: Text(
                     'No templates match your search.',
-                    style: AppTypography.bodySmall,
+                    style: AppTypography.bodySmall(),
                   ),
                 )
               : ListView.separated(
@@ -343,7 +341,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
                                 Expanded(
                                   child: Text(
                                     t.name,
-                                    style: AppTypography.bodyRegular.copyWith(
+                                    style: AppTypography.bodyRegular(
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -352,13 +350,13 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: t.category == 'MARKETING'
-                                        ? Colors.purple.withValues(alpha: 0.15)
-                                        : Colors.blue.withValues(alpha: 0.15),
+                                        ? Colors.purple.withOpacity(0.15)
+                                        : Colors.blue.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
                                     t.category,
-                                    style: AppTypography.caption.copyWith(
+                                    style: AppTypography.caption(
                                       fontSize: 9,
                                       fontWeight: FontWeight.bold,
                                       color: t.category == 'MARKETING' ? Colors.purple : Colors.blue,
@@ -370,7 +368,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
                             const SizedBox(height: 6),
                             Text(
                               t.bodyText,
-                              style: AppTypography.bodySmall.copyWith(
+                              style: AppTypography.bodySmall(
                                 color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                               ),
                               maxLines: 2,
@@ -398,7 +396,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
         children: [
           Text(
             template.name,
-            style: AppTypography.headingSmall.copyWith(fontWeight: FontWeight.bold),
+            style: AppTypography.headingSmall(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
 
@@ -410,7 +408,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
               color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF25D366).withValues(alpha: 0.5),
+                color: const Color(0xFF25D366).withOpacity(0.5),
                 width: 1.2,
               ),
             ),
@@ -423,7 +421,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
                     const SizedBox(width: 6),
                     Text(
                       'Live WhatsApp Preview',
-                      style: AppTypography.caption.copyWith(
+                      style: AppTypography.caption(
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF25D366),
                       ),
@@ -433,7 +431,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
                 const SizedBox(height: 8),
                 Text(
                   _getInterpolatedPreview(),
-                  style: AppTypography.bodyRegular,
+                  style: AppTypography.bodyRegular(),
                 ),
               ],
             ),
@@ -444,7 +442,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
           if (template.parameterNames.isNotEmpty) ...[
             Text(
               'Fill Template Variables',
-              style: AppTypography.bodySmall.copyWith(
+              style: AppTypography.bodySmall(
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -455,7 +453,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: TextField(
                   controller: controller,
-                  style: AppTypography.bodyRegular,
+                  style: AppTypography.bodyRegular(),
                   decoration: InputDecoration(
                     labelText: 'Parameter {{$param}}',
                     hintText: 'Enter value for {{$param}} (e.g. Customer Name, Order #)',

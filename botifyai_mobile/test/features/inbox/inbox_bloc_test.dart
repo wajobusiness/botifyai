@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:botifyai_mobile/features/inbox/presentation/bloc/inbox_bloc.dart';
-import 'package:botifyai_mobile/features/inbox/presentation/bloc/inbox_event.dart';
-import 'package:botifyai_mobile/features/inbox/presentation/bloc/inbox_state.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/bloc/inbox/inbox_bloc.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/bloc/inbox/inbox_event.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/bloc/inbox/inbox_state.dart';
 import 'package:botifyai_mobile/features/inbox/domain/entities/conversation.dart';
 import 'package:botifyai_mobile/features/inbox/domain/entities/contact.dart';
 import 'package:botifyai_mobile/features/inbox/domain/entities/inbox_setup.dart';
@@ -14,10 +14,19 @@ class MockInboxRepository implements InboxRepository {
   bool shouldFail = false;
 
   final sampleConversation = Conversation(
+    id: 101,
     uuid: 'conv-101',
     contact: const Contact(id: 1, name: 'Chioma Adebayo', phone: '+2348012345678'),
     channel: 'whatsapp',
-    lastMessageSnippet: 'Is this item available in Lagos?',
+    lastMessage: Message(
+      id: 1,
+      localId: 'msg-1',
+      conversationUuid: 'conv-101',
+      direction: MessageDirection.inBound,
+      sentBy: 'customer',
+      body: 'Is this item available in Lagos?',
+      sentAt: DateTime.now(),
+    ),
     lastMessageAt: DateTime.now(),
     unreadCount: 2,
     status: 'open',
@@ -26,7 +35,7 @@ class MockInboxRepository implements InboxRepository {
 
   @override
   Future<InboxSetup> getInboxSetup() async {
-    return const InboxSetup(labels: [], cannedReplies: [], channelAccounts: [], agents: []);
+    return const InboxSetup(labels: [], cannedReplies: [], channelAccounts: [], teamMembers: []);
   }
 
   @override
@@ -67,10 +76,12 @@ class MockInboxRepository implements InboxRepository {
   }) async {
     return Message(
       id: 1,
-      uuid: 'msg-1',
-      senderType: 'agent',
+      localId: 'msg-1',
+      conversationUuid: uuid,
+      direction: MessageDirection.outBound,
+      sentBy: 'agent',
       body: body,
-      createdAt: DateTime.now(),
+      sentAt: DateTime.now(),
     );
   }
 
@@ -93,7 +104,9 @@ class MockInboxRepository implements InboxRepository {
   Future<void> detachLabel({required String uuid, required int labelId}) async {}
 }
 
-class FakePusherService extends PusherService {}
+class FakePusherService extends PusherService {
+  FakePusherService() : super.test();
+}
 
 void main() {
   group('InboxBloc Unit Tests', () {
@@ -105,7 +118,7 @@ void main() {
       mockRepository = MockInboxRepository();
       fakePusher = FakePusherService();
       inboxBloc = InboxBloc(
-        inboxRepository: mockRepository,
+        repository: mockRepository,
         pusherService: fakePusher,
       );
     });
@@ -118,14 +131,14 @@ void main() {
       expect(inboxBloc.state, isA<InboxInitial>());
     });
 
-    test('Emits [InboxLoading, InboxLoaded] when FetchConversationsEvent is triggered', () async {
+    test('Emits [InboxLoading, InboxLoaded] when LoadConversationsEvent is triggered', () async {
       final expectedStates = [
         isA<InboxLoading>(),
         isA<InboxLoaded>().having((s) => s.conversations.length, 'conversations length', 1),
       ];
 
       expectLater(inboxBloc.stream, emitsInOrder(expectedStates));
-      inboxBloc.add(FetchConversationsEvent());
+      inboxBloc.add(const LoadConversationsEvent());
     });
 
     test('Emits [InboxLoading, InboxError] when repository throws error', () async {
@@ -137,14 +150,14 @@ void main() {
       ];
 
       expectLater(inboxBloc.stream, emitsInOrder(expectedStates));
-      inboxBloc.add(FetchConversationsEvent());
+      inboxBloc.add(const LoadConversationsEvent());
     });
 
-    test('FilterFolderChangedEvent updates active folder filter', () async {
-      inboxBloc.add(const FilterFolderChangedEvent(folder: 'unassigned'));
+    test('ChangeFolderEvent updates active folder filter', () async {
+      inboxBloc.add(const ChangeFolderEvent('unassigned'));
       await expectLater(
         inboxBloc.stream,
-        emitsThrough(isA<InboxLoaded>().having((s) => s.selectedFolder, 'selectedFolder', 'unassigned')),
+        emitsThrough(isA<InboxLoaded>().having((s) => s.currentFolder, 'currentFolder', 'unassigned')),
       );
     });
   });

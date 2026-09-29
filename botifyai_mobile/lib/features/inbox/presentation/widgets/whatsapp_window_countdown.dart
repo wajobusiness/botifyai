@@ -94,7 +94,7 @@ class _WhatsAppWindowCountdownState extends State<WhatsAppWindowCountdown> {
             Expanded(
               child: Text(
                 'WhatsApp 24h session window expired.',
-                style: AppTypography.caption.copyWith(
+                style: AppTypography.caption(
                   color: isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E),
                   fontWeight: FontWeight.w600,
                 ),
@@ -110,7 +110,7 @@ class _WhatsAppWindowCountdownState extends State<WhatsAppWindowCountdown> {
                 ),
                 child: Text(
                   'Send Template',
-                  style: AppTypography.caption.copyWith(
+                  style: AppTypography.caption(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 10,
@@ -144,7 +144,7 @@ class _WhatsAppWindowCountdownState extends State<WhatsAppWindowCountdown> {
           const SizedBox(width: 8),
           Text(
             'WhatsApp Care Window: ${_formatRemaining()} remaining',
-            style: AppTypography.caption.copyWith(
+            style: AppTypography.caption(
               color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
               fontWeight: FontWeight.w500,
             ),
@@ -154,7 +154,7 @@ class _WhatsAppWindowCountdownState extends State<WhatsAppWindowCountdown> {
             onTap: widget.onOpenTemplatePicker,
             child: Text(
               'Use Template',
-              style: AppTypography.caption.copyWith(
+              style: AppTypography.caption(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w700,
                 fontSize: 11,

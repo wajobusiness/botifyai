@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../inbox/domain/entities/contact.dart';
-import '../domain/repositories/crm_repository.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/contact.dart';
+import 'package:botifyai_mobile/features/crm/domain/repositories/crm_repository.dart';
 import 'crm_event.dart';
 import 'crm_state.dart';
 

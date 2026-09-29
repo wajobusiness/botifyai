@@ -124,7 +124,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   Expanded(
                     child: Text(
                       'Adding Private Internal Note (Visible only to team)',
-                      style: AppTypography.caption.copyWith(
+                      style: AppTypography.caption(
                         color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFB45309),
                         fontWeight: FontWeight.w600,
                         fontSize: 11,
@@ -199,14 +199,14 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     maxLines: 5,
                     enabled: !widget.isWindowLocked || isNote,
                     textCapitalization: TextCapitalization.sentences,
-                    style: AppTypography.bodyRegular.copyWith(
+                    style: AppTypography.bodyRegular(
                       color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                     ),
                     decoration: InputDecoration(
                       hintText: widget.isWindowLocked && !isNote
                           ? '24h window closed. Use a template.'
                           : (isNote ? 'Type an internal note...' : 'Type a reply...'),
-                      hintStyle: AppTypography.bodySmall.copyWith(
+                      hintStyle: AppTypography.bodySmall(
                         color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                       ),
                       border: InputBorder.none,

@@ -49,21 +49,22 @@ class CachedConversation {
       contactPhone: c.contact.phone,
       contactEmail: c.contact.email,
       channel: c.channel,
-      channelId: c.channelId,
-      lastMessageText: c.lastMessageSnippet,
-      lastMessageTime: c.lastMessageAt.toIso8601String(),
-      lastMessageDirection: c.lastMessageDirection,
+      channelId: c.channelAccountId?.toString(),
+      lastMessageText: c.lastMessage?.body ?? '',
+      lastMessageTime: (c.lastMessageAt ?? DateTime.now()).toIso8601String(),
+      lastMessageDirection: c.lastMessage?.isInbound == true ? 'inbound' : 'outbound',
       unreadCount: c.unreadCount,
       status: c.status,
-      assignedToName: c.assignedTo?.name,
+      assignedToName: c.assignedUserName,
       isWhatsappWindowOpen: c.isWhatsappWindowOpen,
       lastCustomerMessageAt: c.lastCustomerMessageAt?.toIso8601String(),
-      tags: c.tags,
+      tags: c.labels.map((l) => l.name).toList(),
     );
   }
 
   Conversation toDomain() {
     return ConversationModel.fromJson({
+      'id': 0,
       'uuid': uuid,
       'contact': {
         'id': 0,
@@ -73,16 +74,21 @@ class CachedConversation {
         'email': contactEmail,
       },
       'channel': channel,
-      'channel_id': channelId,
-      'last_message_snippet': lastMessageText,
+      'channel_account_id': channelId != null ? int.tryParse(channelId!) : null,
+      'last_message': {
+        'local_id': 'last-$uuid',
+        'conversation_uuid': uuid,
+        'body': lastMessageText,
+        'sent_by': lastMessageDirection == 'inbound' ? 'customer' : 'agent',
+        'sent_at': lastMessageTime,
+      },
       'last_message_at': lastMessageTime,
-      'last_message_direction': lastMessageDirection,
       'unread_count': unreadCount,
       'status': status,
-      'assigned_to': assignedToName != null ? {'id': 0, 'name': assignedToName} : null,
+      'assigned_user_name': assignedToName,
       'is_whatsapp_window_open': isWhatsappWindowOpen,
       'last_customer_message_at': lastCustomerMessageAt,
-      'tags': tags,
+      'labels': tags.map((t) => {'id': 0, 'name': t, 'color': '#467235'}).toList(),
     });
   }
 

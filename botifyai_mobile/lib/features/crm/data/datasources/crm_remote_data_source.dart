@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
-import '../../../../core/api/api_client.dart';
-import '../../../../core/api/api_endpoints.dart';
-import '../../../../core/errors/failures.dart';
-import '../../inbox/data/models/contact_model.dart';
-import '../../inbox/domain/repositories/inbox_repository.dart';
-import '../models/contact_profile_model.dart';
+import 'package:botifyai_mobile/core/api/api_client.dart';
+import 'package:botifyai_mobile/core/api/api_endpoints.dart';
+import 'package:botifyai_mobile/core/errors/failures.dart';
+import 'package:botifyai_mobile/features/inbox/data/models/contact_model.dart';
+import 'package:botifyai_mobile/features/inbox/domain/repositories/inbox_repository.dart';
+import 'package:botifyai_mobile/features/crm/data/models/contact_profile_model.dart';
 
 abstract class CrmRemoteDataSource {
   Future<PaginatedList<ContactModel>> getContacts({

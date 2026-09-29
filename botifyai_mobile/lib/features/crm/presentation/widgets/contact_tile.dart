@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
-import '../../inbox/domain/entities/contact.dart';
+import 'package:botifyai_mobile/app/theme/app_colors.dart';
+import 'package:botifyai_mobile/app/theme/app_typography.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/contact.dart';
 
 class ContactTile extends StatelessWidget {
   final Contact contact;
@@ -37,7 +37,7 @@ class ContactTile extends StatelessWidget {
               child: contact.avatar == null || contact.avatar!.isEmpty
                   ? Text(
                       contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
-                      style: AppTypography.headingSmall.copyWith(
+                      style: AppTypography.headingSmall(
                         color: isDark ? Colors.white : AppColors.primary,
                       ),
                     )
@@ -52,7 +52,7 @@ class ContactTile extends StatelessWidget {
                 children: [
                   Text(
                     contact.name,
-                    style: AppTypography.bodyRegular.copyWith(
+                    style: AppTypography.bodyRegular(
                       fontWeight: FontWeight.w600,
                       color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                     ),
@@ -62,7 +62,7 @@ class ContactTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     contact.phone ?? contact.email ?? 'No contact info',
-                    style: AppTypography.caption.copyWith(
+                    style: AppTypography.caption(
                       color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                     ),
                     maxLines: 1,

@@ -25,6 +25,9 @@ class PusherService {
   factory PusherService() => _instance;
   PusherService._internal();
 
+  /// Constructor for unit testing / mocking
+  PusherService.test();
+
   final PusherChannelsFlutter _pusher = PusherChannelsFlutter.getInstance();
   final StreamController<PusherRealtimeEvent> _eventStreamController =
       StreamController<PusherRealtimeEvent>.broadcast();

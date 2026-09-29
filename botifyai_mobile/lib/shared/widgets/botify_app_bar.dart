@@ -48,17 +48,21 @@ class BotifyAppBar extends StatelessWidget implements PreferredSizeWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 28,
-                          height: 28,
+                          width: 30,
+                          height: 30,
                           decoration: BoxDecoration(
-                            color: AppColors.brandPrimary.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(6),
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            border: Border.all(
+                              color: AppColors.brandPrimaryLight,
+                              width: 1,
+                            ),
                           ),
-                          child: const Center(
-                            child: Icon(
-                              LucideIcons.building,
-                              size: 16,
-                              color: AppColors.brandPrimary,
+                          padding: const EdgeInsets.all(2),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
@@ -85,11 +89,25 @@ class BotifyAppBar extends StatelessWidget implements PreferredSizeWidget {
                 );
               },
             )
-          : Text(
-              title ?? '',
-              style: AppTypography.headingMedium(
-                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-              ),
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  margin: const EdgeInsets.only(right: 8),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                Text(
+                  title ?? '',
+                  style: AppTypography.headingMedium(
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  ),
+                ),
+              ],
             ),
       actions: [
         if (onSearchTap != null)
@@ -116,7 +134,7 @@ class BotifyAppBar extends StatelessWidget implements PreferredSizeWidget {
                     color: AppColors.error,
                     shape: BoxShape.circle,
                   ),
-                  constraints: const Size.square(8),
+                  constraints: const BoxConstraints(minWidth: 8, minHeight: 8),
                 ),
               ),
           ],

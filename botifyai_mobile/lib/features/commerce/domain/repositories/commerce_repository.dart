@@ -1,5 +1,5 @@
-import '../../inbox/domain/repositories/inbox_repository.dart';
-import '../domain/entities/order.dart';
+import 'package:botifyai_mobile/features/inbox/domain/repositories/inbox_repository.dart';
+import '../entities/order.dart';
 
 abstract class CommerceRepository {
   Future<PaginatedList<Order>> getOrders({

@@ -87,7 +87,7 @@ class _CannedRepliesSheetState extends State<CannedRepliesSheet> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withValues(alpha: 0.2),
+                    color: AppColors.primaryLight.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(LucideIcons.zap, size: 18, color: AppColors.primary),
@@ -95,7 +95,7 @@ class _CannedRepliesSheetState extends State<CannedRepliesSheet> {
                 const SizedBox(width: 10),
                 Text(
                   'Canned Reply Shortcuts',
-                  style: AppTypography.headingSmall.copyWith(
+                  style: AppTypography.headingSmall(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -114,7 +114,7 @@ class _CannedRepliesSheetState extends State<CannedRepliesSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: TextField(
-              style: AppTypography.bodySmall,
+              style: AppTypography.bodySmall(),
               decoration: InputDecoration(
                 hintText: 'Search shortcuts (e.g. /shipping, /hello)...',
                 prefixIcon: const Icon(LucideIcons.search, size: 16),
@@ -138,7 +138,7 @@ class _CannedRepliesSheetState extends State<CannedRepliesSheet> {
                 ? Center(
                     child: Text(
                       'No canned replies found.',
-                      style: AppTypography.bodySmall,
+                      style: AppTypography.bodySmall(),
                     ),
                   )
                 : ListView.separated(
@@ -165,12 +165,12 @@ class _CannedRepliesSheetState extends State<CannedRepliesSheet> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.15),
+                                  color: AppColors.primary.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   item.shortcut,
-                                  style: AppTypography.caption.copyWith(
+                                  style: AppTypography.caption(
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.primary,
                                     fontSize: 11,
@@ -180,7 +180,7 @@ class _CannedRepliesSheetState extends State<CannedRepliesSheet> {
                               const SizedBox(height: 6),
                               Text(
                                 item.body,
-                                style: AppTypography.bodySmall.copyWith(
+                                style: AppTypography.bodySmall(
                                   color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                                 ),
                               ),

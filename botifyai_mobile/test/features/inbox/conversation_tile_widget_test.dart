@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:botifyai_mobile/features/inbox/domain/entities/conversation.dart';
 import 'package:botifyai_mobile/features/inbox/domain/entities/contact.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/message.dart';
 import 'package:botifyai_mobile/features/inbox/presentation/widgets/conversation_tile.dart';
 
 void main() {
@@ -16,10 +17,19 @@ void main() {
   group('ConversationTile Widget Tests', () {
     testWidgets('Renders contact name, snippet and unread badge count', (WidgetTester tester) async {
       final conversation = Conversation(
+        id: 999,
         uuid: 'conv-999',
         contact: const Contact(id: 1, name: 'Emeka Okafor', phone: '+2347000000000'),
         channel: 'whatsapp',
-        lastMessageSnippet: 'Can I pay via Bank Transfer?',
+        lastMessage: Message(
+          id: 1,
+          localId: 'msg-1',
+          conversationUuid: 'conv-999',
+          direction: MessageDirection.inBound,
+          sentBy: 'customer',
+          body: 'Can I pay via Bank Transfer?',
+          sentAt: DateTime.now(),
+        ),
         lastMessageAt: DateTime.now().subtract(const Duration(minutes: 2)),
         unreadCount: 3,
         status: 'open',

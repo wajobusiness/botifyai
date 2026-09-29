@@ -75,16 +75,16 @@ class AttachmentPickerSheet extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
+              color: color.withOpacity(0.15),
               shape: BoxShape.circle,
-              border: Border.all(color: color.withValues(alpha: 0.3)),
+              border: Border.all(color: color.withOpacity(0.3)),
             ),
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 8),
           Text(
             label,
-            style: AppTypography.caption.copyWith(
+            style: AppTypography.caption(
               fontWeight: FontWeight.w600,
               color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
             ),
@@ -119,7 +119,7 @@ class AttachmentPickerSheet extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'Share Media & Files',
-              style: AppTypography.headingSmall.copyWith(fontWeight: FontWeight.bold),
+              style: AppTypography.headingSmall(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
             Row(

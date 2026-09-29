@@ -41,21 +41,21 @@ class CachedMessage {
 
   factory CachedMessage.fromDomain(Message m, {required String conversationUuid}) {
     return CachedMessage(
-      id: m.id,
-      uuid: m.uuid,
+      id: m.id ?? 0,
+      uuid: m.localId,
       conversationUuid: conversationUuid,
-      senderType: m.senderType,
+      senderType: m.sentBy,
       senderName: m.senderName,
       senderAvatar: m.senderAvatar,
-      type: m.type,
+      type: m.type.name,
       body: m.body,
       attachmentUrl: m.attachmentUrl,
       attachmentType: m.attachmentType,
       attachmentSize: m.attachmentSize,
-      attachmentDuration: m.attachmentDuration,
-      status: m.status,
-      isInternalNote: m.isInternalNote,
-      createdAt: m.createdAt.toIso8601String(),
+      attachmentDuration: null,
+      status: m.status.name,
+      isInternalNote: m.isNote,
+      createdAt: m.sentAt.toIso8601String(),
     );
   }
 
@@ -63,7 +63,9 @@ class CachedMessage {
     return MessageModel.fromJson({
       'id': id,
       'uuid': uuid,
+      'local_id': uuid,
       'sender_type': senderType,
+      'sent_by': senderType,
       'sender_name': senderName,
       'sender_avatar': senderAvatar,
       'type': type,
@@ -74,7 +76,9 @@ class CachedMessage {
       'attachment_duration': attachmentDuration,
       'status': status,
       'is_internal_note': isInternalNote,
+      'is_note': isInternalNote,
       'created_at': createdAt,
+      'sent_at': createdAt,
     });
   }
 
@@ -102,9 +106,9 @@ class CachedMessage {
   factory CachedMessage.fromJson(Map<String, dynamic> json) {
     return CachedMessage(
       id: (json['id'] as num?)?.toInt() ?? 0,
-      uuid: json['uuid'] as String,
+      uuid: json['uuid'] as String? ?? json['local_id'] as String? ?? 'off-${DateTime.now().millisecondsSinceEpoch}',
       conversationUuid: json['conversation_uuid'] as String? ?? '',
-      senderType: json['sender_type'] as String? ?? 'agent',
+      senderType: json['sender_type'] as String? ?? json['sent_by'] as String? ?? 'agent',
       senderName: json['sender_name'] as String?,
       senderAvatar: json['sender_avatar'] as String?,
       type: json['type'] as String? ?? 'text',
@@ -114,8 +118,8 @@ class CachedMessage {
       attachmentSize: (json['attachment_size'] as num?)?.toInt(),
       attachmentDuration: (json['attachment_duration'] as num?)?.toInt(),
       status: json['status'] as String? ?? 'sent',
-      isInternalNote: json['is_internal_note'] as bool? ?? false,
-      createdAt: json['created_at'] as String? ?? DateTime.now().toIso8601String(),
+      isInternalNote: json['is_internal_note'] as bool? ?? json['is_note'] as bool? ?? false,
+      createdAt: json['created_at'] as String? ?? json['sent_at'] as String? ?? DateTime.now().toIso8601String(),
       cachedAt: json['cached_at'] != null ? DateTime.parse(json['cached_at'] as String) : null,
     );
   }

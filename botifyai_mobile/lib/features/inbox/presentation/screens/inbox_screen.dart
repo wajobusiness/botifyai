@@ -83,12 +83,12 @@ class _InboxViewState extends State<_InboxView> {
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                style: AppTypography.bodyRegular.copyWith(
+                style: AppTypography.bodyRegular(
                   color: isDark ? Colors.white : Colors.black87,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Search contacts, phone...',
-                  hintStyle: AppTypography.bodySmall.copyWith(
+                  hintStyle: AppTypography.bodySmall(
                     color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                   ),
                   border: InputBorder.none,
@@ -97,7 +97,7 @@ class _InboxViewState extends State<_InboxView> {
                   context.read<InboxBloc>().add(SearchQueryChangedEvent(val));
                 },
               )
-            : Text('Inbox', style: AppTypography.headingMedium),
+            : Text('Inbox', style: AppTypography.headingMedium()),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? LucideIcons.x : LucideIcons.search, size: 20),
@@ -160,12 +160,12 @@ class _InboxViewState extends State<_InboxView> {
                         children: [
                           const Icon(LucideIcons.alertCircle, size: 48, color: AppColors.error),
                           const SizedBox(height: 12),
-                          Text('Failed to load inbox', style: AppTypography.headingSmall),
+                          Text('Failed to load inbox', style: AppTypography.headingSmall()),
                           const SizedBox(height: 6),
                           Text(
                             state.message,
                             textAlign: TextAlign.center,
-                            style: AppTypography.bodySmall,
+                            style: AppTypography.bodySmall(),
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
@@ -208,7 +208,7 @@ class _InboxViewState extends State<_InboxView> {
                                 const SizedBox(height: 16),
                                 Text(
                                   'No conversations found',
-                                  style: AppTypography.headingSmall.copyWith(
+                                  style: AppTypography.headingSmall(
                                     color: isDark
                                         ? AppColors.darkTextPrimary
                                         : AppColors.lightTextPrimary,
@@ -219,7 +219,7 @@ class _InboxViewState extends State<_InboxView> {
                                   state.searchQuery.isNotEmpty
                                       ? 'No matching results for "${state.searchQuery}"'
                                       : 'You have no ${state.currentFolder} conversations.',
-                                  style: AppTypography.bodySmall.copyWith(
+                                  style: AppTypography.bodySmall(
                                     color: isDark
                                         ? AppColors.darkTextSecondary
                                         : AppColors.lightTextSecondary,
@@ -299,7 +299,7 @@ class _InboxViewState extends State<_InboxView> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Filter by Channel', style: AppTypography.headingSmall),
+                Text('Filter by Channel', style: AppTypography.headingSmall()),
                 const SizedBox(height: 8),
                 ListTile(
                   leading: const Icon(LucideIcons.layers, color: AppColors.primary),

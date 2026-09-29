@@ -20,10 +20,10 @@ void main() {
 
       await tester.pumpWidget(createTestWidget(
         CopilotKeyboardBar(
-          onTapDraft: () => draftTapped = true,
-          onTapSummarize: () => summarizeTapped = true,
-          onTapShortcuts: () => shortcutsTapped = true,
-          onTapTemplates: () => templatesTapped = true,
+          onAiDraft: () => draftTapped = true,
+          onSummarize: () => summarizeTapped = true,
+          onShortcuts: () => shortcutsTapped = true,
+          onTemplates: () => templatesTapped = true,
         ),
       ));
 

@@ -1,35 +1,51 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:botifyai_mobile/features/inbox/presentation/bloc/chat_detail_bloc.dart';
-import 'package:botifyai_mobile/features/inbox/presentation/bloc/chat_detail_event.dart';
-import 'package:botifyai_mobile/features/inbox/presentation/bloc/chat_detail_state.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/bloc/chat/chat_detail_bloc.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/bloc/chat/chat_detail_event.dart';
+import 'package:botifyai_mobile/features/inbox/presentation/bloc/chat/chat_detail_state.dart';
 import 'package:botifyai_mobile/features/inbox/domain/entities/message.dart';
 import 'package:botifyai_mobile/features/inbox/domain/entities/conversation.dart';
+import 'package:botifyai_mobile/features/inbox/domain/entities/contact.dart';
 import 'package:botifyai_mobile/features/inbox/domain/entities/inbox_setup.dart';
 import 'package:botifyai_mobile/features/inbox/domain/entities/whatsapp_template.dart';
 import 'package:botifyai_mobile/features/inbox/domain/repositories/inbox_repository.dart';
 import 'package:botifyai_mobile/core/realtime/pusher_service.dart';
 
 class MockChatInboxRepository implements InboxRepository {
+  final Conversation sampleConv = const Conversation(
+    id: 101,
+    uuid: 'conv-101',
+    contact: Contact(id: 1, name: 'Chioma Adebayo', phone: '+2348012345678'),
+    channel: 'whatsapp',
+    status: 'open',
+    isWhatsappWindowOpen: true,
+  );
+
   List<Message> mockMessages = [
     Message(
       id: 1,
-      uuid: 'msg-101',
-      senderType: 'customer',
+      localId: 'msg-101',
+      conversationUuid: 'conv-101',
+      direction: MessageDirection.inBound,
+      sentBy: 'customer',
       body: 'Hello, how much is the delivery to Abuja?',
-      createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
-      status: 'delivered',
+      sentAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      status: MessageDeliveryStatus.delivered,
     ),
   ];
 
   @override
-  Future<InboxSetup> getInboxSetup() async => const InboxSetup(labels: [], cannedReplies: [], channelAccounts: [], agents: []);
+  Future<InboxSetup> getInboxSetup() async => const InboxSetup(labels: [], cannedReplies: [], channelAccounts: [], teamMembers: []);
   @override
   Future<List<WhatsAppTemplate>> getWhatsAppTemplates() async => [];
   @override
   Future<PaginatedList<Conversation>> getConversations({String folder = 'mine', String? channel, String? search, int page = 1}) async =>
       PaginatedList<Conversation>(data: [], currentPage: 1, lastPage: 1, total: 0);
+  
   @override
-  Future<Map<String, dynamic>> getConversationDetail(String uuid) async => {};
+  Future<Map<String, dynamic>> getConversationDetail(String uuid) async => {
+    'conversation': sampleConv,
+    'messages': mockMessages,
+  };
 
   @override
   Future<PaginatedList<Message>> getMessages(String uuid, {int page = 1}) async {
@@ -52,24 +68,26 @@ class MockChatInboxRepository implements InboxRepository {
   }) async {
     return Message(
       id: 2,
-      uuid: 'msg-102',
-      senderType: 'agent',
+      localId: 'msg-102',
+      conversationUuid: uuid,
+      direction: MessageDirection.outBound,
+      sentBy: 'agent',
       body: body,
-      type: type,
-      status: 'sent',
-      isInternalNote: isNote,
-      createdAt: DateTime.now(),
+      type: isNote ? MessageType.note : MessageType.text,
+      status: MessageDeliveryStatus.sent,
+      isNote: isNote,
+      sentAt: DateTime.now(),
     );
   }
 
   @override
   Future<Conversation> assignConversation({required String uuid, required int? userId, String? assignedTo}) async {
-    throw UnimplementedError();
+    return sampleConv;
   }
 
   @override
   Future<Conversation> updateConversationStatus({required String uuid, required String status}) async {
-    throw UnimplementedError();
+    return sampleConv;
   }
 
   @override
@@ -82,7 +100,9 @@ class MockChatInboxRepository implements InboxRepository {
   Future<void> detachLabel({required String uuid, required int labelId}) async {}
 }
 
-class FakePusherService extends PusherService {}
+class FakePusherService extends PusherService {
+  FakePusherService() : super.test();
+}
 
 void main() {
   group('ChatDetailBloc Unit Tests', () {
@@ -94,7 +114,7 @@ void main() {
       mockRepo = MockChatInboxRepository();
       fakePusher = FakePusherService();
       chatBloc = ChatDetailBloc(
-        inboxRepository: mockRepo,
+        repository: mockRepo,
         pusherService: fakePusher,
       );
     });
@@ -107,32 +127,31 @@ void main() {
       expect(chatBloc.state, isA<ChatDetailInitial>());
     });
 
-    test('FetchMessagesEvent loads message list into ChatDetailLoaded', () async {
+    test('LoadChatDetailEvent loads message list into ChatDetailLoaded', () async {
       final expectedStates = [
         isA<ChatDetailLoading>(),
         isA<ChatDetailLoaded>().having((s) => s.messages.length, 'messages count', 1),
       ];
 
       expectLater(chatBloc.stream, emitsInOrder(expectedStates));
-      chatBloc.add(const FetchMessagesEvent(conversationUuid: 'conv-101'));
+      chatBloc.add(const LoadChatDetailEvent('conv-101'));
     });
 
-    test('SendMessageEvent optimistically adds message and updates status to sent', () async {
+    test('SendTextMessageEvent optimistically adds message and updates status to sent', () async {
       // First load messages
-      chatBloc.add(const FetchMessagesEvent(conversationUuid: 'conv-101'));
+      chatBloc.add(const LoadChatDetailEvent('conv-101'));
       await expectLater(chatBloc.stream, emitsThrough(isA<ChatDetailLoaded>()));
 
       // Send outbound message
-      chatBloc.add(const SendMessageEvent(
-        conversationUuid: 'conv-101',
-        body: 'Standard delivery is ₦3,500.',
+      chatBloc.add(const SendTextMessageEvent(
+        text: 'Standard delivery is ₦3,500.',
       ));
 
       await expectLater(
         chatBloc.stream,
         emitsThrough(
           isA<ChatDetailLoaded>().having(
-            (s) => s.messages.any((m) => m.body == 'Standard delivery is ₦3,500.' && m.status == 'sent'),
+            (s) => s.messages.any((m) => m.body == 'Standard delivery is ₦3,500.' && m.status == MessageDeliveryStatus.sent),
             'has sent message',
             true,
           ),
@@ -140,25 +159,27 @@ void main() {
       );
     });
 
-    test('IncomingMessageEvent appends new message and deduplicates', () async {
-      chatBloc.add(const FetchMessagesEvent(conversationUuid: 'conv-101'));
+    test('InboundMessageReceivedChatEvent appends new message and deduplicates', () async {
+      chatBloc.add(const LoadChatDetailEvent('conv-101'));
       await expectLater(chatBloc.stream, emitsThrough(isA<ChatDetailLoaded>()));
 
       final incoming = Message(
         id: 99,
-        uuid: 'msg-99',
-        senderType: 'customer',
+        localId: 'msg-99',
+        conversationUuid: 'conv-101',
+        direction: MessageDirection.inBound,
+        sentBy: 'customer',
         body: 'Great! Can I order now?',
-        createdAt: DateTime.now(),
+        sentAt: DateTime.now(),
       );
 
-      chatBloc.add(IncomingMessageEvent(message: incoming));
+      chatBloc.add(InboundMessageReceivedChatEvent(incoming));
 
       await expectLater(
         chatBloc.stream,
         emitsThrough(
           isA<ChatDetailLoaded>().having(
-            (s) => s.messages.any((m) => m.uuid == 'msg-99'),
+            (s) => s.messages.any((m) => m.localId == 'msg-99'),
             'contains incoming message',
             true,
           ),

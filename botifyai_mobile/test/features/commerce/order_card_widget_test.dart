@@ -24,7 +24,7 @@ void main() {
         totalAmount: 18500.0,
         itemsCount: 1,
         items: const [
-          OrderItem(id: 1, productName: 'Silk Hijab Navy Blue', quantity: 1, price: 18500.0),
+          OrderItem(id: 1, productName: 'Silk Hijab Navy Blue', quantity: 1, unitPrice: 18500.0, totalPrice: 18500.0),
         ],
         createdAt: DateTime.now(),
       );
@@ -43,7 +43,7 @@ void main() {
       expect(find.text('#BOT-5050'), findsOneWidget);
       expect(find.text('Fatima Garba'), findsOneWidget);
       expect(find.text('₦18,500.00'), findsOneWidget);
-      expect(find.text('PAID'), findsOneWidget);
+      expect(find.text('Paid'), findsOneWidget);
 
       await tester.tap(find.byType(OrderCard));
       expect(tapped, isTrue);

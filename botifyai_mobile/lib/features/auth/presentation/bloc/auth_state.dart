@@ -43,3 +43,6 @@ class AuthErrorState extends AuthState {
   @override
   List<Object?> get props => [message, errors];
 }
+
+typedef AuthAuthenticated = AuthenticatedState;
+typedef AuthUnauthenticated = UnauthenticatedState;
