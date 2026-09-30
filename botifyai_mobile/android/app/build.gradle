@@ -31,7 +31,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "cloud.botifyai.companion"
-    compileSdk 34
+    compileSdk 35
     ndkVersion flutter.ndkVersion
 
     compileOptions {
