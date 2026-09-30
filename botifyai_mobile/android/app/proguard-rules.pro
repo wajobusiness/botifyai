@@ -1,3 +1,6 @@
+# Application Package
+-keep class cloud.botifyai.companion.** { *; }
+
 # Flutter & Dart ProGuard Rules
 -keep class io.flutter.app.** { *; }
 -keep class io.flutter.plugin.**  { *; }

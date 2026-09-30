@@ -1,4 +1,4 @@
-package cloud.botifyai.botifyai_mobile
+package cloud.botifyai.companion
 
 import io.flutter.embedding.android.FlutterActivity
 
