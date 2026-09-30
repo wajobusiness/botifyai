@@ -14,24 +14,29 @@ rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
-subprojects {
-    project.evaluationDependsOn(":app")
-}
 
 subprojects {
-    project.ext.flutter = [
-        compileSdkVersion: 35,
-        minSdkVersion: 23,
-        targetSdkVersion: 34,
-    ]
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            project.android {
-                compileSdkVersion 35
-                buildToolsVersion "35.0.0"
+    if (project.name != "app") {
+        project.ext.flutter = [
+            compileSdkVersion: 35,
+            minSdkVersion: 23,
+            targetSdkVersion: 34,
+        ]
+        if (!project.state.executed) {
+            project.afterEvaluate { p ->
+                if (p.hasProperty("android")) {
+                    p.android {
+                        compileSdkVersion 35
+                        buildToolsVersion "35.0.0"
+                    }
+                }
             }
         }
     }
+}
+
+subprojects {
+    project.evaluationDependsOn(":app")
 }
 
 tasks.register("clean", Delete) {
