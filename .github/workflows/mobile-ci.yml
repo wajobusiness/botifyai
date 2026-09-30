@@ -1,0 +1,54 @@
+name: BotifyAI Mobile CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    paths:
+      - 'botifyai_mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'botifyai_mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+
+jobs:
+  analyze-and-test:
+    name: Flutter Analyze & Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        working-directory: botifyai_mobile
+        run: flutter pub get
+
+      - name: Run Static Analysis
+        working-directory: botifyai_mobile
+        run: dart analyze
+
+      - name: Run Unit & Widget Tests
+        working-directory: botifyai_mobile
+        run: flutter test --coverage
+
+      - name: Upload Test Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-lcov-report
+          path: botifyai_mobile/coverage/lcov.info
+          if-no-files-found: ignore

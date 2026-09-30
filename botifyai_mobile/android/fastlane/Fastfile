@@ -1,0 +1,51 @@
+default_platform(:android)
+
+platform :android do
+  desc "Runs code analysis and tests before building"
+  lane :test do
+    Dir.chdir("../..") do
+      sh("flutter", "analyze")
+      sh("flutter", "test")
+    end
+  end
+
+  desc "Build signed Release Android App Bundle (AAB)"
+  lane :build_aab do
+    Dir.chdir("../..") do
+      sh("flutter", "build", "appbundle", "--release", "--obfuscate", "--split-debug-info=build/app/outputs/symbols")
+    end
+  end
+
+  desc "Build signed Release Universal APK"
+  lane :build_apk do
+    Dir.chdir("../..") do
+      sh("flutter", "build", "apk", "--release", "--split-per-abi")
+    end
+  end
+
+  desc "Deploy to Google Play Internal Testing Track"
+  lane :beta do
+    test
+    build_aab
+    upload_to_play_store(
+      track: "internal",
+      aab: "../build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      release_status: "draft"
+    )
+  end
+
+  desc "Deploy to Google Play Production Track (with 10% Staged Rollout)"
+  lane :production do
+    test
+    build_aab
+    upload_to_play_store(
+      track: "production",
+      aab: "../build/app/outputs/bundle/release/app-release.aab",
+      rollout: "0.10", # 10% Initial Staged Rollout
+      release_status: "inProgress"
+    )
+  end
+end

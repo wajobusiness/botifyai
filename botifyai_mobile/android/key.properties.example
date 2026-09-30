@@ -1,0 +1,8 @@
+# BotifyAI Android Release Keystore Configuration Example
+# Copy this file to key.properties and replace with your actual keystore details
+# NOTE: Never commit key.properties or .jks/.keystore files to Git!
+
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=botifyai_upload_key
+storeFile=/path/to/upload-keystore.jks

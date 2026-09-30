@@ -1,0 +1,105 @@
+name: BotifyAI Mobile Release Packaging
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  build-android-release:
+    name: Build Signed Android (AAB + APK)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        working-directory: botifyai_mobile
+        run: flutter pub get
+
+      - name: Configure Keystore (from Secrets)
+        working-directory: botifyai_mobile/android
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/upload-keystore.jks
+          cat <<EOF > key.properties
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+
+      - name: Build Android App Bundle (AAB)
+        working-directory: botifyai_mobile
+        run: flutter build appbundle --release --obfuscate --split-debug-info=build/app/outputs/symbols
+
+      - name: Build Release APK
+        working-directory: botifyai_mobile
+        run: flutter build apk --release
+
+      - name: Upload Android AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: botifyai-release-aab
+          path: botifyai_mobile/build/app/outputs/bundle/release/app-release.aab
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: botifyai-release-apk
+          path: botifyai_mobile/build/app/outputs/flutter-apk/app-release.apk
+
+  build-ios-release:
+    name: Build iOS Archive & IPA
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        working-directory: botifyai_mobile
+        run: flutter pub get
+
+      - name: Build iOS No-Codesign Bundle
+        working-directory: botifyai_mobile
+        run: flutter build ios --release --no-codesign
+
+      - name: Archive Runner Payload
+        working-directory: botifyai_mobile/build/ios/iphoneos
+        run: |
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r botifyai_unsigned.ipa Payload
+
+      - name: Upload iOS Payload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: botifyai-ios-payload
+          path: botifyai_mobile/build/ios/iphoneos/botifyai_unsigned.ipa

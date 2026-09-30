@@ -1,0 +1,56 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Runs static analysis and test suite"
+  lane :test do
+    Dir.chdir("../..") do
+      sh("flutter", "analyze")
+      sh("flutter", "test")
+    end
+  end
+
+  desc "Build IPA and upload to TestFlight"
+  lane :beta do
+    test
+    setup_ci if is_ci
+    
+    # Sync signing certificates using Fastlane Match
+    match(
+      type: "appstore",
+      readonly: is_ci,
+      app_identifier: "cloud.botifyai.companion"
+    )
+
+    Dir.chdir("../..") do
+      sh("flutter", "build", "ipa", "--release", "--export-options-plist=ios/ExportOptions.plist", "--obfuscate", "--split-debug-info=build/app/outputs/symbols")
+    end
+
+    upload_to_testflight(
+      ipa: "../build/ios/ipa/botifyai_mobile.ipa",
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Submit to App Store with 7-day Phased Release"
+  lane :release do
+    test
+    setup_ci if is_ci
+    
+    match(
+      type: "appstore",
+      readonly: is_ci,
+      app_identifier: "cloud.botifyai.companion"
+    )
+
+    Dir.chdir("../..") do
+      sh("flutter", "build", "ipa", "--release", "--export-options-plist=ios/ExportOptions.plist")
+    end
+
+    upload_to_app_store(
+      ipa: "../build/ios/ipa/botifyai_mobile.ipa",
+      phased_release: true, # 7-day automated phased ramp
+      submit_for_review: false, # Human gates final submission
+      automatic_release: false
+    )
+  end
+end
