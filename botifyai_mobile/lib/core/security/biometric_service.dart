@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 
 /// Biometric security service (FaceID / Fingerprint)
@@ -7,6 +8,7 @@ class BiometricService {
   BiometricService({LocalAuthentication? auth}) : _auth = auth ?? LocalAuthentication();
 
   Future<bool> isBiometricsAvailable() async {
+    if (kIsWeb) return false;
     try {
       final canCheck = await _auth.canCheckBiometrics;
       final isDeviceSupported = await _auth.isDeviceSupported();
@@ -17,10 +19,12 @@ class BiometricService {
   }
 
   Future<bool> isBiometricEnrolled() async {
+    if (kIsWeb) return false;
     return isBiometricsAvailable();
   }
 
   Future<List<BiometricType>> getAvailableBiometrics() async {
+    if (kIsWeb) return [];
     try {
       return await _auth.getAvailableBiometrics();
     } catch (_) {
@@ -29,6 +33,7 @@ class BiometricService {
   }
 
   Future<bool> authenticate({String reason = 'Authenticate to access BotifyAI'}) async {
+    if (kIsWeb) return false;
     try {
       final isAvailable = await isBiometricsAvailable();
       if (!isAvailable) return false;

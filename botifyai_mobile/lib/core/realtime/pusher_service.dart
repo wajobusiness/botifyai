@@ -28,7 +28,10 @@ class PusherService {
   /// Constructor for unit testing / mocking
   PusherService.test();
 
-  final PusherChannelsFlutter _pusher = PusherChannelsFlutter.getInstance();
+  PusherChannelsFlutter? _pusher;
+  PusherChannelsFlutter get _pusherInstance =>
+      _pusher ??= PusherChannelsFlutter.getInstance();
+
   final StreamController<PusherRealtimeEvent> _eventStreamController =
       StreamController<PusherRealtimeEvent>.broadcast();
 
@@ -46,6 +49,13 @@ class PusherService {
     String? customApiKey,
     String? customCluster,
   }) async {
+    if (kIsWeb) {
+      debugPrint('PusherService: Realtime WebSockets running in simulated mode for Web.');
+      _isConnected = true;
+      _isInitialized = true;
+      return;
+    }
+
     if (_isInitialized && _currentWorkspaceId == workspaceId && _isConnected) {
       return;
     }
@@ -57,7 +67,7 @@ class PusherService {
     final cluster = customCluster ?? 'mt1';
 
     try {
-      await _pusher.init(
+      await _pusherInstance.init(
         apiKey: apiKey,
         cluster: cluster,
         authEndpoint: 'https://botifyai.cloud/broadcasting/auth',
@@ -81,12 +91,12 @@ class PusherService {
         onAuthorizer: null,
       );
 
-      await _pusher.connect();
+      await _pusherInstance.connect();
       _isInitialized = true;
 
       // Subscribe to private workspace channel
       final workspaceChannel = 'private-workspace.$workspaceId';
-      await _pusher.subscribe(channelName: workspaceChannel);
+      await _pusherInstance.subscribe(channelName: workspaceChannel);
       debugPrint('Pusher subscribed to channel: $workspaceChannel');
     } catch (e) {
       debugPrint('Pusher Initialization Error: $e');
@@ -139,10 +149,10 @@ class PusherService {
 
   /// Subscribe to a specific conversation channel if needed
   Future<void> subscribeToConversation(String conversationUuid) async {
-    if (!_isInitialized) return;
+    if (kIsWeb || !_isInitialized) return;
     try {
       final channelName = 'private-conversation.$conversationUuid';
-      await _pusher.subscribe(channelName: channelName);
+      await _pusherInstance.subscribe(channelName: channelName);
     } catch (e) {
       debugPrint('Error subscribing to conversation: $e');
     }
@@ -150,10 +160,10 @@ class PusherService {
 
   /// Unsubscribe from a conversation channel
   Future<void> unsubscribeFromConversation(String conversationUuid) async {
-    if (!_isInitialized) return;
+    if (kIsWeb || !_isInitialized) return;
     try {
       final channelName = 'private-conversation.$conversationUuid';
-      await _pusher.unsubscribe(channelName: channelName);
+      await _pusherInstance.unsubscribe(channelName: channelName);
     } catch (e) {
       debugPrint('Error unsubscribing from conversation: $e');
     }
@@ -161,11 +171,17 @@ class PusherService {
 
   /// Disconnect and cleanup
   Future<void> disconnect() async {
+    if (kIsWeb) {
+      _isConnected = false;
+      _isInitialized = false;
+      _currentWorkspaceId = null;
+      return;
+    }
     try {
       if (_currentWorkspaceId != null) {
-        await _pusher.unsubscribe(channelName: 'private-workspace.$_currentWorkspaceId');
+        await _pusherInstance.unsubscribe(channelName: 'private-workspace.$_currentWorkspaceId');
       }
-      await _pusher.disconnect();
+      await _pusherInstance.disconnect();
       _isConnected = false;
       _isInitialized = false;
       _currentWorkspaceId = null;

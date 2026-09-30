@@ -25,7 +25,7 @@ class FcmService {
   bool _isInitialized = false;
 
   Future<void> init({required ApiClient apiClient}) async {
-    if (_isInitialized) return;
+    if (kIsWeb || _isInitialized) return;
 
     try {
       // Set background messaging handler
@@ -137,7 +137,7 @@ class FcmService {
     final notification = message.notification;
     if (notification == null) return;
 
-    final androidDetails = const AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       'botifyai_high_importance_channel',
       'BotifyAI Notifications',
       importance: Importance.max,
@@ -145,13 +145,13 @@ class FcmService {
       playSound: true,
     );
 
-    final iosDetails = const DarwinNotificationDetails(
+    const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
     );
 
-    final details = NotificationDetails(
+    const details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );

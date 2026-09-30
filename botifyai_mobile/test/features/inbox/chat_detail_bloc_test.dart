@@ -39,7 +39,7 @@ class MockChatInboxRepository implements InboxRepository {
   Future<List<WhatsAppTemplate>> getWhatsAppTemplates() async => [];
   @override
   Future<PaginatedList<Conversation>> getConversations({String folder = 'mine', String? channel, String? search, int page = 1}) async =>
-      PaginatedList<Conversation>(data: [], currentPage: 1, lastPage: 1, total: 0);
+      const PaginatedList<Conversation>(data: [], currentPage: 1, lastPage: 1, total: 0);
   
   @override
   Future<Map<String, dynamic>> getConversationDetail(String uuid) async => {

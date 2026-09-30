@@ -62,7 +62,7 @@ class MockInboxRepository implements InboxRepository {
 
   @override
   Future<PaginatedList<Message>> getMessages(String uuid, {int page = 1}) async {
-    return PaginatedList<Message>(data: [], currentPage: 1, lastPage: 1, total: 0);
+    return const PaginatedList<Message>(data: [], currentPage: 1, lastPage: 1, total: 0);
   }
 
   @override

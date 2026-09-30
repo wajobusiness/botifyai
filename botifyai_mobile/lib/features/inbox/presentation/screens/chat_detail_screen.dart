@@ -207,7 +207,7 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
     );
   }
 
-  void _openShortcutsSheet(BuildContext context) async {
+  void _openShortcutsSheet() async {
     try {
       final setup = await widget.inboxRepository.getInboxSetup();
       if (!mounted) return;
@@ -221,6 +221,7 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
         },
       );
     } catch (_) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No canned replies available.')),
       );
@@ -535,7 +536,7 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
                       isGenerating: copilotState is CopilotGenerating,
                       onAiDraft: () => _triggerAiDraft(context),
                       onSummarize: () => _triggerSummarize(context),
-                      onShortcuts: () => _openShortcutsSheet(context),
+                      onShortcuts: () => _openShortcutsSheet(),
                       onTemplates: () => _openTemplatePicker(context),
                     );
                   },
