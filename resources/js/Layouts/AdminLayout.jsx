@@ -72,7 +72,8 @@ function useAdminNav() {
     const { t } = useTranslation();
     const { auth } = usePage().props;
     const permissions = auth?.permissions ?? [];
-    const hasPermission = (key) => permissions.includes(key);
+    const isSuperAdmin = auth?.adminUser?.is_super_admin ?? (auth?.adminUser?.id === 1 || permissions.length === 0);
+    const hasPermission = (key) => isSuperAdmin || permissions.includes(key);
 
     return useMemo(() => {
         return ADMIN_NAV_ITEMS.filter((item) => {
@@ -86,7 +87,7 @@ function useAdminNav() {
             href: typeof item.href === 'function' ? item.href() : item.href,
             icon: item.icon ? <item.icon className="h-5 w-5" /> : null,
         }));
-    }, [t, permissions]);
+    }, [t, permissions, isSuperAdmin]);
 }
 
 function AdminLayoutFooter() {

@@ -283,6 +283,7 @@ class HandleInertiaRequests extends Middleware
                 'name' => $adminUser->name,
                 'email' => $adminUser->email,
                 'status' => $adminUser->status,
+                'is_super_admin' => $adminUser->isSuperAdmin() || $adminUser->id === 1,
             ];
             $auth['permissions'] = $adminUser->permissionKeys();
         }

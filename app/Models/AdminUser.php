@@ -32,9 +32,18 @@ class AdminUser extends Authenticatable
         return $this->belongsToMany(Role::class, 'admin_role');
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->id === 1 || $this->roles()->whereIn('key', [Role::KEY_SUPER_ADMIN, 'super_admin', 'admin', 'SUPER_ADMIN', 'ADMIN'])->exists();
+    }
+
     /** Permission keys this admin has (via all roles). */
     public function permissionKeys(): array
     {
+        if ($this->isSuperAdmin()) {
+            return Permission::pluck('key')->all();
+        }
+
         $keys = $this->roles()
             ->with('permissions')
             ->get()
@@ -48,11 +57,19 @@ class AdminUser extends Authenticatable
 
     public function hasPermissionTo(string $permissionKey): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
         return in_array($permissionKey, $this->permissionKeys(), true);
     }
 
     public function hasAnyPermission(array $permissionKeys): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
         $mine = $this->permissionKeys();
         foreach ($permissionKeys as $key) {
             if (in_array($key, $mine, true)) {
@@ -60,11 +77,6 @@ class AdminUser extends Authenticatable
             }
         }
         return false;
-    }
-
-    public function isSuperAdmin(): bool
-    {
-        return $this->roles()->where('key', Role::KEY_SUPER_ADMIN)->exists();
     }
 
     public function isActive(): bool

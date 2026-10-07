@@ -6,22 +6,16 @@ import {
     BookOpen,
     Video,
     Users,
-    CheckCircle2,
     Plus,
     Edit2,
     Trash2,
     ExternalLink,
     ChevronDown,
     ChevronRight,
-    Layers,
-    Clock,
-    Sparkles,
-    Search,
     Youtube,
     FolderPlus,
     Folder,
     FilePlus,
-    Check,
     X,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -663,7 +657,7 @@ export default function AdminAcademyIndex({
                                 <GraduationCap className="w-12 h-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
                                 <h3 className="text-base font-bold text-neutral-800 dark:text-neutral-200">No Courses Created Yet</h3>
                                 <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-sm mx-auto">
-                                    Click "Add New Course" above or run the Academy database seeder to populate default courses.
+                                    Click &quot;Add New Course&quot; above or run the Academy database seeder to populate default courses.
                                 </p>
                             </div>
                         )}

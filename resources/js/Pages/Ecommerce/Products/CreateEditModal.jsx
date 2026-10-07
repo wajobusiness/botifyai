@@ -3,7 +3,7 @@ import { router } from '@inertiajs/react';
 import {
     X, Upload, Link as LinkIcon, FileText, Image, AlertCircle,
     Sparkles, Award, Bold, Italic, Underline, Heading2, Heading3,
-    List, ListOrdered, Link2, Eye, Code2, CheckSquare, Info,
+    List, ListOrdered, Link2, Eye, Code2, CheckSquare,
 } from 'lucide-react';
 
 export default function CreateEditModal({ isOpen, onClose, product = null, defaultCurrency = 'NGN' }) {
@@ -34,6 +34,7 @@ export default function CreateEditModal({ isOpen, onClose, product = null, defau
 
     useEffect(() => {
         if (product) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setForm({
                 name: product.name || '',
                 slug: product.slug || '',
@@ -106,7 +107,8 @@ export default function CreateEditModal({ isOpen, onClose, product = null, defau
     };
 
     const insertLink = () => {
-        const url = prompt('Enter the link URL (e.g. https://example.com):', 'https://');
+        const promptFn = typeof window !== 'undefined' && typeof window.prompt === 'function' ? window.prompt : null;
+        const url = promptFn ? promptFn('Enter the link URL (e.g. https://example.com):', 'https://') : 'https://';
         if (url) {
             insertHtml(`<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #0d9488; text-decoration: underline;">`, `</a>`, `Click here`);
         }
@@ -315,7 +317,7 @@ export default function CreateEditModal({ isOpen, onClose, product = null, defau
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                                Description & What's Included <span className="text-teal-600 font-normal">(HTML Supported)</span>
+                                Description &amp; What&apos;s Included <span className="text-teal-600 font-normal">(HTML Supported)</span>
                             </label>
                             <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 p-0.5 rounded-lg text-xs">
                                 <button
@@ -432,11 +434,11 @@ export default function CreateEditModal({ isOpen, onClose, product = null, defau
                                 <button
                                     type="button"
                                     onClick={insertCalloutBox}
-                                    title="Insert 'What's Included' Box"
+                                    title="Insert What's Included Box"
                                     className="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 text-[10px] font-bold hover:bg-green-200"
                                 >
                                     <CheckSquare className="h-3 w-3" />
-                                    + What's Included Box
+                                    + What&apos;s Included Box
                                 </button>
                                 <button
                                     type="button"

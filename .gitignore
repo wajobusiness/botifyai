@@ -47,4 +47,5 @@ database/.DS_Store
 public/storage
 
 .DS_Store
-
+.gemini/
+.mcp.json

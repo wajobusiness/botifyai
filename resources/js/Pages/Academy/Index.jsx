@@ -5,7 +5,6 @@ import {
     GraduationCap,
     Play,
     BookOpen,
-    CheckCircle,
     Clock,
     Search,
     Sparkles,
@@ -13,7 +12,6 @@ import {
     Flame,
     Trophy,
     Video,
-    BarChart3,
 } from 'lucide-react';
 
 export default function AcademyIndex({
@@ -346,7 +344,7 @@ export default function AcademyIndex({
                             No tutorials found
                         </h3>
                         <p className="mt-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 max-w-sm mx-auto">
-                            We couldn't find any courses matching your criteria. Try adjusting your search query or category filter.
+                            We couldn&apos;t find any courses matching your criteria. Try adjusting your search query or category filter.
                         </p>
                         <button
                             onClick={() => {

@@ -4,15 +4,12 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import {
     GraduationCap,
     Play,
-    CheckCircle,
     Clock,
     ChevronDown,
     ChevronUp,
     ArrowLeft,
     Sparkles,
     BookOpen,
-    Video,
-    Award,
     Check,
 } from 'lucide-react';
 
@@ -224,7 +221,7 @@ export default function CourseCurriculum({ course = {} }) {
 
                                         {isOpen && (
                                             <div className="divide-y divide-neutral-100 dark:divide-neutral-800/80">
-                                                {mod.lessons?.map((lesson, lIndex) => (
+                                                {mod.lessons?.map((lesson) => (
                                                     <Link
                                                         key={lesson.id}
                                                         href={route('client.academy.lessons.show', {

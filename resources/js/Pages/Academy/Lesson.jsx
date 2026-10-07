@@ -3,18 +3,14 @@ import { Head, Link, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import {
     Play,
-    CheckCircle,
     CheckCircle2,
     ChevronLeft,
     ChevronRight,
     ArrowLeft,
-    BookOpen,
     FileText,
     Download,
     ExternalLink,
     List,
-    Clock,
-    Sparkles,
     Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -28,7 +24,6 @@ export default function LessonPlayer({
     const [isCompleted, setIsCompleted] = useState(Boolean(lesson.is_completed));
     const [submitting, setSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState('notes');
-    const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const handleToggleComplete = () => {
         setSubmitting(true);
@@ -195,7 +190,7 @@ export default function LessonPlayer({
                                         />
                                     ) : (
                                         <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 text-xs text-neutral-500 dark:text-neutral-400">
-                                            Follow along with the video above. Check off the lesson when you've practiced the steps in your BotifyAI workspace.
+                                            Follow along with the video above. Check off the lesson when you&apos;ve practiced the steps in your BotifyAI workspace.
                                         </div>
                                     )}
                                 </div>

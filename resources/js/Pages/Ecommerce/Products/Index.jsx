@@ -35,10 +35,10 @@ function currencySymbol(code) {
 export default function ProductsIndex({
     products,
     filters = {},
-    stores = [],
+    stores: _stores = [],
     nativeStore = {},
     stats = {},
-    lowStockThreshold = 5,
+    lowStockThreshold: _lowStockThreshold = 5,
 }) {
     const { t } = useTranslation();
     const { props } = usePage();
@@ -160,7 +160,7 @@ export default function ProductsIndex({
                                         <Package className="h-8 w-8 mx-auto mb-2 text-neutral-300 dark:text-neutral-600" />
                                         <p className="font-medium text-neutral-600 dark:text-neutral-400">No products found.</p>
                                         <p className="text-xs text-neutral-400 mt-1">
-                                            Click "+ Add Digital Product" to create your first product.
+                                            Click &quot;+ Add Digital Product&quot; to create your first product.
                                         </p>
                                     </td>
                                 </tr>
