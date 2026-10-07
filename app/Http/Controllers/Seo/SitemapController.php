@@ -77,6 +77,9 @@ class SitemapController extends Controller
             return $this->buildUrlsetXml($entries);
         });
 
+        return response($xml, 200)->header('Content-Type', 'application/xml');
+    }
+
     /**
      * Blog Posts & Categories Sitemap: /sitemaps/blog.xml
      */
@@ -292,6 +295,7 @@ class SitemapController extends Controller
     {
         Cache::forget('seo_sitemap_index');
         Cache::forget('seo_sitemap_pages');
+        Cache::forget('seo_sitemap_blog');
         Cache::forget('seo_sitemap_cms');
         Cache::forget('seo_sitemap_stores');
         Cache::forget('seo_sitemap_products');
