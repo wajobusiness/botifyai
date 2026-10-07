@@ -130,9 +130,14 @@ class EcommerceProduct extends Model
             }
         });
 
+        static::saved(function () {
+            \App\Http\Controllers\Seo\SitemapController::clearCache();
+        });
+
         static::deleting(function (self $product) {
             $product->digitalAsset()->delete();
             $product->downloadTokens()->delete();
+            \App\Http\Controllers\Seo\SitemapController::clearCache();
         });
     }
 

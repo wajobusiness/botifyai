@@ -29,4 +29,15 @@ class CmsPage extends Model
     {
         return $value ?: $this->title;
     }
+
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            \App\Http\Controllers\Seo\SitemapController::clearCache();
+        });
+
+        static::deleted(function () {
+            \App\Http\Controllers\Seo\SitemapController::clearCache();
+        });
+    }
 }

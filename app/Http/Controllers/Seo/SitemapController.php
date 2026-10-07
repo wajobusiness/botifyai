@@ -114,14 +114,16 @@ class SitemapController extends Controller
         $xml = Cache::remember('seo_sitemap_stores', self::CACHE_TTL, function () {
             $entries = [];
             try {
-                $stores = EcommerceStore::where('is_active', true)
+                $stores = EcommerceStore::where(function ($q) {
+                        $q->where('status', 'active')->orWhereNull('status');
+                    })
                     ->whereNotNull('slug')
                     ->where('slug', '!=', '')
                     ->get();
 
                 foreach ($stores as $store) {
                     $entries[] = [
-                        'loc' => route('public.storefront.show', ['slug' => $store->slug]),
+                        'loc' => route('public.storefront.show', ['slug' => $store->slug ?: $store->uuid]),
                         'priority' => '0.8',
                         'changefreq' => 'weekly',
                         'lastmod' => ($store->updated_at ?? now())->toAtomString(),
@@ -146,14 +148,17 @@ class SitemapController extends Controller
             $entries = [];
             try {
                 $products = EcommerceProduct::with('store')
-                    ->where('is_published', true)
-                    ->whereNotNull('slug')
-                    ->where('slug', '!=', '')
+                    ->where(function ($q) {
+                        $q->where('is_published', true)->orWhereNull('is_published');
+                    })
+                    ->where(function ($q) {
+                        $q->where('status', 'active')->orWhereNull('status');
+                    })
                     ->get();
 
                 foreach ($products as $product) {
                     $entry = [
-                        'loc' => route('public.checkout.show', ['slug' => $product->slug]),
+                        'loc' => $product->getCheckoutUrl(),
                         'priority' => '0.9',
                         'changefreq' => 'daily',
                         'lastmod' => ($product->updated_at ?? now())->toAtomString(),
@@ -183,6 +188,17 @@ class SitemapController extends Controller
      */
     protected function buildUrlsetXml(array $entries, bool $includeImageNamespace = false): string
     {
+        // Strictly adhere to Sitemaps XML protocol: an <urlset> MUST contain at least one <url> tag.
+        // If no dynamic entries exist, insert a fallback root URL so search engines don't flag "Missing XML tag <url>".
+        if (empty($entries)) {
+            $entries[] = [
+                'loc' => url('/'),
+                'priority' => '0.5',
+                'changefreq' => 'weekly',
+                'lastmod' => now()->toAtomString(),
+            ];
+        }
+
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
         if ($includeImageNamespace) {
             $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">'."\n";
@@ -197,7 +213,7 @@ class SitemapController extends Controller
             $xml .= '    <changefreq>'.$entry['changefreq'].'</changefreq>'."\n";
             $xml .= '    <priority>'.$entry['priority'].'</priority>'."\n";
 
-            if (! empty($entry['image'])) {
+            if (! empty($entry['image']) && ! empty($entry['image']['loc'])) {
                 $xml .= "    <image:image>\n";
                 $xml .= '      <image:loc>'.htmlspecialchars($entry['image']['loc']).'</image:loc>'."\n";
                 if (! empty($entry['image']['title'])) {

@@ -197,4 +197,15 @@ class EcommerceStore extends Model
     {
         return $this->marketing_pixels[$platform] ?? null;
     }
+
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            \App\Http\Controllers\Seo\SitemapController::clearCache();
+        });
+
+        static::deleted(function () {
+            \App\Http\Controllers\Seo\SitemapController::clearCache();
+        });
+    }
 }
