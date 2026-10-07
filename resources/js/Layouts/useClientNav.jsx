@@ -5,7 +5,7 @@ import {
     LayoutDashboard, CreditCard, Package, FileText, Users, Settings,
     Layers, Webhook, Key, BookOpen, Image, Radio, Inbox, Bot, Database,
     Zap, Share2, MapPin, Tag, LifeBuoy, ExternalLink, Mail, MessageSquare,
-    ShoppingBag, KanbanSquare, Wallet, Store, Sparkles,
+    ShoppingBag, KanbanSquare, Wallet, Store, Sparkles, GraduationCap,
 } from 'lucide-react';
 
 const iconClass = 'h-4 w-4';
@@ -111,6 +111,10 @@ export default function useClientNav() {
         { label: t('nav.automations'), href: safeRoute('client.automations.index'), icon: <Zap className={iconClass} />, activePattern: 'client.automations.*' },
     ];
 
+    const academyItems = [
+        { label: t('nav.academy', 'Botify Academy'), href: safeRoute('client.academy.index'), icon: <GraduationCap className={iconClass} />, activePattern: 'client.academy.*' },
+    ];
+
     const ecommerceItems = [
         { label: t('nav.stores', 'Stores & Hub'), href: safeRoute('client.ecommerce.stores.index'), icon: <Store className={iconClass} />, activePattern: 'client.ecommerce.stores.*' },
         { label: t('nav.products', 'Products & Vault'), href: safeRoute('client.ecommerce.products.index'), icon: <Package className={iconClass} />, activePattern: 'client.ecommerce.products.*' },
@@ -137,6 +141,7 @@ export default function useClientNav() {
         { type: 'group', label: t('nav.group_broadcasting'),  items: broadcastItems },
         { type: 'group', label: t('nav.group_automations'),   items: automationItems },
         { type: 'group', label: t('nav.group_ecommerce'),    items: ecommerceItems },
+        { type: 'group', label: t('nav.group_academy', 'Academy & Learning'), items: academyItems },
         { type: 'group', label: t('nav.group_ai'),            items: aiItems },
         { type: 'group', label: t('nav.group_leads'),         items: leadsItems },
         { type: 'group', label: t('nav.group_reports'),       items: reportsItems },

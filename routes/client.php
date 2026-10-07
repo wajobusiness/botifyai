@@ -24,12 +24,19 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleContextController;
 use App\Http\Controllers\WorkspaceController;
 use App\Modules\Ecommerce\Http\Controllers\AffiliatePortalController;
+use App\Modules\Academy\Http\Controllers\ClientAcademyController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::middleware(['verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', ClientDashboardController::class)->name('dashboard');
+
+    // Botify Academy (Free Learning Hub)
+    Route::get('/academy', [ClientAcademyController::class, 'index'])->name('academy.index');
+    Route::get('/academy/courses/{slug}', [ClientAcademyController::class, 'course'])->name('academy.courses.show');
+    Route::get('/academy/lessons/{courseSlug}/{lessonSlug}', [ClientAcademyController::class, 'lesson'])->name('academy.lessons.show');
+    Route::post('/academy/lessons/{lesson}/complete', [ClientAcademyController::class, 'completeLesson'])->name('academy.lessons.complete');
 
     // Subscription
     Route::get('/subscription', [ClientSubscriptionController::class, 'show'])->name('subscription.show');

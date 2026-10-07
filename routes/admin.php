@@ -92,6 +92,24 @@ Route::post('/affiliates/users/{user}/comp', [AdminAffiliateController::class, '
 Route::post('/affiliates/users/{user}/extend', [AdminAffiliateController::class, 'extendExpiry'])->name('affiliates.users.extend')->middleware('permission:manage_settings');
 Route::post('/affiliates/users/{user}/revoke', [AdminAffiliateController::class, 'revokeAccess'])->name('affiliates.users.revoke')->middleware('permission:manage_settings');
 
+// Botify Academy Administration
+Route::get('/academy', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'index'])->name('academy.index')->middleware('permission:view_settings');
+Route::post('/academy/categories', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'storeCategory'])->name('academy.categories.store')->middleware('permission:view_settings');
+Route::put('/academy/categories/{category}', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'updateCategory'])->name('academy.categories.update')->middleware('permission:view_settings');
+Route::delete('/academy/categories/{category}', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'destroyCategory'])->name('academy.categories.destroy')->middleware('permission:view_settings');
+
+Route::post('/academy/courses', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'storeCourse'])->name('academy.courses.store')->middleware('permission:view_settings');
+Route::put('/academy/courses/{course}', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'updateCourse'])->name('academy.courses.update')->middleware('permission:view_settings');
+Route::delete('/academy/courses/{course}', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'destroyCourse'])->name('academy.courses.destroy')->middleware('permission:view_settings');
+
+Route::post('/academy/modules', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'storeModule'])->name('academy.modules.store')->middleware('permission:view_settings');
+Route::put('/academy/modules/{module}', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'updateModule'])->name('academy.modules.update')->middleware('permission:view_settings');
+Route::delete('/academy/modules/{module}', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'destroyModule'])->name('academy.modules.destroy')->middleware('permission:view_settings');
+
+Route::post('/academy/lessons', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'storeLesson'])->name('academy.lessons.store')->middleware('permission:view_settings');
+Route::put('/academy/lessons/{lesson}', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'updateLesson'])->name('academy.lessons.update')->middleware('permission:view_settings');
+Route::delete('/academy/lessons/{lesson}', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'destroyLesson'])->name('academy.lessons.destroy')->middleware('permission:view_settings');
+
 // Coupons
 Route::get('/coupons', [CouponController::class, 'index'])->name('coupons.index')->middleware('permission:view_plans');
 Route::post('/coupons', [CouponController::class, 'store'])->name('coupons.store')->middleware('permission:create_plans');

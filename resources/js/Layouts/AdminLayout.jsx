@@ -31,12 +31,14 @@ import {
     ShoppingBag,
     Search,
     Award,
+    GraduationCap,
 } from 'lucide-react';
 
 /** Nav item: { labelKey, route, href, icon, permission } - show only if user has permission (or no permission required). Order follows typical admin usage frequency. */
 const ADMIN_NAV_ITEMS = [
     { labelKey: 'admin.dashboard', route: 'admin.dashboard', href: () => route('admin.dashboard'), icon: LayoutDashboard },
     { labelKey: 'admin.client_management', route: 'admin.clients.index', href: () => route('admin.clients.index'), icon: Users, permission: 'view_clients' },
+    { labelKey: 'admin.nav.academy', labelFallback: 'Botify Academy', route: 'admin.academy.index', href: () => { try { return route('admin.academy.index'); } catch (_) { return '/admin/academy'; } }, icon: GraduationCap, permission: 'view_settings' },
     { labelKey: 'admin.nav.subscriptions', route: 'admin.subscriptions.index', href: () => route('admin.subscriptions.index'), icon: CreditCard, permission: 'view_subscriptions' },
     { labelKey: 'admin.nav.support', route: 'admin.support.index', href: () => route('admin.support.index'), icon: LifeBuoy, permission: 'view_settings' },
     { labelKey: 'admin.nav.payments', route: 'admin.payments.index', href: () => route('admin.payments.index'), icon: Receipt, permission: 'view_payment_gateways' },

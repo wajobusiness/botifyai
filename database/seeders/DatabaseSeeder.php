@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             SmtpConfigurationSeeder::class,
             LandingPageSeeder::class,
             CmsPageSeeder::class,
+            BotifyAcademySeeder::class,
 
             // Comprehensive demo content: one fully-populated client
             // (SpaGreen Wellness) across every module, plus light secondaries.
