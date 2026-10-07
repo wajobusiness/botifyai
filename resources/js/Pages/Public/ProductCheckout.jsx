@@ -141,7 +141,7 @@ export default function ProductCheckout(props = {}) {
             <Head>
                 <title>{`Buy ${product.name} | ${store.name || 'BotifyAI Store'}`}</title>
                 {product.description && (
-                    <meta name="description" content={product.description.slice(0, 160)} />
+                    <meta name="description" content={product.description.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim().slice(0, 160)} />
                 )}
             </Head>
 
@@ -308,9 +308,10 @@ export default function ProductCheckout(props = {}) {
                                 </div>
 
                                 {product.description && (
-                                    <div className="mt-6 pt-6 border-t border-neutral-100 dark:border-neutral-800 text-sm text-neutral-600 dark:text-neutral-300 whitespace-pre-line leading-relaxed">
-                                        {product.description}
-                                    </div>
+                                    <div
+                                        className="mt-6 pt-6 border-t border-neutral-100 dark:border-neutral-800 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed prose dark:prose-invert max-w-none [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-neutral-900 dark:[&_h1]:text-neutral-100 [&_h1]:mt-4 [&_h1]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-neutral-900 dark:[&_h2]:text-neutral-100 [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-neutral-900 dark:[&_h3]:text-neutral-100 [&_h3]:mt-3 [&_h3]:mb-1 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ul]:space-y-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_ol]:space-y-1 [&_li]:mb-0.5 [&_a]:text-teal-600 dark:[&_a]:text-teal-400 [&_a]:underline [&_strong]:font-bold [&_strong]:text-neutral-900 dark:[&_strong]:text-neutral-100 [&_blockquote]:border-l-4 [&_blockquote]:border-teal-500 [&_blockquote]:pl-3 [&_blockquote]:italic [&_img]:rounded-xl [&_img]:max-w-full [&_hr]:my-4 [&_hr]:border-neutral-200 dark:[&_hr]:border-neutral-800"
+                                        dangerouslySetInnerHTML={{ __html: product.description }}
+                                    />
                                 )}
                             </div>
                         </div>

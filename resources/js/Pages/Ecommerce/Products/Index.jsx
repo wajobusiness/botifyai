@@ -135,6 +135,7 @@ export default function ProductsIndex({
                     >
                         <option value="">All Types & Platforms</option>
                         <option value="native">Native Digital Products</option>
+                        <option value="selar">Selar Store (Imported)</option>
                         <option value="shopify">Shopify</option>
                         <option value="woocommerce">WooCommerce</option>
                     </select>
@@ -165,7 +166,9 @@ export default function ProductsIndex({
                                 </tr>
                             )}
                             {products.data.map((p) => {
+                                const isSelar = p.platform === 'selar';
                                 const isNative = p.platform === 'native';
+                                const isEditable = true; // All workspace products are editable
                                 const sym = currencySymbol(p.currency);
                                 return (
                                     <tr key={p.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition">
@@ -191,11 +194,13 @@ export default function ProductsIndex({
                                             <div className="flex flex-col items-start gap-1">
                                                 <div className="flex items-center gap-1.5 flex-wrap">
                                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                        isNative
+                                                        isSelar
+                                                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50'
+                                                            : isNative
                                                             ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300'
                                                             : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
                                                     }`}>
-                                                        {isNative ? 'Digital Download' : p.platform}
+                                                        {isSelar ? 'Selar Store' : isNative ? 'Digital Download' : p.platform}
                                                     </span>
                                                     {p.affiliate_enabled ? (
                                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60">
@@ -269,21 +274,21 @@ export default function ProductsIndex({
 
                                         {/* Actions */}
                                         <td className="px-4 py-3 text-right">
-                                            {isNative && (
+                                            {isEditable && (
                                                 <div className="flex items-center justify-end gap-1">
                                                     <button
                                                         onClick={() => {
                                                             setEditingProduct(p);
                                                             setModalOpen(true);
                                                         }}
-                                                        className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                                                        title="Edit Product"
+                                                        className="p-1.5 rounded-lg text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900/30 transition"
+                                                        title="Edit Product, Description & Affiliate"
                                                     >
                                                         <Edit2 className="h-4 w-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(p)}
-                                                        className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                        className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                                                         title="Delete Product"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
