@@ -107,7 +107,7 @@ class SitemapController extends Controller
     }
 
     /**
-     * Merchant Storefronts Sitemap: /sitemaps/stores.xml
+     * Merchant Storefronts Sitemap: /sitemaps/stores.xml (with Image metadata)
      */
     public function stores(): Response
     {
@@ -115,25 +115,38 @@ class SitemapController extends Controller
             $entries = [];
             try {
                 $stores = EcommerceStore::where(function ($q) {
-                        $q->where('status', 'active')->orWhereNull('status');
+                        $q->whereIn('status', ['active', 'connected', 'published'])
+                          ->orWhereNull('status')
+                          ->orWhereNotNull('published_at');
                     })
-                    ->whereNotNull('slug')
-                    ->where('slug', '!=', '')
+                    ->where(function ($q) {
+                        $q->whereNotNull('slug')->where('slug', '!=', '')
+                          ->orWhereNotNull('uuid');
+                    })
                     ->get();
 
                 foreach ($stores as $store) {
-                    $entries[] = [
+                    $entry = [
                         'loc' => route('public.storefront.show', ['slug' => $store->slug ?: $store->uuid]),
                         'priority' => '0.8',
                         'changefreq' => 'weekly',
                         'lastmod' => ($store->updated_at ?? now())->toAtomString(),
                     ];
+
+                    if (! empty($store->logo_url) || ! empty($store->banner_url)) {
+                        $entry['image'] = [
+                            'loc' => $store->logo_url ?: $store->banner_url,
+                            'title' => $store->name ?: 'Storefront',
+                        ];
+                    }
+
+                    $entries[] = $entry;
                 }
             } catch (\Throwable) {
                 // Ignore
             }
 
-            return $this->buildUrlsetXml($entries);
+            return $this->buildUrlsetXml($entries, true);
         });
 
         return response($xml, 200)->header('Content-Type', 'application/xml');
