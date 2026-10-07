@@ -34,6 +34,7 @@ Route::post('/contact', [ContactController::class, 'store'])->name('contact.stor
 
 // Public marketing landing pages
 Route::get('/affiliates', [LandingController::class, 'affiliates'])->name('public.affiliates');
+Route::get('/academy', fn () => redirect()->route('client.academy.index'))->name('public.academy');
 Route::get('/pricing', [LandingController::class, 'pricing'])->name('pricing');
 Route::get('/faq', [LandingController::class, 'faq'])->name('faq');
 Route::get('/use-cases', [LandingController::class, 'useCases'])->name('use-cases');

@@ -43,13 +43,14 @@ export default function LandingLayout({ children }) {
     const { t } = useTranslation();
 
     const NAV_LINKS = [
-        { label: t('nav.features'),     href: '/#features' },
-        { label: t('nav.use_cases'),    href: '/use-cases' },
+        { label: t('nav.features', { defaultValue: 'Features' }),     href: '/#features' },
+        { label: t('nav.use_cases', { defaultValue: 'Use Cases' }),    href: '/use-cases' },
         { label: t('nav.integrations', { defaultValue: 'Integrations' }), href: '/integrations' },
+        { label: t('nav.academy', { defaultValue: 'Academy' }), href: '/academy' },
         { label: t('nav.affiliates', { defaultValue: 'Affiliates' }), href: '/affiliates' },
-        { label: t('nav.pricing'),      href: '/pricing' },
-        { label: t('nav.faq'),          href: '/faq' },
-        { label: t('nav.contact'),      href: '/contact' },
+        { label: t('nav.pricing', { defaultValue: 'Pricing' }),      href: '/pricing' },
+        { label: t('nav.faq', { defaultValue: 'FAQ' }),          href: '/faq' },
+        { label: t('nav.contact', { defaultValue: 'Contact' }),      href: '/contact' },
     ];
     const page = usePage();
     const auth = page.props.auth;
@@ -405,11 +406,12 @@ export default function LandingLayout({ children }) {
                             <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4">{t('landing_page_admin.footer_product', { defaultValue: 'Product' })}</h4>
                             <ul className="space-y-2.5">
                                 {[
-                                    { label: t('nav.features'), href: '/#features' },
+                                    { label: t('nav.features', { defaultValue: 'Features' }), href: '/#features' },
                                     { label: t('nav.integrations', { defaultValue: 'Integrations' }), href: '/integrations' },
+                                    { label: t('nav.academy', { defaultValue: 'Botify Academy' }), href: '/academy' },
                                     { label: t('nav.affiliates', { defaultValue: 'Affiliate Network' }), href: '/affiliates' },
-                                    { label: t('nav.pricing'), href: '/pricing' },
-                                    { label: t('nav.faq'), href: '/faq' },
+                                    { label: t('nav.pricing', { defaultValue: 'Pricing' }), href: '/pricing' },
+                                    { label: t('nav.faq', { defaultValue: 'FAQ' }), href: '/faq' },
                                 ].map((l) => (
                                     <li key={l.href}>
                                         <Link href={l.href} className="text-sm text-neutral-400 hover:text-white transition">{l.label}</Link>

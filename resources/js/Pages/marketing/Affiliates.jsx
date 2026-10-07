@@ -344,7 +344,7 @@ export default function AffiliatesLanding({
                                 Compare Rates Transparently
                             </h4>
                             <p className="text-xs text-neutral-300">
-                                Each product's commission rate is displayed clearly on its catalog listing so you can compare earnings before picking what to promote.
+                                Each product&apos;s commission rate is displayed clearly on its catalog listing so you can compare earnings before picking what to promote.
                             </p>
                         </div>
 
