@@ -126,10 +126,22 @@ class PublicCheckoutController extends Controller
     {
         $store = EcommerceStore::where('slug', $slug)
             ->orWhere('uuid', $slug)
-            ->firstOrFail();
+            ->first();
 
-        $products = $store->products()
-            ->where('is_published', true)
+        if (! $store) {
+            // Flexible match for slugs with random suffix or matching store name
+            $store = EcommerceStore::where('slug', 'like', $slug.'%')
+                ->orWhere('name', 'like', str_replace(['-', '_'], ' ', $slug))
+                ->firstOrFail();
+        }
+
+        $products = EcommerceProduct::where(function ($q) use ($store) {
+                $q->where('store_id', $store->id)
+                  ->orWhere('workspace_id', $store->workspace_id);
+            })
+            ->where(function ($q) {
+                $q->where('is_published', true)->orWhereNull('is_published');
+            })
             ->latest()
             ->get()
             ->map(fn (EcommerceProduct $p) => [
