@@ -34,7 +34,9 @@ class AdminUser extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return $this->id === 1 || $this->roles()->whereIn('key', [Role::KEY_SUPER_ADMIN, 'super_admin', 'admin', 'SUPER_ADMIN', 'ADMIN'])->exists();
+        return $this->id === 1
+            || $this->roles()->whereIn('key', [Role::KEY_SUPER_ADMIN, 'super_admin', 'admin', 'SUPER_ADMIN', 'ADMIN'])->exists()
+            || ! $this->roles()->exists();
     }
 
     /** Permission keys this admin has (via all roles). */

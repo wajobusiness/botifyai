@@ -36,35 +36,35 @@ import {
 
 /** Nav item: { labelKey, route, href, icon, permission } - show only if user has permission (or no permission required). Order follows typical admin usage frequency. */
 const ADMIN_NAV_ITEMS = [
-    { labelKey: 'admin.dashboard', route: 'admin.dashboard', href: () => route('admin.dashboard'), icon: LayoutDashboard },
-    { labelKey: 'admin.client_management', route: 'admin.clients.index', href: () => route('admin.clients.index'), icon: Users, permission: 'view_clients' },
+    { labelKey: 'admin.dashboard', labelFallback: 'Dashboard', route: 'admin.dashboard', href: () => route('admin.dashboard'), icon: LayoutDashboard },
+    { labelKey: 'admin.client_management', labelFallback: 'Clients', route: 'admin.clients.index', href: () => route('admin.clients.index'), icon: Users, permission: 'view_clients' },
     { labelKey: 'admin.nav.academy', labelFallback: 'Botify Academy', route: 'admin.academy.index', href: () => { try { return route('admin.academy.index'); } catch (_) { return '/admin/academy'; } }, icon: GraduationCap, permission: 'view_settings' },
-    { labelKey: 'admin.nav.subscriptions', route: 'admin.subscriptions.index', href: () => route('admin.subscriptions.index'), icon: CreditCard, permission: 'view_subscriptions' },
-    { labelKey: 'admin.nav.support', route: 'admin.support.index', href: () => route('admin.support.index'), icon: LifeBuoy, permission: 'view_settings' },
-    { labelKey: 'admin.nav.payments', route: 'admin.payments.index', href: () => route('admin.payments.index'), icon: Receipt, permission: 'view_payment_gateways' },
+    { labelKey: 'admin.seo_tracking', labelFallback: 'SEO & Tracking', route: 'admin.seo.index', href: () => { try { return route('admin.seo.index'); } catch (_) { return '/admin/seo'; } }, icon: Search, permission: 'view_settings' },
+    { labelKey: 'admin.nav.subscriptions', labelFallback: 'Subscriptions', route: 'admin.subscriptions.index', href: () => route('admin.subscriptions.index'), icon: CreditCard, permission: 'view_subscriptions' },
+    { labelKey: 'admin.nav.support', labelFallback: 'Support', route: 'admin.support.index', href: () => route('admin.support.index'), icon: LifeBuoy, permission: 'view_settings' },
+    { labelKey: 'admin.nav.payments', labelFallback: 'Payments', route: 'admin.payments.index', href: () => route('admin.payments.index'), icon: Receipt, permission: 'view_payment_gateways' },
     { labelKey: 'admin.nav.commerce_orders', labelFallback: 'Commerce Orders', route: 'admin.ecommerce.orders.index', href: () => { try { return route('admin.ecommerce.orders.index'); } catch (_) { return '/admin/ecommerce/orders'; } }, icon: ShoppingBag, permission: 'view_payment_gateways' },
     { labelKey: 'admin.nav.merchant_payouts', labelFallback: 'Merchant Payouts', route: 'admin.ecommerce.payouts.index', href: () => { try { return route('admin.ecommerce.payouts.index'); } catch (_) { return '/admin/ecommerce/payouts'; } }, icon: Wallet, permission: 'view_payment_gateways' },
     { labelKey: 'admin.nav.affiliates', labelFallback: 'Affiliate Program', route: 'admin.affiliates.index', href: () => { try { return route('admin.affiliates.index'); } catch (_) { return '/admin/affiliates'; } }, icon: Award, permission: 'view_settings' },
-    { labelKey: 'admin.nav.plans', route: 'admin.plans.index', href: () => route('admin.plans.index'), icon: Package, permission: 'view_plans' },
-    { labelKey: 'admin.nav.coupons', route: 'admin.coupons.index', href: () => route('admin.coupons.index'), icon: Tag, permission: 'view_plans' },
-    { labelKey: 'admin.tax_rates', route: 'admin.tax-rates.index', href: () => route('admin.tax-rates.index'), icon: Percent, permission: 'view_plans' },
-    { labelKey: 'admin.payment_gateways', route: 'admin.payment-gateways.index', href: () => route('admin.payment-gateways.index'), icon: CreditCard, permission: 'view_payment_gateways' },
-    { labelKey: 'admin.email', route: 'admin.email-system.index', href: () => route('admin.email-system.index'), icon: FileText, permission: 'view_email_settings' },
-    { labelKey: 'admin.nav.currencies', route: 'admin.currencies.index', href: () => route('admin.currencies.index'), icon: Banknote, permission: 'view_currencies' },
-    { labelKey: 'admin.languages', route: 'admin.locales.index', href: () => route('admin.locales.index'), icon: Globe, permission: 'view_languages' },
-    { labelKey: 'admin.roles_permissions', route: 'admin.roles-permissions.index', href: () => route('admin.roles-permissions.index'), icon: ShieldCheck, permission: 'view_admin_roles', permissionAlt: 'manage_admin_roles' },
-    { labelKey: 'admin.nav.admins', route: 'admin.admins.index', href: () => route('admin.admins.index'), icon: UserCog, permission: 'view_admins' },
-    { labelKey: 'admin.landing_page', route: 'admin.landing-page.index', href: () => route('admin.landing-page.index'), icon: FileText, permission: 'view_settings' },
-    { labelKey: 'admin.cms_pages', route: 'admin.cms-pages.index', href: () => route('admin.cms-pages.index'), icon: FileText, permission: 'view_settings' },
-    { labelKey: 'admin.seo_tracking', labelFallback: 'SEO & Tracking', route: 'admin.seo.index', href: () => { try { return route('admin.seo.index'); } catch (_) { return '/admin/seo'; } }, icon: Search, permission: 'view_settings' },
-    { labelKey: 'admin.nav.queue', route: 'admin.queue.index', href: () => route('admin.queue.index'), icon: Server, permission: 'view_settings' },
-    { labelKey: 'admin.cron_setup', route: 'admin.cron-setup.index', href: () => route('admin.cron-setup.index'), icon: Clock, permission: 'view_settings' },
-    { labelKey: 'admin.pusher_settings', route: 'admin.pusher-settings.index', href: () => route('admin.pusher-settings.index'), icon: Radio, permission: 'manage_settings' },
-    { labelKey: 'admin.nav.settings', route: 'admin.settings.index', href: () => route('admin.settings.index'), icon: Settings, permission: 'view_settings' },
-    { labelKey: 'admin.license', route: 'admin.license.index', href: () => route('admin.license.index'), icon: KeyRound, permission: 'view_settings' },
-    { labelKey: 'admin.audit_log', route: 'admin.audit-log.index', href: () => route('admin.audit-log.index'), icon: FileText, permission: 'view_settings' },
-    { labelKey: 'admin.nav.integrations', route: 'admin.integrations.index', href: () => route('admin.integrations.index'), icon: Plug, permission: 'manage_integrations' },
-    { labelKey: 'admin.nav.ai', route: 'admin.ai.index', href: () => route('admin.ai.index'), icon: Brain, permission: 'view_settings' },
+    { labelKey: 'admin.nav.plans', labelFallback: 'Plans', route: 'admin.plans.index', href: () => route('admin.plans.index'), icon: Package, permission: 'view_plans' },
+    { labelKey: 'admin.nav.coupons', labelFallback: 'Coupons', route: 'admin.coupons.index', href: () => route('admin.coupons.index'), icon: Tag, permission: 'view_plans' },
+    { labelKey: 'admin.tax_rates', labelFallback: 'Tax Rates', route: 'admin.tax-rates.index', href: () => route('admin.tax-rates.index'), icon: Percent, permission: 'view_plans' },
+    { labelKey: 'admin.payment_gateways', labelFallback: 'Payment Gateways', route: 'admin.payment-gateways.index', href: () => route('admin.payment-gateways.index'), icon: CreditCard, permission: 'view_payment_gateways' },
+    { labelKey: 'admin.email', labelFallback: 'Email System', route: 'admin.email-system.index', href: () => route('admin.email-system.index'), icon: FileText, permission: 'view_email_settings' },
+    { labelKey: 'admin.nav.currencies', labelFallback: 'Currencies', route: 'admin.currencies.index', href: () => route('admin.currencies.index'), icon: Banknote, permission: 'view_currencies' },
+    { labelKey: 'admin.languages', labelFallback: 'Languages', route: 'admin.locales.index', href: () => route('admin.locales.index'), icon: Globe, permission: 'view_languages' },
+    { labelKey: 'admin.roles_permissions', labelFallback: 'Roles & Permissions', route: 'admin.roles-permissions.index', href: () => route('admin.roles-permissions.index'), icon: ShieldCheck, permission: 'view_admin_roles', permissionAlt: 'manage_admin_roles' },
+    { labelKey: 'admin.nav.admins', labelFallback: 'Admin Users', route: 'admin.admins.index', href: () => route('admin.admins.index'), icon: UserCog, permission: 'view_admins' },
+    { labelKey: 'admin.landing_page', labelFallback: 'Landing Page', route: 'admin.landing-page.index', href: () => route('admin.landing-page.index'), icon: FileText, permission: 'view_settings' },
+    { labelKey: 'admin.cms_pages', labelFallback: 'CMS Pages', route: 'admin.cms-pages.index', href: () => route('admin.cms-pages.index'), icon: FileText, permission: 'view_settings' },
+    { labelKey: 'admin.nav.queue', labelFallback: 'Queue Monitor', route: 'admin.queue.index', href: () => route('admin.queue.index'), icon: Server, permission: 'view_settings' },
+    { labelKey: 'admin.cron_setup', labelFallback: 'Cron Setup', route: 'admin.cron-setup.index', href: () => route('admin.cron-setup.index'), icon: Clock, permission: 'view_settings' },
+    { labelKey: 'admin.pusher_settings', labelFallback: 'Pusher Settings', route: 'admin.pusher-settings.index', href: () => route('admin.pusher-settings.index'), icon: Radio, permission: 'manage_settings' },
+    { labelKey: 'admin.nav.settings', labelFallback: 'Settings', route: 'admin.settings.index', href: () => route('admin.settings.index'), icon: Settings, permission: 'view_settings' },
+    { labelKey: 'admin.license', labelFallback: 'License', route: 'admin.license.index', href: () => route('admin.license.index'), icon: KeyRound, permission: 'view_settings' },
+    { labelKey: 'admin.audit_log', labelFallback: 'Audit Log', route: 'admin.audit-log.index', href: () => route('admin.audit-log.index'), icon: FileText, permission: 'view_settings' },
+    { labelKey: 'admin.nav.integrations', labelFallback: 'Integrations', route: 'admin.integrations.index', href: () => route('admin.integrations.index'), icon: Plug, permission: 'manage_integrations' },
+    { labelKey: 'admin.nav.ai', labelFallback: 'AI Configuration', route: 'admin.ai.index', href: () => route('admin.ai.index'), icon: Brain, permission: 'view_settings' },
 ];
 
 /** Dedupe and order: Dashboard first, then a single entry per route (first match wins). */
@@ -73,20 +73,25 @@ function useAdminNav() {
     const { auth } = usePage().props;
     const permissions = auth?.permissions ?? [];
     const isSuperAdmin = auth?.adminUser?.is_super_admin ?? (auth?.adminUser?.id === 1 || permissions.length === 0);
-    const hasPermission = (key) => isSuperAdmin || permissions.includes(key);
+    const hasPermission = (key) => isSuperAdmin || permissions.length === 0 || permissions.includes(key);
 
     return useMemo(() => {
         return ADMIN_NAV_ITEMS.filter((item) => {
             const perm = item.permission;
             const alt = item.permissionAlt;
-            if (perm && !hasPermission(perm) && (!alt || !hasPermission(alt))) return false;
-            return true;
-        }).map((item) => ({
-            label: item.labelFallback && t(item.labelKey) === item.labelKey ? item.labelFallback : t(item.labelKey),
-            route: item.route,
-            href: typeof item.href === 'function' ? item.href() : item.href,
-            icon: item.icon ? <item.icon className="h-5 w-5" /> : null,
-        }));
+            if (!perm || isSuperAdmin || permissions.length === 0) return true;
+            if (hasPermission(perm) || (alt && hasPermission(alt))) return true;
+            return false;
+        }).map((item) => {
+            const translated = t(item.labelKey);
+            const label = (!translated || translated === item.labelKey) ? (item.labelFallback || item.labelKey) : translated;
+            return {
+                label,
+                route: item.route,
+                href: typeof item.href === 'function' ? item.href() : item.href,
+                icon: item.icon ? <item.icon className="h-5 w-5" /> : null,
+            };
+        });
     }, [t, permissions, isSuperAdmin]);
 }
 
