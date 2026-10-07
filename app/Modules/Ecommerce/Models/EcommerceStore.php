@@ -121,11 +121,16 @@ class EcommerceStore extends Model
             }
         });
 
+        static::saved(function () {
+            \App\Http\Controllers\Seo\SitemapController::clearCache();
+        });
+
         // Clean up child resources when a store is removed.
         static::deleting(function (self $store) {
             $store->orders()->delete();
             $store->carts()->delete();
             EcommerceProduct::where('store_id', $store->id)->delete();
+            \App\Http\Controllers\Seo\SitemapController::clearCache();
         });
     }
 
@@ -196,16 +201,5 @@ class EcommerceStore extends Model
     public function getPixelConfig(string $platform): ?array
     {
         return $this->marketing_pixels[$platform] ?? null;
-    }
-
-    protected static function booted(): void
-    {
-        static::saved(function () {
-            \App\Http\Controllers\Seo\SitemapController::clearCache();
-        });
-
-        static::deleted(function () {
-            \App\Http\Controllers\Seo\SitemapController::clearCache();
-        });
     }
 }
