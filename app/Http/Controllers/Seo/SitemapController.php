@@ -26,6 +26,7 @@ class SitemapController extends Controller
             $now = now()->toAtomString();
             $sitemaps = [
                 ['loc' => route('sitemap.pages'), 'lastmod' => $now],
+                ['loc' => route('sitemap.blog'), 'lastmod' => $now],
                 ['loc' => route('sitemap.cms'), 'lastmod' => $now],
                 ['loc' => route('sitemap.stores'), 'lastmod' => $now],
                 ['loc' => route('sitemap.products'), 'lastmod' => $now],
@@ -71,6 +72,47 @@ class SitemapController extends Controller
                 $entries[] = ['loc' => url('/faq'), 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => $now];
                 $entries[] = ['loc' => url('/about'), 'priority' => '0.6', 'changefreq' => 'monthly', 'lastmod' => $now];
                 $entries[] = ['loc' => url('/contact'), 'priority' => '0.5', 'changefreq' => 'monthly', 'lastmod' => $now];
+            }
+
+            return $this->buildUrlsetXml($entries);
+        });
+
+    /**
+     * Blog Posts & Categories Sitemap: /sitemaps/blog.xml
+     */
+    public function blog(): Response
+    {
+        $xml = Cache::remember('seo_sitemap_blog', self::CACHE_TTL, function () {
+            $entries = [];
+            $now = now()->toAtomString();
+
+            // Main blog index
+            $entries[] = ['loc' => route('blog.index'), 'priority' => '0.9', 'changefreq' => 'daily', 'lastmod' => $now];
+
+            try {
+                // Published Articles
+                $posts = \App\Modules\Blog\Models\BlogPost::published()->get(['slug', 'updated_at', 'published_at']);
+                foreach ($posts as $post) {
+                    $entries[] = [
+                        'loc' => route('blog.show', ['slug' => $post->slug]),
+                        'priority' => '0.8',
+                        'changefreq' => 'weekly',
+                        'lastmod' => ($post->updated_at ?: $post->published_at ?: now())->toAtomString(),
+                    ];
+                }
+
+                // Active Categories
+                $categories = \App\Modules\Blog\Models\BlogCategory::where('is_active', true)->get(['slug', 'updated_at']);
+                foreach ($categories as $cat) {
+                    $entries[] = [
+                        'loc' => route('blog.category', ['slug' => $cat->slug]),
+                        'priority' => '0.6',
+                        'changefreq' => 'weekly',
+                        'lastmod' => ($cat->updated_at ?: now())->toAtomString(),
+                    ];
+                }
+            } catch (\Throwable) {
+                // Table might not be migrated yet
             }
 
             return $this->buildUrlsetXml($entries);

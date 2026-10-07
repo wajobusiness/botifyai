@@ -33,6 +33,13 @@ Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 // Public marketing landing pages
+Route::get('/blog', [\App\Modules\Blog\Http\Controllers\PublicBlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/feed.xml', [\App\Modules\Blog\Http\Controllers\PublicBlogController::class, 'feed'])->name('blog.feed');
+Route::get('/blog/category/{slug}', [\App\Modules\Blog\Http\Controllers\PublicBlogController::class, 'category'])->name('blog.category');
+Route::get('/blog/tag/{slug}', [\App\Modules\Blog\Http\Controllers\PublicBlogController::class, 'tag'])->name('blog.tag');
+Route::get('/blog/author/{slug}', [\App\Modules\Blog\Http\Controllers\PublicBlogController::class, 'author'])->name('blog.author');
+Route::get('/blog/{slug}', [\App\Modules\Blog\Http\Controllers\PublicBlogController::class, 'show'])->name('blog.show');
+
 Route::get('/affiliates', [LandingController::class, 'affiliates'])->name('public.affiliates');
 Route::get('/academy', fn () => redirect()->route('client.academy.index'))->name('public.academy');
 Route::get('/pricing', [LandingController::class, 'pricing'])->name('pricing');
@@ -47,6 +54,7 @@ Route::get('/p/{slug}', [CmsPageController::class, 'show'])->name('cms-page.show
 // Sitemap Index & Modular Sub-Sitemaps
 Route::get('/sitemap.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'index'])->name('sitemap');
 Route::get('/sitemaps/pages.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'pages'])->name('sitemap.pages');
+Route::get('/sitemaps/blog.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'blog'])->name('sitemap.blog');
 Route::get('/sitemaps/cms.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'cms'])->name('sitemap.cms');
 Route::get('/sitemaps/stores.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'stores'])->name('sitemap.stores');
 Route::get('/sitemaps/products.xml', [\App\Http\Controllers\Seo\SitemapController::class, 'products'])->name('sitemap.products');

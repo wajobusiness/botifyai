@@ -110,6 +110,35 @@ Route::post('/academy/lessons', [\App\Modules\Academy\Http\Controllers\AdminAcad
 Route::put('/academy/lessons/{lesson}', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'updateLesson'])->name('academy.lessons.update')->middleware('permission:view_settings');
 Route::delete('/academy/lessons/{lesson}', [\App\Modules\Academy\Http\Controllers\AdminAcademyController::class, 'destroyLesson'])->name('academy.lessons.destroy')->middleware('permission:view_settings');
 
+// Botify Blog Administration
+Route::get('/blog', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogPostController::class, 'index'])->name('blog.index')->middleware('permission:view_settings');
+Route::get('/blog/create', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogPostController::class, 'create'])->name('blog.create')->middleware('permission:view_settings');
+Route::post('/blog', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogPostController::class, 'store'])->name('blog.store')->middleware('permission:view_settings');
+Route::get('/blog/{post}/edit', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogPostController::class, 'edit'])->name('blog.edit')->middleware('permission:view_settings');
+Route::put('/blog/{post}', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogPostController::class, 'update'])->name('blog.update')->middleware('permission:view_settings');
+Route::delete('/blog/{post}', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogPostController::class, 'destroy'])->name('blog.destroy')->middleware('permission:view_settings');
+Route::post('/blog/upload-image', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogPostController::class, 'uploadImage'])->name('blog.upload-image')->middleware('permission:view_settings');
+
+// Blog Categories & Tags
+Route::get('/blog-categories', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogCategoryController::class, 'index'])->name('blog.categories.index')->middleware('permission:view_settings');
+Route::post('/blog-categories', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogCategoryController::class, 'store'])->name('blog.categories.store')->middleware('permission:view_settings');
+Route::put('/blog-categories/{category}', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogCategoryController::class, 'update'])->name('blog.categories.update')->middleware('permission:view_settings');
+Route::delete('/blog-categories/{category}', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogCategoryController::class, 'destroy'])->name('blog.categories.destroy')->middleware('permission:view_settings');
+Route::delete('/blog-tags/{tag}', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogCategoryController::class, 'destroyTag'])->name('blog.tags.destroy')->middleware('permission:view_settings');
+
+// Blog Authors
+Route::get('/blog-authors', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogAuthorController::class, 'index'])->name('blog.authors.index')->middleware('permission:view_settings');
+Route::post('/blog-authors', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogAuthorController::class, 'store'])->name('blog.authors.store')->middleware('permission:view_settings');
+Route::put('/blog-authors/{author}', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogAuthorController::class, 'update'])->name('blog.authors.update')->middleware('permission:view_settings');
+Route::delete('/blog-authors/{author}', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogAuthorController::class, 'destroy'])->name('blog.authors.destroy')->middleware('permission:view_settings');
+
+// AI SEO Content Copilot Endpoints
+Route::post('/blog/ai/topics', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogAiController::class, 'generateTopics'])->name('blog.ai.topics')->middleware('permission:view_settings');
+Route::post('/blog/ai/outline', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogAiController::class, 'generateOutline'])->name('blog.ai.outline')->middleware('permission:view_settings');
+Route::post('/blog/ai/draft', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogAiController::class, 'generateDraft'])->name('blog.ai.draft')->middleware('permission:view_settings');
+Route::post('/blog/ai/optimize-seo', [\App\Modules\Blog\Http\Controllers\Admin\AdminBlogAiController::class, 'optimizeSeo'])->name('blog.ai.optimize-seo')->middleware('permission:view_settings');
+
+
 // Coupons
 Route::get('/coupons', [CouponController::class, 'index'])->name('coupons.index')->middleware('permission:view_plans');
 Route::post('/coupons', [CouponController::class, 'store'])->name('coupons.store')->middleware('permission:create_plans');

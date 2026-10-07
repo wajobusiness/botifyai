@@ -84,8 +84,8 @@ class SeoService
             return $this->resolveCmsPageSeo($slug, $request);
         }
 
-        // 5. Marketing Subpages: /pricing, /faq, /use-cases, /about, /integrations, /contact
-        if (in_array($path, ['pricing', 'faq', 'use-cases', 'about', 'integrations', 'contact'], true)) {
+        // 5. Marketing Subpages: /pricing, /faq, /use-cases, /about, /integrations, /contact, /blog, /affiliates, /academy
+        if (in_array($path, ['pricing', 'faq', 'use-cases', 'about', 'integrations', 'contact', 'blog', 'affiliates', 'academy'], true)) {
             return $this->resolveMarketingSubpageSeo($path, $request);
         }
 

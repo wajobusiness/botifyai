@@ -32,6 +32,7 @@ import {
     Search,
     Award,
     GraduationCap,
+    Newspaper,
 } from 'lucide-react';
 
 /** Nav item: { labelKey, route, href, icon, permission } - show only if user has permission (or no permission required). Order follows typical admin usage frequency. */
@@ -39,6 +40,7 @@ const ADMIN_NAV_ITEMS = [
     { labelKey: 'admin.dashboard', labelFallback: 'Dashboard', route: 'admin.dashboard', href: () => route('admin.dashboard'), icon: LayoutDashboard },
     { labelKey: 'admin.client_management', labelFallback: 'Clients', route: 'admin.clients.index', href: () => route('admin.clients.index'), icon: Users, permission: 'view_clients' },
     { labelKey: 'admin.nav.academy', labelFallback: 'Botify Academy', route: 'admin.academy.index', href: () => { try { return route('admin.academy.index'); } catch (_) { return '/admin/academy'; } }, icon: GraduationCap, permission: 'view_settings' },
+    { labelKey: 'admin.nav.blog', labelFallback: 'Blog Management', route: 'admin.blog.index', href: () => { try { return route('admin.blog.index'); } catch (_) { return '/admin/blog'; } }, icon: Newspaper, permission: 'view_settings' },
     { labelKey: 'admin.seo_tracking', labelFallback: 'SEO & Tracking', route: 'admin.seo.index', href: () => { try { return route('admin.seo.index'); } catch (_) { return '/admin/seo'; } }, icon: Search, permission: 'view_settings' },
     { labelKey: 'admin.nav.subscriptions', labelFallback: 'Subscriptions', route: 'admin.subscriptions.index', href: () => route('admin.subscriptions.index'), icon: CreditCard, permission: 'view_subscriptions' },
     { labelKey: 'admin.nav.support', labelFallback: 'Support', route: 'admin.support.index', href: () => route('admin.support.index'), icon: LifeBuoy, permission: 'view_settings' },
