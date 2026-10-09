@@ -5,6 +5,7 @@ import {
     Sparkles, Award, Bold, Italic, Underline, Heading2, Heading3,
     List, ListOrdered, Link2, Eye, Code2, CheckSquare,
 } from 'lucide-react';
+import { encodeSafeHtml } from '@/Utils/safeHtml';
 
 export default function CreateEditModal({ isOpen, onClose, product = null, defaultCurrency = 'NGN' }) {
     const isEdit = Boolean(product);
@@ -126,7 +127,7 @@ export default function CreateEditModal({ isOpen, onClose, product = null, defau
         payload.append('price', form.price);
         if (form.compare_at_price) payload.append('compare_at_price', form.compare_at_price);
         payload.append('currency', form.currency);
-        payload.append('description', form.description || '');
+        payload.append('description', encodeSafeHtml(form.description));
         payload.append('asset_type', form.asset_type);
         if (form.asset_type === 'redirect_url' && form.external_redirect_url) {
             payload.append('external_redirect_url', form.external_redirect_url);

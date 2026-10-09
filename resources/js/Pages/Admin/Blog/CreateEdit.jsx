@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { encodeSafeHtml } from '@/Utils/safeHtml';
 import {
     Newspaper,
     Save,
@@ -77,10 +78,15 @@ export default function BlogCreateEdit({
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const payload = {
+            ...data,
+            content: encodeSafeHtml(data.content),
+            excerpt: encodeSafeHtml(data.excerpt),
+        };
         if (isEditing) {
-            submitPut(route('admin.blog.update', post.id));
+            router.put(route('admin.blog.update', post.id), payload);
         } else {
-            submitPost(route('admin.blog.store'));
+            router.post(route('admin.blog.store'), payload);
         }
     };
 

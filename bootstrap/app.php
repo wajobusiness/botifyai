@@ -105,6 +105,9 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(prepend: [
+            \App\Http\Middleware\HandleSafeEncodedPayloads::class,
+        ]);
         $middleware->web(append: [
             // Runs before the DB-querying middleware below so a fresh deploy is
             // redirected to /install without touching the (empty) database.

@@ -3,10 +3,11 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { useForm, router } from '@inertiajs/react';
 import { FileText, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { encodeSafeHtml } from '@/Utils/safeHtml';
 
 function PageForm({ page = null, onClose }) {
     const { t } = useTranslation();
-    const { data, setData, post, put, processing, errors } = useForm({
+    const { data, setData, processing, errors } = useForm({
         slug: page?.slug ?? '',
         title: page?.title ?? '',
         content: page?.content ?? '',
@@ -18,10 +19,14 @@ function PageForm({ page = null, onClose }) {
 
     const submit = (e) => {
         e.preventDefault();
+        const payload = {
+            ...data,
+            content: encodeSafeHtml(data.content),
+        };
         if (page) {
-            put(route('admin.cms-pages.update', page.id), { onSuccess: onClose });
+            router.put(route('admin.cms-pages.update', page.id), payload, { onSuccess: onClose });
         } else {
-            post(route('admin.cms-pages.store'), { onSuccess: onClose });
+            router.post(route('admin.cms-pages.store'), payload, { onSuccess: onClose });
         }
     };
 

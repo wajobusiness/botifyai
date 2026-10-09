@@ -4,6 +4,7 @@ import { Button, Card } from '@/Components/ui';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Globe, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { encodeSafeHtml } from '@/Utils/safeHtml';
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -939,7 +940,11 @@ export default function LandingPageIndex({ settings: initialSettings }) {
     const handleSubmit = (e) => {
         e?.preventDefault();
         setProcessing(true);
-        router.put(route('admin.landing-page.update'), { settings: localData }, {
+        const safeSettings = {};
+        Object.keys(localData).forEach((k) => {
+            safeSettings[k] = typeof localData[k] === 'string' ? encodeSafeHtml(localData[k]) : localData[k];
+        });
+        router.put(route('admin.landing-page.update'), { settings: safeSettings }, {
             preserveScroll: true,
             onFinish: () => setProcessing(false),
         });

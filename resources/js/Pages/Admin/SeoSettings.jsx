@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Tabs } from '@/Components/ui';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
+import { encodeSafeHtml } from '@/Utils/safeHtml';
 import {
     Search, BarChart2, CheckCircle2, Globe, ArrowRightLeft,
     Shield, Code, RefreshCw, Plus, Trash2, Edit2, ExternalLink,
@@ -45,7 +46,12 @@ export default function SeoSettings({ settings = {}, redirects = [], sitemapUrls
 
     const handleSettingsSubmit = (e) => {
         e.preventDefault();
-        put(route('admin.seo.update'), {
+        const payload = {
+            ...data,
+            seo_custom_head_scripts: encodeSafeHtml(data.seo_custom_head_scripts),
+            seo_custom_body_scripts: encodeSafeHtml(data.seo_custom_body_scripts),
+        };
+        router.put(route('admin.seo.update'), payload, {
             preserveScroll: true,
         });
     };

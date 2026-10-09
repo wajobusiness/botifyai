@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, router, useForm } from '@inertiajs/react';
+import { encodeSafeHtml } from '@/Utils/safeHtml';
 import {
     GraduationCap,
     BookOpen,
@@ -97,8 +98,12 @@ export default function AdminAcademyIndex({
 
     const handleCourseSubmit = (e) => {
         e.preventDefault();
+        const payload = {
+            ...courseForm.data,
+            description: encodeSafeHtml(courseForm.data.description),
+        };
         if (courseModal.mode === 'create') {
-            courseForm.post(route('admin.academy.courses.store'), {
+            router.post(route('admin.academy.courses.store'), payload, {
                 onSuccess: () => {
                     toast.success('Course created successfully');
                     setCourseModal({ open: false, mode: 'create', data: null });
@@ -106,7 +111,7 @@ export default function AdminAcademyIndex({
                 onError: () => toast.error('Please check the course form inputs'),
             });
         } else {
-            courseForm.put(route('admin.academy.courses.update', courseModal.data.id), {
+            router.put(route('admin.academy.courses.update', courseModal.data.id), payload, {
                 onSuccess: () => {
                     toast.success('Course updated successfully');
                     setCourseModal({ open: false, mode: 'create', data: null });
@@ -235,8 +240,13 @@ export default function AdminAcademyIndex({
 
     const handleLessonSubmit = (e) => {
         e.preventDefault();
+        const payload = {
+            ...lessonForm.data,
+            lesson_notes: encodeSafeHtml(lessonForm.data.lesson_notes),
+            description: encodeSafeHtml(lessonForm.data.description),
+        };
         if (lessonModal.mode === 'create') {
-            lessonForm.post(route('admin.academy.lessons.store'), {
+            router.post(route('admin.academy.lessons.store'), payload, {
                 onSuccess: () => {
                     toast.success('Lesson added successfully');
                     setLessonModal({ open: false, mode: 'create', courseId: null, moduleId: null, data: null });
@@ -244,7 +254,7 @@ export default function AdminAcademyIndex({
                 onError: () => toast.error('Please check the lesson form inputs'),
             });
         } else {
-            lessonForm.put(route('admin.academy.lessons.update', lessonModal.data.id), {
+            router.put(route('admin.academy.lessons.update', lessonModal.data.id), payload, {
                 onSuccess: () => {
                     toast.success('Lesson updated successfully');
                     setLessonModal({ open: false, mode: 'create', courseId: null, moduleId: null, data: null });

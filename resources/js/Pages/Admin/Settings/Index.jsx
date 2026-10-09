@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Tabs } from '@/Components/ui';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { encodeSafeHtml } from '@/Utils/safeHtml';
 import {
     Upload, X, Image, Globe, Palette, Settings2, Code2, Flame,
     Search, BarChart2, Shield, Code, ArrowRightLeft, RefreshCw,
@@ -659,7 +660,12 @@ function SeoTab({ seo = {}, redirects = [], sitemapUrls = {}, robotsUrl = '', fl
 
     const handleSettingsSubmit = (e) => {
         e.preventDefault();
-        put(route('admin.seo.update'), { preserveScroll: true });
+        const payload = {
+            ...data,
+            seo_custom_head_scripts: encodeSafeHtml(data.seo_custom_head_scripts),
+            seo_custom_body_scripts: encodeSafeHtml(data.seo_custom_body_scripts),
+        };
+        router.put(route('admin.seo.update'), payload, { preserveScroll: true });
     };
 
     const handleClearSitemap = () => {
