@@ -9,7 +9,7 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Handle X-XSRF-Token and X-CSRF-Token Headers
+    # Handle X-XSRF-Token and X-CSRF-Token
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
@@ -21,10 +21,12 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Block direct web access to sensitive private directories and files
-    RewriteRule ^(app|bootstrap|config|database|resources|routes|tests)/ - [F,L]
+    # Block direct access to hidden files and package manifests
+    RewriteRule ^\.env - [F,L]
+    RewriteRule ^composer\.(json|lock) - [F,L]
+    RewriteRule ^package\.(json|lock) - [F,L]
+    RewriteRule ^\.git - [F,L]
     RewriteRule ^storage/(app/private|framework|logs) - [F,L]
-    RewriteRule ^(\.env|composer\.(json|lock)|package\.(json|lock)|\.git) - [F,L]
 
     # Map public storage requests to storage/app/public
     RewriteCond %{DOCUMENT_ROOT}/storage/app/public/$1 -f
@@ -34,15 +36,6 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
-</IfModule>
-
-# Disable ModSecurity filtering for form saves if supported by server
-<IfModule mod_security.c>
-    SecFilterEngine Off
-    SecFilterScanPOST Off
-</IfModule>
-<IfModule mod_security2.c>
-    SecRuleEngine Off
 </IfModule>
 
 # php -- BEGIN cPanel-generated handler, do not edit

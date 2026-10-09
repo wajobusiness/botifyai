@@ -9,7 +9,7 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Handle X-XSRF-Token and X-CSRF-Token Headers
+    # Handle X-XSRF-Token and X-CSRF-Token
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
@@ -25,13 +25,4 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
-</IfModule>
-
-# Disable ModSecurity filtering for form saves if supported by server
-<IfModule mod_security.c>
-    SecFilterEngine Off
-    SecFilterScanPOST Off
-</IfModule>
-<IfModule mod_security2.c>
-    SecRuleEngine Off
 </IfModule>
