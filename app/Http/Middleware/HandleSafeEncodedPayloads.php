@@ -43,3 +43,4 @@ class HandleSafeEncodedPayloads
         return $data;
     }
 }
+

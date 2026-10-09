@@ -45,11 +45,15 @@ class SecureHeaders
         $iyzico = $request->routeIs('checkout.iyzico.form') ? ' https://iyzipay.com https://*.iyzipay.com' : '';
 
         $unsafeEval = config('app.env') !== 'production' ? " 'unsafe-eval'" : '';
-        $scriptSrc = "'self' 'unsafe-inline'".$unsafeEval.$this->viteDevSources().$this->thirdPartyScriptSources().$iyzico;
+        $extraScripts = ' https://www.youtube.com https://s.ytimg.com https://player.vimeo.com https://js.stripe.com https://checkout.paystack.com https://checkout.razorpay.com https://challenges.cloudflare.com https://www.google.com https://www.gstatic.com';
+        $scriptSrc = "'self' 'unsafe-inline'".$unsafeEval.$this->viteDevSources().$this->thirdPartyScriptSources().$extraScripts.$iyzico;
         $styleSrc = "'self' 'unsafe-inline' https://fonts.bunny.net https://fonts.googleapis.com".$this->viteDevSources().$this->thirdPartyStyleSources().$iyzico;
         $fontSrc = "'self' data: https://fonts.bunny.net https://fonts.gstatic.com https://fonts.googleapis.com".$iyzico;
 
-        $frameSrc = "'self'".$this->metaFrameSources().$iyzico;
+        $videoFrames = ' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://*.youtube.com https://*.youtube-nocookie.com https://player.vimeo.com https://vimeo.com https://*.vimeo.com https://www.loom.com https://*.loom.com';
+        $paymentFrames = ' https://js.stripe.com https://*.stripe.com https://checkout.paystack.com https://*.paystack.co https://checkout.razorpay.com https://*.razorpay.com';
+        $serviceFrames = ' https://challenges.cloudflare.com https://www.google.com https://*.google.com';
+        $frameSrc = "'self'".$videoFrames.$paymentFrames.$serviceFrames.$this->metaFrameSources().$iyzico;
 
         $directives = array_filter([
             "default-src 'self'",
@@ -57,10 +61,12 @@ class SecureHeaders
             'script-src-elem '.$scriptSrc,
             'style-src '.$styleSrc,
             'style-src-elem '.$styleSrc,
-            "img-src 'self' data: https: blob:",
+            "img-src 'self' data: https: blob: https://*.ytimg.com https://i.ytimg.com https://img.youtube.com https://images.unsplash.com",
             'font-src '.$fontSrc,
-            "connect-src 'self' ".$this->connectSources().$iyzico,
+            "media-src 'self' data: https: blob:",
+            "connect-src 'self' ".$this->connectSources().$iyzico.' https://www.youtube.com https://*.googlevideo.com https://*.ytimg.com https://api.stripe.com https://api.paystack.co',
             'frame-src '.$frameSrc,
+            'child-src blob: '.$frameSrc,
             "frame-ancestors 'self'",
         ]);
 

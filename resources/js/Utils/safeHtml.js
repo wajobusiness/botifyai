@@ -14,3 +14,4 @@ export function encodeSafeHtml(str) {
         return str;
     }
 }
+
