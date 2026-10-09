@@ -45,6 +45,19 @@ export default function LessonPlayer({
         );
     };
 
+    const extractYouTubeId = (input) => {
+        if (!input) return null;
+        const trimmed = String(input).trim();
+        if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+        const match = trimmed.match(/(?:youtube(?:-nocookie)?\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i);
+        return match && match[1] ? match[1] : null;
+    };
+
+    const videoId = extractYouTubeId(lesson.youtube_video_id || lesson.youtube_video_url);
+    const directYoutubeUrl = videoId
+        ? `https://www.youtube.com/watch?v=${videoId}`
+        : (lesson.youtube_video_url || null);
+
     return (
         <ClientLayout title={`${lesson.title} - ${course.title}`}>
             <Head title={`${lesson.title} - Botify Academy`} />
@@ -119,12 +132,12 @@ export default function LessonPlayer({
                 {/* Main Player & Curriculum Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Left 8 Cols: Video Player & Notes */}
-                    <div className="lg:col-span-8 space-y-6">
+                    <div className="lg:col-span-8 space-y-4">
                         {/* Video Player Container */}
                         <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl border border-neutral-800">
-                            {lesson.youtube_video_id ? (
+                            {videoId ? (
                                 <iframe
-                                    src={`https://www.youtube-nocookie.com/embed/${lesson.youtube_video_id}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1`}
+                                    src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&enablejsapi=1`}
                                     title={lesson.title}
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                     allowFullScreen
@@ -142,6 +155,24 @@ export default function LessonPlayer({
                                 </div>
                             )}
                         </div>
+
+                        {/* Direct YouTube Fallback Link Bar */}
+                        {directYoutubeUrl && (
+                            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs">
+                                <span className="text-neutral-500 dark:text-neutral-400">
+                                    Experiencing playback issues with embedded video?
+                                </span>
+                                <a
+                                    href={directYoutubeUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 font-bold text-purple-600 dark:text-purple-400 hover:underline"
+                                >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    Watch on YouTube
+                                </a>
+                            </div>
+                        )}
 
                         {/* Lesson Tabs (Notes, Resources) */}
                         <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">

@@ -37,6 +37,47 @@ class AcademyLesson extends Model
         ];
     }
 
+    public static function parseYouTubeId(?string $url): ?string
+    {
+        if (empty($url)) {
+            return null;
+        }
+
+        $trimmed = trim($url);
+
+        // If it's already an 11-char ID
+        if (preg_match('/^[a-zA-Z0-9_-]{11}$/', $trimmed)) {
+            return $trimmed;
+        }
+
+        // Match all standard YouTube URL patterns (watch, embed, shorts, youtu.be, youtube-nocookie)
+        if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?|shorts)/|.*[?&]v=)|youtu\.be/)([^"&?/\s]{11})%i', $trimmed, $match)) {
+            return $match[1];
+        }
+
+        return null;
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (AcademyLesson $lesson) {
+            if (! empty($lesson->youtube_video_url)) {
+                $extracted = self::parseYouTubeId($lesson->youtube_video_url);
+                if ($extracted) {
+                    $lesson->youtube_video_id = $extracted;
+                }
+            } elseif (! empty($lesson->youtube_video_id)) {
+                $extracted = self::parseYouTubeId($lesson->youtube_video_id);
+                if ($extracted) {
+                    $lesson->youtube_video_id = $extracted;
+                    if (empty($lesson->youtube_video_url)) {
+                        $lesson->youtube_video_url = "https://www.youtube.com/watch?v={$extracted}";
+                    }
+                }
+            }
+        });
+    }
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(AcademyCourse::class, 'course_id');

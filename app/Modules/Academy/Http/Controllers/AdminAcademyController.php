@@ -22,15 +22,7 @@ class AdminAcademyController extends Controller
      */
     private function extractYouTubeId(?string $url): ?string
     {
-        if (empty($url)) {
-            return null;
-        }
-
-        if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/\s]{11})%i', $url, $match)) {
-            return $match[1];
-        }
-
-        return strlen(trim($url)) === 11 ? trim($url) : null;
+        return AcademyLesson::parseYouTubeId($url);
     }
 
     /**
