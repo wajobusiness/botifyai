@@ -22,7 +22,16 @@ class AnalyticsService {
 
   Future<void> logEvent(String name, {Map<String, Object?>? parameters}) async {
     try {
-      await _analytics.logEvent(name: name, parameters: parameters);
+      Map<String, Object>? filteredParams;
+      if (parameters != null) {
+        filteredParams = {};
+        parameters.forEach((key, value) {
+          if (value != null) {
+            filteredParams![key] = value;
+          }
+        });
+      }
+      await _analytics.logEvent(name: name, parameters: filteredParams);
     } catch (e) {
       debugPrint('Failed to log analytics event $name: $e');
     }
