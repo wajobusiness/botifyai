@@ -18,6 +18,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   late AnimationController _animController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+  bool _hasNavigated = false;
+
+  void _navigateTo(String path) {
+    if (!_hasNavigated && mounted) {
+      _hasNavigated = true;
+      context.go(path);
+    }
+  }
 
   @override
   void initState() {
@@ -37,8 +45,29 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     _animController.forward();
 
-    // Trigger auth status check on splash mount
-    context.read<AuthBloc>().add(CheckAuthStatusEvent());
+    // Check if Auth state is already resolved
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final state = context.read<AuthBloc>().state;
+      if (state is AuthenticatedState) {
+        _navigateTo('/inbox');
+      } else if (state is UnauthenticatedState) {
+        _navigateTo('/login');
+      } else {
+        context.read<AuthBloc>().add(CheckAuthStatusEvent());
+      }
+    });
+
+    // Safety timeout: transition after maximum 2 seconds
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (!mounted || _hasNavigated) return;
+      final state = context.read<AuthBloc>().state;
+      if (state is AuthenticatedState) {
+        _navigateTo('/inbox');
+      } else {
+        _navigateTo('/login');
+      }
+    });
   }
 
   @override
@@ -52,9 +81,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthenticatedState) {
-          context.go('/inbox');
-        } else if (state is UnauthenticatedState) {
-          context.go('/login');
+          _navigateTo('/inbox');
+        } else if (state is UnauthenticatedState || state is AuthErrorState) {
+          _navigateTo('/login');
         }
       },
       child: Scaffold(

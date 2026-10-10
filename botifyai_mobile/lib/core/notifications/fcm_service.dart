@@ -19,7 +19,7 @@ class FcmService {
   factory FcmService() => _instance;
   FcmService._internal();
 
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  FirebaseMessaging? _messaging;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
@@ -28,11 +28,15 @@ class FcmService {
     if (kIsWeb || _isInitialized) return;
 
     try {
+      _messaging ??= FirebaseMessaging.instance;
+      final messaging = _messaging;
+      if (messaging == null) return;
+
       // Set background messaging handler
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
       // Request permissions
-      final settings = await _messaging.requestPermission(
+      final settings = await messaging.requestPermission(
         alert: true,
         announcement: false,
         badge: true,
@@ -94,21 +98,21 @@ class FcmService {
       });
 
       // Cold-start notification check (app launched from terminated state)
-      final initialMessage = await _messaging.getInitialMessage();
+      final initialMessage = await messaging.getInitialMessage();
       if (initialMessage != null) {
         debugPrint('FCM Initial Message (Terminated): ${initialMessage.data}');
         NotificationRouter.handleMessage(initialMessage);
       }
 
       // Retrieve device token & register with backend
-      final token = await _messaging.getToken();
+      final token = await messaging.getToken();
       if (token != null) {
         debugPrint('FCM Device Token: $token');
         await _registerDeviceToken(apiClient, token);
       }
 
       // Token refresh listener
-      _messaging.onTokenRefresh.listen((newToken) {
+      messaging.onTokenRefresh.listen((newToken) {
         _registerDeviceToken(apiClient, newToken);
       });
 

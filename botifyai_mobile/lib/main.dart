@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,19 +22,30 @@ import 'features/auth/presentation/bloc/auth_state.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Safely initialize Firebase (if credentials exist)
+  try {
+    if (!kIsWeb) {
+      await Firebase.initializeApp();
+    }
+  } catch (e) {
+    debugPrint('Firebase.initializeApp safe catch: $e');
+  }
+
   // Set preferred orientations & transparent status bar on mobile
   if (!kIsWeb) {
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
+    try {
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
 
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-      ),
-    );
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+        ),
+      );
+    } catch (_) {}
   }
 
   // Initialize Core Services
