@@ -1,0 +1,22 @@
+{
+  "@@locale": "ar",
+  "appTitle": "بوتيفاي",
+  "inbox": "البريد الوارد",
+  "crm": "إدارة العملاء",
+  "commerce": "المتجر والطلبات",
+  "hub": "الإعدادات",
+  "signIn": "تسجيل الدخول",
+  "welcomeTitle": "مرحباً بك في BotifyAI",
+  "welcomeSubtitle": "إدارة المحادثات الحية، طلبات المتجر، ومساعد الذكاء الاصطناعي.",
+  "emailAddress": "البريد الإلكتروني",
+  "password": "كلمة المرور",
+  "biometricSignIn": "الدخول بالبصمة",
+  "biometricSecurity": "الأمان البيومتري",
+  "biometricSubtitle": "قفل ببصمة الوجه أو الأصبع",
+  "signOut": "تسجيل الخروج",
+  "search": "بحث",
+  "activeConversations": "المحادثات النشطة",
+  "orders": "الطلبات",
+  "pendingOrders": "طلبات معلقة",
+  "paidOrders": "طلبات مدفوعة"
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "cloud.botifyai.companion",
+      "sha256_cert_fingerprints": [
+        "14:6D:E9:7D:0F:52:CC:77:47:31:63:7E:60:4B:CF:31:0F:70:C3:4B:B1:42:04:78:E5:67:3F:8E:B3:36:9E:87"
+      ]
+    }
+  }
+]

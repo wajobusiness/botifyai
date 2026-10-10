@@ -1,0 +1,25 @@
+{
+  "@@locale": "en",
+  "appTitle": "BotifyAI",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "inbox": "Inbox",
+  "crm": "CRM",
+  "commerce": "Commerce",
+  "hub": "Hub",
+  "signIn": "Sign In",
+  "welcomeTitle": "Welcome to BotifyAI",
+  "welcomeSubtitle": "Manage your live conversations, store orders, and AI Copilot.",
+  "emailAddress": "Email Address",
+  "password": "Password",
+  "biometricSignIn": "Biometric Sign In",
+  "biometricSecurity": "Biometric Security",
+  "biometricSubtitle": "FaceID / Fingerprint Lock",
+  "signOut": "Sign Out",
+  "search": "Search",
+  "activeConversations": "Active Conversations",
+  "orders": "Orders",
+  "pendingOrders": "Pending Orders",
+  "paidOrders": "Paid Orders"
+}

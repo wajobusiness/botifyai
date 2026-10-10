@@ -93,5 +93,9 @@ return [
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
     ],
 
+    'fcm' => [
+        'key' => env('FCM_SERVER_KEY', env('FIREBASE_SERVER_KEY')),
+    ],
+
 ];
 

@@ -65,6 +65,20 @@ Route::get('/ads.txt', function () {
         ->header('Content-Type', 'text/plain');
 })->name('ads.txt');
 
+// Mobile Companion App Deep Linking (Android App Links & iOS Universal Links)
+Route::get('/.well-known/assetlinks.json', function () {
+    $path = public_path('.well-known/assetlinks.json');
+    return file_exists($path)
+        ? response()->file($path, ['Content-Type' => 'application/json'])
+        : response()->json([], 404);
+});
+Route::get('/.well-known/apple-app-site-association', function () {
+    $path = public_path('.well-known/apple-app-site-association');
+    return file_exists($path)
+        ? response()->file($path, ['Content-Type' => 'application/json'])
+        : response()->json([], 404);
+});
+
 // Webhooks (no auth, verified by gateway signature)
 Route::middleware('throttle:webhooks')->group(function () {
     Route::post('/webhooks/stripe', [WebhookController::class, 'stripe'])->name('webhooks.stripe');

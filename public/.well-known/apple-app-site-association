@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.cloud.botifyai.companion",
+        "paths": [
+          "/app/inbox/*",
+          "/app/commerce/*",
+          "/app/crm/*"
+        ]
+      }
+    ]
+  }
+}

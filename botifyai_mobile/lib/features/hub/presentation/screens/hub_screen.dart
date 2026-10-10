@@ -10,8 +10,72 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 
-class HubScreen extends StatelessWidget {
+import '../../../../core/security/biometric_service.dart';
+import '../../../../core/storage/secure_storage_service.dart';
+
+class HubScreen extends StatefulWidget {
   const HubScreen({super.key});
+
+  @override
+  State<HubScreen> createState() => _HubScreenState();
+}
+
+class _HubScreenState extends State<HubScreen> {
+  bool _biometricsEnabled = false;
+  bool _biometricsAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final storage = context.read<SecureStorageService>();
+    final biometrics = context.read<BiometricService>();
+    final enabled = await storage.isBiometricsEnabled();
+    final available = await biometrics.isBiometricsAvailable();
+    if (mounted) {
+      setState(() {
+        _biometricsEnabled = enabled;
+        _biometricsAvailable = available;
+      });
+    }
+  }
+
+  Future<void> _toggleBiometrics(bool value) async {
+    final storage = context.read<SecureStorageService>();
+    final biometrics = context.read<BiometricService>();
+
+    if (value) {
+      final success = await biometrics.authenticate(
+        reason: 'Authenticate to enable biometric unlock for BotifyAI',
+      );
+      if (success) {
+        await storage.setBiometricsEnabled(true);
+        if (mounted) {
+          setState(() => _biometricsEnabled = true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Biometric security enabled successfully.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } else {
+      await storage.setBiometricsEnabled(false);
+      if (mounted) {
+        setState(() => _biometricsEnabled = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Biometric security disabled.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -205,11 +269,15 @@ class HubScreen extends StatelessWidget {
                     ListTile(
                       leading: const Icon(LucideIcons.fingerprint, size: 20, color: AppColors.info),
                       title: Text('Biometric Security', style: AppTypography.bodyMedium()),
-                      subtitle: const Text('FaceID / Fingerprint Lock'),
+                      subtitle: Text(
+                        _biometricsAvailable
+                            ? 'FaceID / Fingerprint Lock'
+                            : 'Hardware biometrics not supported on device',
+                      ),
                       trailing: Switch.adaptive(
-                        value: true,
+                        value: _biometricsEnabled && _biometricsAvailable,
                         activeColor: AppColors.brandPrimary,
-                        onChanged: (val) {},
+                        onChanged: _biometricsAvailable ? _toggleBiometrics : null,
                       ),
                     ),
                     const Divider(height: 1),

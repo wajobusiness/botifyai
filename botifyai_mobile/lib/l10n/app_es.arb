@@ -1,0 +1,22 @@
+{
+  "@@locale": "es",
+  "appTitle": "BotifyAI",
+  "inbox": "Bandeja",
+  "crm": "CRM",
+  "commerce": "Comercio",
+  "hub": "Ajustes",
+  "signIn": "Iniciar Sesión",
+  "welcomeTitle": "Bienvenido a BotifyAI",
+  "welcomeSubtitle": "Gestiona tus conversaciones en vivo, pedidos y el copiloto de IA.",
+  "emailAddress": "Correo Electrónico",
+  "password": "Contraseña",
+  "biometricSignIn": "Acceso Biométrico",
+  "biometricSecurity": "Seguridad Biométrica",
+  "biometricSubtitle": "Bloqueo por FaceID / Huella",
+  "signOut": "Cerrar Sesión",
+  "search": "Buscar",
+  "activeConversations": "Conversaciones Activas",
+  "orders": "Pedidos",
+  "pendingOrders": "Pedidos Pendientes",
+  "paidOrders": "Pedidos Pagados"
+}
