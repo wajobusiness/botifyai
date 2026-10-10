@@ -1,7 +1,7 @@
 name: botifyai_mobile
 description: "BotifyAI Mobile Companion App - Omnichannel Live Chat, AI Copilot, CRM & Commerce"
 publish_to: 'none'
-version: 1.0.9+9
+version: 1.0.10+10
 
 environment:
   sdk: '>=3.2.0 <4.0.0'

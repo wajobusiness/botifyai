@@ -63,7 +63,7 @@ class PusherService {
     _currentWorkspaceId = workspaceId;
     final token = await SecureStorageService().getToken();
 
-    final apiKey = customApiKey ?? 'botifyai_key';
+    final apiKey = customApiKey ?? '618b79aaf48601826f3f';
     final cluster = customCluster ?? 'mt1';
 
     try {
