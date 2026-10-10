@@ -115,23 +115,31 @@ class _VoiceNoteRecorderBarState extends State<VoiceNoteRecorderBar> with Single
           ),
 
           // Pulsing red recording dot & Timer
-          FadeTransition(
-            opacity: _pulseController,
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                color: AppColors.error,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            _formatDuration(_elapsedSeconds),
-            style: AppTypography.bodyRegular(
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : Colors.black87,
+          Semantics(
+            label: 'Recording voice note, duration ${_formatDuration(_elapsedSeconds)}',
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FadeTransition(
+                  opacity: _pulseController,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(
+                      color: AppColors.error,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _formatDuration(_elapsedSeconds),
+                  style: AppTypography.bodyRegular(
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
             ),
           ),
 

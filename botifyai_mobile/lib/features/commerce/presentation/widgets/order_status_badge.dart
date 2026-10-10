@@ -36,19 +36,22 @@ class OrderStatusBadge extends StatelessWidget {
     final color = _getStatusColor();
     final label = status.isNotEmpty ? status[0].toUpperCase() + status.substring(1).toLowerCase() : 'Pending';
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        label,
-        style: AppTypography.caption(
-          color: color,
-          fontWeight: FontWeight.w700,
-          fontSize: 10,
+    return Semantics(
+      label: isPayment ? 'Payment status: $label' : 'Order status: $label',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.caption(
+            color: color,
+            fontWeight: FontWeight.w700,
+            fontSize: 10,
+          ),
         ),
       ),
     );
