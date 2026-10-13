@@ -168,6 +168,20 @@ Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencie
 Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store')->middleware('permission:manage_currencies');
 Route::put('/currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update')->middleware('permission:manage_currencies');
 
+// Admin Marketing Hub & Customer Segmentation
+Route::get('/marketing', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'index'])->name('marketing.index')->middleware('permission:view_email_settings');
+Route::post('/marketing/sync', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'syncAudience'])->name('marketing.sync')->middleware('permission:manage_email_settings');
+Route::post('/marketing/audience-preview', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'audiencePreview'])->name('marketing.audience-preview')->middleware('permission:view_email_settings');
+Route::post('/marketing/segments', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'storeSegment'])->name('marketing.segments.store')->middleware('permission:manage_email_settings');
+Route::delete('/marketing/segments/{segment}', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'destroySegment'])->name('marketing.segments.destroy')->middleware('permission:manage_email_settings');
+Route::post('/marketing/campaigns', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'storeCampaign'])->name('marketing.campaigns.store')->middleware('permission:manage_email_settings');
+Route::post('/marketing/campaigns/{campaign}/launch', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'launchCampaign'])->name('marketing.campaigns.launch')->middleware('permission:manage_email_settings');
+Route::post('/marketing/campaigns/{campaign}/pause', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'pauseCampaign'])->name('marketing.campaigns.pause')->middleware('permission:manage_email_settings');
+Route::delete('/marketing/campaigns/{campaign}', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'destroyCampaign'])->name('marketing.campaigns.destroy')->middleware('permission:manage_email_settings');
+Route::post('/marketing/campaigns/{campaign}/test-send', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'testSendCampaign'])->name('marketing.campaigns.test-send')->middleware('permission:manage_email_settings');
+Route::post('/marketing/contacts/{contact}/toggle-opt-in', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'toggleContactOptIn'])->name('marketing.contacts.toggle-opt-in')->middleware('permission:manage_email_settings');
+Route::post('/marketing/ai-assist', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'aiAssist'])->name('marketing.ai-assist')->middleware('permission:view_email_settings');
+
 // Email System (SMTP + Email Templates)
 Route::get('/email-system', [EmailSystemController::class, 'index'])->name('email-system.index')->middleware('permission:view_email_settings');
 Route::put('/email-templates/{template}', [EmailSystemController::class, 'updateTemplate'])->name('email-templates.update')->middleware('permission:manage_email_settings');

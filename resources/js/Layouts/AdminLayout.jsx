@@ -33,11 +33,13 @@ import {
     Award,
     GraduationCap,
     Newspaper,
+    Megaphone,
 } from 'lucide-react';
 
 /** Nav item: { labelKey, route, href, icon, permission } - show only if user has permission (or no permission required). Order follows typical admin usage frequency. */
 const ADMIN_NAV_ITEMS = [
     { labelKey: 'admin.dashboard', labelFallback: 'Dashboard', route: 'admin.dashboard', href: () => route('admin.dashboard'), icon: LayoutDashboard },
+    { labelKey: 'admin.marketing_hub', labelFallback: 'Marketing Hub', route: 'admin.marketing.index', href: () => { try { return route('admin.marketing.index'); } catch (_) { return '/admin/marketing'; } }, icon: Megaphone, permission: 'view_email_settings' },
     { labelKey: 'admin.client_management', labelFallback: 'Clients', route: 'admin.clients.index', href: () => route('admin.clients.index'), icon: Users, permission: 'view_clients' },
     { labelKey: 'admin.nav.academy', labelFallback: 'Botify Academy', route: 'admin.academy.index', href: () => { try { return route('admin.academy.index'); } catch (_) { return '/admin/academy'; } }, icon: GraduationCap, permission: 'view_settings' },
     { labelKey: 'admin.nav.blog', labelFallback: 'Blog Management', route: 'admin.blog.index', href: () => { try { return route('admin.blog.index'); } catch (_) { return '/admin/blog'; } }, icon: Newspaper, permission: 'view_settings' },

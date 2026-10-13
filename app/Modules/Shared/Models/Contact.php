@@ -80,20 +80,28 @@ class Contact extends Model
     protected $appends = ['full_name', 'avatar_url'];
 
     protected $fillable = [
-        'workspace_id', 'phone_e164', 'email', 'first_name', 'last_name',
+        'workspace_id', 'user_id', 'phone_e164', 'email', 'first_name', 'last_name',
         'avatar', 'country', 'language', 'opt_in_whatsapp', 'opt_in_sms', 'opt_in_email',
-        'custom_fields', 'last_seen_at', 'source', 'lead_id',
+        'custom_fields', 'last_seen_at', 'bounced_at', 'complained_at', 'source', 'lead_id',
     ];
 
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
             'opt_in_whatsapp' => 'boolean',
             'opt_in_sms' => 'boolean',
             'opt_in_email' => 'boolean',
             'custom_fields' => 'array',
             'last_seen_at' => 'datetime',
+            'bounced_at' => 'datetime',
+            'complained_at' => 'datetime',
         ];
+    }
+
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
     public function tags(): BelongsToMany

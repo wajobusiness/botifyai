@@ -117,8 +117,22 @@ class LaunchCampaignJob implements ShouldQueue
         $contactIds = match ($campaign->audience_type) {
             'segment' => $this->resolveSegment($campaign),
             'tag' => $this->resolveTag($campaign),
-            'contact_list' => $this->resolveAllContacts($campaign),
+            'contact_list', 'all_users' => $this->resolveAllContacts($campaign),
             'csv' => $this->resolveCsv($campaign),
+            'only_registered_users',
+            'verified_users',
+            'only_buyers',
+            'only_subscribers',
+            'only_active_subscribers',
+            'product_buyers',
+            'inactive_users',
+            'high_value_customers',
+            'recent_customers',
+            'affiliates',
+            'selected_contacts' => app(SegmentResolver::class)
+                ->presetQuery($campaign->workspace_id, $campaign->audience_type, $campaign->audience_ref)
+                ->pluck('id')
+                ->all(),
             default => [],
         };
 
@@ -142,9 +156,12 @@ class LaunchCampaignJob implements ShouldQueue
             $query->where($optInColumn, true);
         }
 
-        // Email channel additionally requires a non-empty email; SMS/WhatsApp require a phone.
+        // Email channel additionally requires a non-empty email and excludes hard bounces / complaints.
         if ($campaign->channel === 'email') {
-            $query->whereNotNull('email')->where('email', '!=', '');
+            $query->whereNotNull('email')
+                ->where('email', '!=', '')
+                ->whereNull('bounced_at')
+                ->whereNull('complained_at');
         } else {
             $query->whereNotNull('phone_e164')->where('phone_e164', '!=', '');
         }

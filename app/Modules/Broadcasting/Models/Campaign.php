@@ -49,8 +49,8 @@ class Campaign extends Model
     }
 
     protected $fillable = [
-        'workspace_id', 'name', 'channel', 'whatsapp_phone_number_id', 'audience_type', 'audience_ref',
-        'template_ref', 'payload_json', 'schedule_at', 'timezone', 'status', 'totals_json', 'created_by',
+        'workspace_id', 'name', 'campaign_type', 'channel', 'whatsapp_phone_number_id', 'audience_type', 'audience_ref',
+        'template_ref', 'payload_json', 'schedule_at', 'timezone', 'recurrence_rule', 'status', 'totals_json', 'created_by',
     ];
 
     protected function casts(): array
@@ -58,6 +58,7 @@ class Campaign extends Model
         return [
             'template_ref' => 'array',
             'payload_json' => 'array',
+            'recurrence_rule' => 'array',
             'totals_json' => 'array',
             'schedule_at' => 'datetime',
         ];

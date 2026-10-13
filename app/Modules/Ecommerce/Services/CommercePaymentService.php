@@ -261,6 +261,13 @@ class CommercePaymentService
             Log::warning('MarketingPixelService server-side conversion dispatch failed: ' . $e->getMessage());
         }
 
+        // 13. Sync buyer & purchased products into Platform Marketing Hub
+        try {
+            app(\App\Services\Marketing\PlatformAudienceSyncService::class)->syncOrderBuyer($paidOrder);
+        } catch (\Throwable $e) {
+            Log::warning('PlatformAudienceSyncService order buyer sync failed: ' . $e->getMessage());
+        }
+
         return true;
     }
 

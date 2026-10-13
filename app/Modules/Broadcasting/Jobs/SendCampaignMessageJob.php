@@ -141,7 +141,7 @@ class SendCampaignMessageJob implements ShouldQueue
         return match ($campaign->channel) {
             'whatsapp' => ! $contact->opt_in_whatsapp || ! $contact->phone_e164,
             'sms' => ! $contact->opt_in_sms || ! $contact->phone_e164,
-            'email' => ! $contact->opt_in_email || ! $contact->email,
+            'email' => ! $contact->opt_in_email || ! $contact->email || $contact->bounced_at !== null || $contact->complained_at !== null,
             default => true,
         };
     }
@@ -435,6 +435,7 @@ class SendCampaignMessageJob implements ShouldQueue
         }
 
         $smtp = WorkspaceSmtpConfig::forWorkspace($campaign->workspace_id)
+            ?? SmtpConfiguration::getActiveFor('marketing')
             ?? SmtpConfiguration::getActive();
 
         $fromEmail = filled($payload['from_email'] ?? '') ? $payload['from_email'] : null;

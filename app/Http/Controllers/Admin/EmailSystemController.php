@@ -25,6 +25,7 @@ class EmailSystemController extends Controller
 
         $smtpConfigurations = SmtpConfiguration::orderBy('is_active', 'desc')->orderBy('id')->get()->map(fn (SmtpConfiguration $c) => [
             'id' => $c->id,
+            'name' => $c->name,
             'host' => $c->host,
             'port' => $c->port,
             'username' => $c->username,
@@ -32,6 +33,8 @@ class EmailSystemController extends Controller
             'encryption' => $c->encryption,
             'from_email' => $c->from_email,
             'from_name' => $c->from_name,
+            'purpose' => $c->purpose ?? 'both',
+            'rate_limit_per_minute' => $c->rate_limit_per_minute,
             'is_active' => $c->is_active,
             'summary' => $c->summary,
         ]);
@@ -56,6 +59,7 @@ class EmailSystemController extends Controller
     public function storeSmtp(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'name' => ['nullable', 'string', 'max:128'],
             'host' => ['required', 'string', 'max:255'],
             'port' => ['required', 'integer', 'min:1', 'max:65535'],
             'username' => ['required', 'string', 'max:255'],
@@ -63,14 +67,19 @@ class EmailSystemController extends Controller
             'encryption' => ['required', 'string', 'in:tls,ssl,none'],
             'from_email' => ['required', 'email'],
             'from_name' => ['required', 'string', 'max:255'],
+            'purpose' => ['nullable', 'string', 'in:transactional,marketing,both'],
+            'rate_limit_per_minute' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'activate' => ['boolean'],
         ]);
 
+        $purpose = $validated['purpose'] ?? 'both';
+
         if (($validated['activate'] ?? false) === true) {
-            SmtpConfiguration::query()->update(['is_active' => false]);
+            SmtpConfiguration::whereIn('purpose', [$purpose, 'both'])->update(['is_active' => false]);
         }
 
         SmtpConfiguration::create([
+            'name' => $validated['name'] ?? null,
             'host' => $validated['host'],
             'port' => $validated['port'],
             'username' => $validated['username'],
@@ -78,6 +87,8 @@ class EmailSystemController extends Controller
             'encryption' => $validated['encryption'],
             'from_email' => $validated['from_email'],
             'from_name' => $validated['from_name'],
+            'purpose' => $purpose,
+            'rate_limit_per_minute' => $validated['rate_limit_per_minute'] ?? null,
             'is_active' => $validated['activate'] ?? false,
         ]);
 
@@ -87,6 +98,7 @@ class EmailSystemController extends Controller
     public function updateSmtp(Request $request, SmtpConfiguration $smtpConfiguration): RedirectResponse
     {
         $validated = $request->validate([
+            'name' => ['nullable', 'string', 'max:128'],
             'host' => ['required', 'string', 'max:255'],
             'port' => ['required', 'integer', 'min:1', 'max:65535'],
             'username' => ['required', 'string', 'max:255'],
@@ -94,20 +106,29 @@ class EmailSystemController extends Controller
             'encryption' => ['required', 'string', 'in:tls,ssl,none'],
             'from_email' => ['required', 'email'],
             'from_name' => ['required', 'string', 'max:255'],
+            'purpose' => ['nullable', 'string', 'in:transactional,marketing,both'],
+            'rate_limit_per_minute' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'activate' => ['boolean'],
         ]);
 
+        $purpose = $validated['purpose'] ?? ($smtpConfiguration->purpose ?? 'both');
+
         if (($validated['activate'] ?? false) === true) {
-            SmtpConfiguration::where('id', '!=', $smtpConfiguration->id)->update(['is_active' => false]);
+            SmtpConfiguration::where('id', '!=', $smtpConfiguration->id)
+                ->whereIn('purpose', [$purpose, 'both'])
+                ->update(['is_active' => false]);
         }
 
         $data = [
+            'name' => $validated['name'] ?? $smtpConfiguration->name,
             'host' => $validated['host'],
             'port' => $validated['port'],
             'username' => $validated['username'],
             'encryption' => $validated['encryption'],
             'from_email' => $validated['from_email'],
             'from_name' => $validated['from_name'],
+            'purpose' => $purpose,
+            'rate_limit_per_minute' => $validated['rate_limit_per_minute'] ?? $smtpConfiguration->rate_limit_per_minute,
             'is_active' => $validated['activate'] ?? $smtpConfiguration->is_active,
         ];
         if (! empty($validated['password'])) {

@@ -16,6 +16,8 @@ class SmtpConfiguration extends Model
         'from_email',
         'from_name',
         'is_active',
+        'purpose',
+        'rate_limit_per_minute',
     ];
 
     protected function casts(): array
@@ -23,6 +25,7 @@ class SmtpConfiguration extends Model
         return [
             'port' => 'integer',
             'is_active' => 'boolean',
+            'rate_limit_per_minute' => 'integer',
         ];
     }
 
@@ -56,6 +59,27 @@ class SmtpConfiguration extends Model
     public static function getActive(): ?self
     {
         return static::where('is_active', true)->first();
+    }
+
+    /**
+     * Resolve the preferred SMTP configuration for a specific stream ('transactional' or 'marketing').
+     * Prefers an explicit stream match first, then 'both', then any active configuration.
+     */
+    public static function getActiveFor(string $purpose = 'transactional'): ?self
+    {
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('smtp_configurations', 'purpose')) {
+                $dedicated = static::where('purpose', $purpose)
+                    ->orderByDesc('is_active')
+                    ->first();
+                if ($dedicated) {
+                    return $dedicated;
+                }
+            }
+        } catch (\Throwable) {
+        }
+
+        return static::getActive();
     }
 
     /**

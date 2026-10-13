@@ -25,6 +25,17 @@ class User extends Authenticatable implements MustVerifyEmail
     protected static function booted(): void
     {
         static::saved(function (User $user) {
+            if (
+                $user->wasRecentlyCreated
+                || $user->wasChanged(['name', 'email', 'email_verified_at', 'role', 'active_role', 'affiliate_status', 'locale'])
+            ) {
+                try {
+                    app(\App\Services\Marketing\PlatformAudienceSyncService::class)->syncUser($user);
+                } catch (\Throwable) {
+                    // Never block user save on marketing sync
+                }
+            }
+
             if (! $user->client_id) {
                 return;
             }
