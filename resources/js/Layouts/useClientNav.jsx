@@ -5,7 +5,7 @@ import {
     LayoutDashboard, CreditCard, Package, FileText, Users, Settings,
     Layers, Webhook, Key, BookOpen, Image, Radio, Inbox, Bot, Database,
     Zap, Share2, MapPin, Tag, LifeBuoy, ExternalLink, Mail, MessageSquare,
-    ShoppingBag, KanbanSquare, Wallet, Store, Sparkles, GraduationCap,
+    ShoppingBag, KanbanSquare, Wallet, Store, Sparkles, GraduationCap, Megaphone,
 } from 'lucide-react';
 
 const iconClass = 'h-4 w-4';
@@ -32,6 +32,7 @@ export default function useClientNav() {
 
     const accountItems = [
         { label: t('nav.dashboard'), href: safeRoute('client.dashboard'), icon: <LayoutDashboard className={iconClass} />, activePattern: 'client.dashboard' },
+        { label: t('nav.marketing_hub', 'Marketing Hub'), href: '/app/marketing', icon: <Megaphone className={iconClass} />, activePattern: 'client.marketing.*' },
     ];
 
     const accountSettingsItems = [
@@ -79,6 +80,7 @@ export default function useClientNav() {
     ];
 
     const broadcastItems = [
+        { label: t('nav.marketing_hub', 'Marketing Hub'), href: '/app/marketing', icon: <Megaphone className={iconClass} />, activePattern: 'client.marketing.*' },
         { label: t('nav.campaigns'),    href: safeRoute('client.campaigns.index'),    icon: <Radio className={iconClass} />,        activePattern: 'client.campaigns.*' },
         { label: t('nav.sms_gateways'), href: safeRoute('client.sms-gateways.index'), icon: <MessageSquare className={iconClass} />, activePattern: 'client.sms-gateways.*' },
         { label: t('nav.email_server'), href: safeRoute('client.email-server.index'), icon: <Mail className={iconClass} />,          activePattern: 'client.email-server.*' },

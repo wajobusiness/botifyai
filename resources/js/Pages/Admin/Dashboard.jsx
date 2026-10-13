@@ -118,6 +118,7 @@ export default function AdminDashboard({ range = 30, stats = {}, charts = {}, ta
     ];
 
     const quickLinks = [
+        { href: '/admin/marketing', label: t('admin.marketing_hub') || 'Marketing Hub' },
         { href: route('admin.clients.index'), label: t('admin.client_management') || 'Clients' },
         { href: route('admin.subscriptions.index'), label: t('admin.nav.subscriptions') || 'Subscriptions' },
         { href: route('admin.plans.index'), label: t('admin.plans') || 'Plans' },

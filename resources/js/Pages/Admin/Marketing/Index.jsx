@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import ClientLayout from '@/Layouts/ClientLayout';
 import { toast } from 'sonner';
 import {
     Megaphone,
@@ -97,6 +98,9 @@ export default function AdminMarketingIndex({
     filters = {},
 }) {
     const { flash } = usePage().props;
+    const isAppRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/app');
+    const basePath = isAppRoute ? '/app/marketing' : '/admin/marketing';
+    const LayoutComponent = isAppRoute ? ClientLayout : AdminLayout;
     const [activeTab, setActiveTab] = useState(filters.tab || 'overview');
     const [syncing, setSyncing] = useState(false);
 
@@ -166,7 +170,7 @@ export default function AdminMarketingIndex({
         setLoadingPreview(true);
 
         window.axios
-            .post(route('admin.marketing.audience-preview'), {
+            .post(`${basePath}/audience-preview`, {
                 audience_type: campaignForm.audience_type,
                 audience_ref: String(campaignForm.audience_ref || ''),
             })
@@ -183,12 +187,12 @@ export default function AdminMarketingIndex({
         return () => {
             cancelled = true;
         };
-    }, [activeTab, campaignForm.audience_type, campaignForm.audience_ref]);
+    }, [activeTab, campaignForm.audience_type, campaignForm.audience_ref, basePath]);
 
     const handleSyncAudience = () => {
         setSyncing(true);
         router.post(
-            route('admin.marketing.sync'),
+            `${basePath}/sync`,
             {},
             {
                 preserveScroll: true,
@@ -199,7 +203,7 @@ export default function AdminMarketingIndex({
 
     const applyExplorerFilters = (nextPreset = explorerPreset, nextRef = explorerRef, nextQ = searchQuery, nextOptIn = optInFilter) => {
         router.get(
-            route('admin.marketing.index'),
+            basePath,
             {
                 tab: 'audience',
                 preset: nextPreset,
@@ -234,7 +238,7 @@ export default function AdminMarketingIndex({
         }
         setSavingSegment(true);
         router.post(
-            route('admin.marketing.segments.store'),
+            `${basePath}/segments`,
             {
                 id: segmentForm.id,
                 name: segmentForm.name,
@@ -267,7 +271,7 @@ export default function AdminMarketingIndex({
         }
         setAiLoading(true);
         try {
-            const { data } = await window.axios.post(route('admin.marketing.ai-assist'), {
+            const { data } = await window.axios.post(`${basePath}/ai-assist`, {
                 action,
                 campaign_type: campaignForm.campaign_type,
                 goal: aiGoal || campaignForm.subject || campaignForm.name,
@@ -309,7 +313,7 @@ export default function AdminMarketingIndex({
         }
         setSavingCampaign(true);
         router.post(
-            route('admin.marketing.campaigns.store'),
+            `${basePath}/campaigns`,
             {
                 id: campaignForm.id,
                 name: campaignForm.name,
@@ -345,7 +349,7 @@ export default function AdminMarketingIndex({
         }
         setTestingCampaignId(campaignId);
         try {
-            const { data } = await window.axios.post(route('admin.marketing.campaigns.test-send', campaignId), {
+            const { data } = await window.axios.post(`${basePath}/campaigns/${campaignId}/test-send`, {
                 email: testEmail,
             });
             if (data.ok) {
@@ -374,7 +378,7 @@ export default function AdminMarketingIndex({
     );
 
     return (
-        <AdminLayout title="Marketing Hub">
+        <LayoutComponent title="Marketing Hub">
             <Head title="Admin Marketing Hub & Customer Segmentation" />
 
             <div className="space-y-6">
@@ -732,7 +736,7 @@ export default function AdminMarketingIndex({
                                             Email Stream Isolation & Compliance
                                         </h3>
                                         <Link
-                                            href={route('admin.email-system.index')}
+                                            href={isAppRoute ? '/app/email-server' : '/admin/email-system'}
                                             className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
                                         >
                                             Configure SMTP →
@@ -1095,7 +1099,7 @@ export default function AdminMarketingIndex({
                                                             type="button"
                                                             onClick={() =>
                                                                 router.post(
-                                                                    route('admin.marketing.contacts.toggle-opt-in', c.id),
+                                                                    `${basePath}/contacts/${c.id}/toggle-opt-in`,
                                                                     {},
                                                                     { preserveScroll: true }
                                                                 )
@@ -1303,7 +1307,7 @@ export default function AdminMarketingIndex({
                                             <button
                                                 type="button"
                                                 onClick={() =>
-                                                    router.delete(route('admin.marketing.segments.destroy', seg.id), {
+                                                    router.delete(`${basePath}/segments/${seg.id}`, {
                                                         preserveScroll: true,
                                                     })
                                                 }
@@ -1942,7 +1946,7 @@ export default function AdminMarketingIndex({
                                                                         type="button"
                                                                         onClick={() =>
                                                                             router.post(
-                                                                                route('admin.marketing.campaigns.launch', c.id),
+                                                                                `${basePath}/campaigns/${c.id}/launch`,
                                                                                 {},
                                                                                 { preserveScroll: true }
                                                                             )
@@ -1958,7 +1962,7 @@ export default function AdminMarketingIndex({
                                                                     type="button"
                                                                     onClick={() =>
                                                                         router.post(
-                                                                            route('admin.marketing.campaigns.pause', c.id),
+                                                                            `${basePath}/campaigns/${c.id}/pause`,
                                                                             {},
                                                                             { preserveScroll: true }
                                                                         )
@@ -1972,7 +1976,7 @@ export default function AdminMarketingIndex({
                                                                 type="button"
                                                                 onClick={() =>
                                                                     router.delete(
-                                                                        route('admin.marketing.campaigns.destroy', c.id),
+                                                                        `${basePath}/campaigns/${c.id}`,
                                                                         { preserveScroll: true }
                                                                     )
                                                                 }
@@ -1992,7 +1996,7 @@ export default function AdminMarketingIndex({
                     </div>
                 )}
             </div>
-        </AdminLayout>
+        </LayoutComponent>
     );
 }
 
