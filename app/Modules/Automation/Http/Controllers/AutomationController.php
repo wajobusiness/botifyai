@@ -39,17 +39,21 @@ class AutomationController extends Controller
         }
 
         try {
+            $hasNextRunCol = \Illuminate\Support\Facades\Schema::hasColumn('automations', 'next_run_at');
             Automation::where('workspace_id', $workspaceId)
                 ->where('trigger_type', 'schedule.recurring')
-                ->where(function ($q) {
-                    $q->where('status', 'draft')->orWhereNull('next_run_at');
+                ->where(function ($q) use ($hasNextRunCol) {
+                    $q->where('status', 'draft');
+                    if ($hasNextRunCol) {
+                        $q->orWhereNull('next_run_at');
+                    }
                 })
                 ->get()
-                ->each(function (Automation $automation) {
+                ->each(function (Automation $automation) use ($hasNextRunCol) {
                     if ($automation->status === 'draft') {
                         $automation->status = 'active';
                     }
-                    if (! $automation->next_run_at) {
+                    if ($hasNextRunCol && ! $automation->next_run_at) {
                         $automation->next_run_at = $automation->computeNextRunAt();
                     }
                     $automation->save();
@@ -161,12 +165,15 @@ class AutomationController extends Controller
         ]);
 
         $automation->fill($validated);
+        $hasNextRunCol = \Illuminate\Support\Facades\Schema::hasColumn('automations', 'next_run_at');
         if ($automation->trigger_type === 'schedule.recurring') {
             if (! array_key_exists('status', $validated) && $automation->status === 'draft') {
                 $automation->status = 'active';
             }
-            $automation->next_run_at = $automation->computeNextRunAt();
-        } else {
+            if ($hasNextRunCol) {
+                $automation->next_run_at = $automation->computeNextRunAt();
+            }
+        } elseif ($hasNextRunCol) {
             $automation->next_run_at = null;
         }
         $automation->save();
@@ -305,7 +312,7 @@ class AutomationController extends Controller
                 'nodes' => $graph['nodes'],
                 'edges' => $graph['edges'],
             ]);
-            if ($isRecurring) {
+            if ($isRecurring && \Illuminate\Support\Facades\Schema::hasColumn('automations', 'next_run_at')) {
                 $auto->next_run_at = $auto->computeNextRunAt();
             }
             $auto->save();

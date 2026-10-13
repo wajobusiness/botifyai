@@ -39,15 +39,15 @@ class SmtpConfiguration extends Model
         $this->attributes['password'] = Crypt::encryptString($value);
     }
 
-    public function getPasswordAttribute(string $value): ?string
+    public function getPasswordAttribute(?string $value): ?string
     {
-        if (empty($value)) {
+        if ($value === null || $value === '') {
             return null;
         }
         try {
             return Crypt::decryptString($value);
         } catch (\Throwable) {
-            return null;
+            return $value;
         }
     }
 
@@ -58,7 +58,12 @@ class SmtpConfiguration extends Model
 
     public static function getActive(): ?self
     {
-        return static::where('is_active', true)->first();
+        try {
+            return static::where('is_active', true)->first()
+                ?? static::whereNotNull('host')->where('host', '!=', '')->orderByDesc('id')->first();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

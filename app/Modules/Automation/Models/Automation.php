@@ -62,7 +62,7 @@ class Automation extends Model
     /**
      * Compute the next UTC execution timestamp for a `schedule.recurring` automation.
      */
-    public function computeNextRunAt(?\Illuminate\Support\Carbon $from = null): ?\Illuminate\Support\Carbon
+    public function computeNextRunAt(?\Carbon\CarbonInterface $from = null): ?\Illuminate\Support\Carbon
     {
         if ($this->trigger_type !== 'schedule.recurring') {
             return null;
@@ -76,7 +76,7 @@ class Automation extends Model
             $tz = new \DateTimeZone('UTC');
         }
 
-        $base = ($from ? $from->copy() : now())->setTimezone($tz);
+        $base = ($from ? \Illuminate\Support\Carbon::instance($from)->copy() : now())->setTimezone($tz);
 
         // Parse posting times (default 09:00)
         $rawTimes = $config['times'] ?? ['09:00'];
@@ -139,18 +139,19 @@ class Automation extends Model
      *
      * @return array<int, \Illuminate\Support\Carbon>
      */
-    public function computeRunsBetween(\Illuminate\Support\Carbon $start, \Illuminate\Support\Carbon $end, int $maxRuns = 60): array
+    public function computeRunsBetween(\Carbon\CarbonInterface $start, \Carbon\CarbonInterface $end, int $maxRuns = 60): array
     {
         if ($this->trigger_type !== 'schedule.recurring') {
             return [];
         }
 
-        $cursor = $start->copy()->subSecond();
+        $cursor = \Illuminate\Support\Carbon::instance($start)->copy()->subSecond();
+        $endCarbon = \Illuminate\Support\Carbon::instance($end);
         $slots = [];
 
         while (count($slots) < $maxRuns) {
             $next = $this->computeNextRunAt($cursor);
-            if (! $next || $next->gt($end)) {
+            if (! $next || $next->gt($endCarbon)) {
                 break;
             }
             $slots[] = $next;

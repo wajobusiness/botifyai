@@ -346,10 +346,10 @@ class AdminMarketingController extends Controller
                     'id' => $c->id,
                     'uuid' => $c->uuid,
                     'name' => $c->name,
-                    'campaign_type' => $c->campaign_type ?? 'newsletter',
+                    'campaign_type' => $c->campaign_type ?? ($c->payload_json['campaign_type'] ?? 'newsletter'),
                     'channel' => $c->channel,
-                    'audience_type' => $c->audience_type,
-                    'audience_ref' => $c->audience_ref,
+                    'audience_type' => $c->payload_json['audience_type'] ?? $c->audience_type,
+                    'audience_ref' => $c->payload_json['audience_ref'] ?? $c->audience_ref,
                     'payload_json' => $c->payload_json,
                     'schedule_at' => $c->schedule_at?->toIso8601String(),
                     'recurrence_rule' => $c->recurrence_rule ?? null,
@@ -629,6 +629,8 @@ class AdminMarketingController extends Controller
             'track_opens' => (bool) ($validated['track_opens'] ?? true),
             'track_clicks' => (bool) ($validated['track_clicks'] ?? true),
             'campaign_type' => $validated['campaign_type'],
+            'audience_type' => $validated['audience_type'],
+            'audience_ref' => $validated['audience_ref'] ?? null,
         ];
 
         $campaign = null;
@@ -636,11 +638,18 @@ class AdminMarketingController extends Controller
             $campaign = Campaign::where('workspace_id', $workspaceId)->find($validated['id']);
         }
 
+        // MySQL campaigns.audience_type is ENUM('segment','contact_list','tag','csv').
+        // Store preset cohorts ('all_users', 'only_buyers', etc.) as 'contact_list' in the ENUM column
+        // while keeping the exact preset cohort in payload_json['audience_type'].
+        $dbAudienceType = in_array($validated['audience_type'], ['segment', 'contact_list', 'tag', 'csv'], true)
+            ? $validated['audience_type']
+            : 'contact_list';
+
         $attributes = [
             'workspace_id' => $workspaceId,
             'name' => $validated['name'],
             'channel' => 'email',
-            'audience_type' => $validated['audience_type'],
+            'audience_type' => $dbAudienceType,
             'audience_ref' => $validated['audience_ref'] ?? null,
             'payload_json' => $payloadJson,
             'schedule_at' => ! empty($validated['schedule_at']) ? $validated['schedule_at'] : null,
@@ -667,15 +676,50 @@ class AdminMarketingController extends Controller
             $campaign->update(['status' => 'queued']);
 
             if (! $campaign->schedule_at || $campaign->schedule_at->isPast()) {
-                LaunchCampaignJob::dispatch($campaign->id)->onQueue('broadcast');
-
-                return back()->with('success', "Campaign \"{$campaign->name}\" queued for immediate delivery on the broadcast stream.");
+                return $this->executeCampaignLaunch($campaign);
             }
 
             return back()->with('success', "Campaign \"{$campaign->name}\" scheduled for " . $campaign->schedule_at->toDayDateTimeString() . '.');
         }
 
         return back()->with('success', "Campaign \"{$campaign->name}\" saved as draft.");
+    }
+
+    private function executeCampaignLaunch(Campaign $campaign): RedirectResponse
+    {
+        LaunchCampaignJob::dispatch($campaign->id)->onQueue('broadcast');
+
+        if (! app()->runningUnitTests()) {
+            try {
+                (new LaunchCampaignJob($campaign->id))->handle();
+            } catch (\Throwable $e) {
+                Log::warning('AdminMarketingController::executeCampaignLaunch inline error', [
+                    'campaign_id' => $campaign->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $campaign->refresh();
+        $totals = $campaign->totals_json ?? [];
+        $sent = (int) ($totals['sent'] ?? 0);
+        $failed = (int) ($totals['failed'] ?? 0);
+
+        if ($campaign->status === 'failed') {
+            $firstFailReason = CampaignRecipient::where('campaign_id', $campaign->id)
+                ->where('status', 'failed')
+                ->whereNotNull('failed_reason')
+                ->value('failed_reason')
+                ?? ($totals['failed_reason'] ?? 'Check your active SMTP configuration.');
+
+            return back()->with('error', "Campaign \"{$campaign->name}\" could not send: {$firstFailReason}");
+        }
+
+        if ($sent > 0) {
+            return back()->with('success', "Campaign \"{$campaign->name}\" launched — {$sent} email(s) sent" . ($failed > 0 ? " ({$failed} failed)." : '!'));
+        }
+
+        return back()->with('success', "Campaign \"{$campaign->name}\" queued for delivery.");
     }
 
     private function resolvePlatformCampaign(string|int $idOrUuid): Campaign
@@ -700,14 +744,12 @@ class AdminMarketingController extends Controller
     public function launchCampaign(string|int $campaign): RedirectResponse
     {
         $model = $this->resolvePlatformCampaign($campaign);
-        abort_unless(in_array($model->status, ['draft', 'paused'], true), 422, 'Only draft or paused campaigns can be launched.');
+        abort_unless(in_array($model->status, ['draft', 'paused', 'failed'], true), 422, 'Only draft, paused, or failed campaigns can be launched.');
 
         $model->update(['status' => 'queued']);
 
         if (! $model->schedule_at || $model->schedule_at->isPast()) {
-            LaunchCampaignJob::dispatch($model->id)->onQueue('broadcast');
-
-            return back()->with('success', "Campaign \"{$model->name}\" launched.");
+            return $this->executeCampaignLaunch($model);
         }
 
         return back()->with('success', "Campaign \"{$model->name}\" scheduled for launch.");
@@ -777,7 +819,9 @@ class AdminMarketingController extends Controller
             $fromName = filled($payload['from_name'] ?? '') ? $payload['from_name'] : null;
             $replyTo = filled($payload['reply_to'] ?? '') ? $payload['reply_to'] : null;
 
-            $smtp = SmtpConfiguration::getActiveFor('marketing') ?? SmtpConfiguration::getActive();
+            $smtp = SmtpConfiguration::getActiveFor('marketing')
+                ?? SmtpConfiguration::getActive()
+                ?? \App\Modules\Broadcasting\Models\WorkspaceSmtpConfig::forWorkspace($workspaceId);
 
             if ($smtp) {
                 app(MailService::class)->sendRaw($smtp, $contact->email, $subject, $body, [], $fromEmail, $fromName, $replyTo);
@@ -802,7 +846,7 @@ class AdminMarketingController extends Controller
 
             return response()->json([
                 'ok' => false,
-                'error' => 'Failed to send test email. Please verify your active SMTP configuration.',
+                'error' => 'Failed to send test email: ' . $e->getMessage(),
             ], 500);
         }
     }

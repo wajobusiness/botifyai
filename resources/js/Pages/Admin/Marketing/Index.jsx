@@ -317,16 +317,16 @@ export default function AdminMarketingIndex({
             `${basePath}/campaigns`,
             {
                 id: campaignForm.id,
-                name: campaignForm.name,
+                name: campaignForm.name.trim(),
                 campaign_type: campaignForm.campaign_type,
                 audience_type: campaignForm.audience_type,
                 audience_ref: String(campaignForm.audience_ref || ''),
-                subject: campaignForm.subject,
+                subject: campaignForm.subject.trim(),
                 preheader: campaignForm.preheader,
                 body: campaignForm.body,
-                from_name: campaignForm.from_name,
-                from_email: campaignForm.from_email,
-                reply_to: campaignForm.reply_to,
+                from_name: campaignForm.from_name.trim() || null,
+                from_email: campaignForm.from_email.trim() || null,
+                reply_to: campaignForm.reply_to.trim() || null,
                 track_opens: campaignForm.track_opens,
                 track_clicks: campaignForm.track_clicks,
                 schedule_at: campaignForm.schedule_mode !== 'immediate' ? campaignForm.schedule_at : null,
@@ -338,6 +338,10 @@ export default function AdminMarketingIndex({
             },
             {
                 preserveScroll: true,
+                onError: (errs) => {
+                    const firstErr = Object.values(errs || {})[0];
+                    toast.error(firstErr || 'Could not save or launch campaign.');
+                },
                 onFinish: () => setSavingCampaign(false),
             }
         );
@@ -1931,7 +1935,7 @@ export default function AdminMarketingIndex({
                                                             >
                                                                 Test
                                                             </button>
-                                                            {(c.status === 'draft' || c.status === 'paused') && (
+                                                            {(c.status === 'draft' || c.status === 'paused' || c.status === 'failed') && (
                                                                 <>
                                                                     <button
                                                                         type="button"

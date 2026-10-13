@@ -79,12 +79,17 @@ class MailService
         ?string $fromName = null,
         ?string $replyTo = null,
     ): bool {
+        $smtpFromEmail = $smtp->from_email ?: (filter_var((string) $smtp->username, FILTER_VALIDATE_EMAIL) ? $smtp->username : config('mail.from.address', 'noreply@botifyai.cloud'));
+        $smtpFromName = $smtp->from_name ?: config('mail.from.name', config('app.name'));
+        $effectiveFromEmail = $fromEmail ?: $smtpFromEmail;
+        $effectiveFromName = $fromName ?: $smtpFromName;
+
         try {
             $this->configureMailer($smtp);
-            Mail::mailer('dynamic_smtp')->html($bodyHtml, function ($message) use ($to, $subject, $smtp, $extraHeaders, $fromEmail, $fromName, $replyTo) {
+            Mail::mailer('dynamic_smtp')->html($bodyHtml, function ($message) use ($to, $subject, $extraHeaders, $effectiveFromEmail, $effectiveFromName, $replyTo) {
                 $message->to($to)
                     ->subject($subject)
-                    ->from($fromEmail ?: $smtp->from_email, $fromName ?: $smtp->from_name);
+                    ->from($effectiveFromEmail, $effectiveFromName);
 
                 if ($replyTo) {
                     $message->replyTo($replyTo);
@@ -94,8 +99,31 @@ class MailService
                     $message->getHeaders()->addTextHeader($name, $value);
                 }
             });
+
             return true;
         } catch (\Throwable $e) {
+            // Many SMTP relays (Hostinger, cPanel, Titan, Gmail, SES) reject custom From addresses
+            // that do not match the authenticated mailbox. Retry once using $smtpFromEmail + Reply-To.
+            if ($fromEmail && $smtpFromEmail && strtolower($fromEmail) !== strtolower($smtpFromEmail)) {
+                try {
+                    $fallbackReplyTo = $replyTo ?: $fromEmail;
+                    Mail::mailer('dynamic_smtp')->html($bodyHtml, function ($message) use ($to, $subject, $extraHeaders, $smtpFromEmail, $effectiveFromName, $fallbackReplyTo) {
+                        $message->to($to)
+                            ->subject($subject)
+                            ->from($smtpFromEmail, $effectiveFromName)
+                            ->replyTo($fallbackReplyTo);
+
+                        foreach ($extraHeaders as $name => $value) {
+                            $message->getHeaders()->addTextHeader($name, $value);
+                        }
+                    });
+
+                    return true;
+                } catch (\Throwable $retryEx) {
+                    $e = $retryEx;
+                }
+            }
+
             Log::error('MailService: Failed to send email.', [
                 'to' => $to,
                 'error' => $e->getMessage(),

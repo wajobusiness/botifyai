@@ -40,16 +40,27 @@ class WorkspaceBrandProfile extends Model
 
     public static function forWorkspace(int $workspaceId): self
     {
-        return static::firstOrCreate(
-            ['workspace_id' => $workspaceId],
-            [
-                'tone' => 'professional',
-                'content_pillars' => ['Educational Insights', 'Industry Trends', 'Actionable Tips', 'Case Studies'],
-                'brand_colors' => ['#6366f1', '#0f172a', '#f8fafc'],
-                'requires_approval' => false,
-                'auto_replenish' => true,
-            ]
-        );
+        $defaults = [
+            'workspace_id' => $workspaceId,
+            'tone' => 'professional',
+            'content_pillars' => ['Educational Insights', 'Industry Trends', 'Actionable Tips', 'Case Studies'],
+            'brand_colors' => ['#6366f1', '#0f172a', '#f8fafc'],
+            'requires_approval' => false,
+            'auto_replenish' => true,
+        ];
+
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('workspace_brand_profiles')) {
+                return new static($defaults);
+            }
+
+            return static::firstOrCreate(
+                ['workspace_id' => $workspaceId],
+                $defaults
+            );
+        } catch (\Throwable) {
+            return new static($defaults);
+        }
     }
 
     public function primaryColor(): string

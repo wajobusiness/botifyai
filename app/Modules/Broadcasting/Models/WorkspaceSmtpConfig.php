@@ -39,15 +39,15 @@ class WorkspaceSmtpConfig extends Model
         $this->attributes['password'] = Crypt::encryptString($value);
     }
 
-    public function getPasswordAttribute(string $value): ?string
+    public function getPasswordAttribute(?string $value): ?string
     {
-        if (empty($value)) {
+        if ($value === null || $value === '') {
             return null;
         }
         try {
             return Crypt::decryptString($value);
         } catch (\Throwable) {
-            return null;
+            return $value;
         }
     }
 
@@ -58,9 +58,22 @@ class WorkspaceSmtpConfig extends Model
 
     public static function forWorkspace(int $workspaceId): ?self
     {
-        return static::where('workspace_id', $workspaceId)
-            ->where('is_active', true)
-            ->first();
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('workspace_smtp_configs')) {
+                return null;
+            }
+
+            return static::where('workspace_id', $workspaceId)
+                ->where('is_active', true)
+                ->first()
+                ?? static::where('workspace_id', $workspaceId)
+                    ->whereNotNull('host')
+                    ->where('host', '!=', '')
+                    ->orderByDesc('id')
+                    ->first();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public function getSummaryAttribute(): string

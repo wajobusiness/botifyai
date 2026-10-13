@@ -38,17 +38,21 @@ class SocialPostController extends Controller
         }
 
         try {
+            $hasNextRunCol = \Illuminate\Support\Facades\Schema::hasColumn('automations', 'next_run_at');
             Automation::where('workspace_id', $workspaceId)
                 ->where('trigger_type', 'schedule.recurring')
-                ->where(function ($q) {
-                    $q->where('status', 'draft')->orWhereNull('next_run_at');
+                ->where(function ($q) use ($hasNextRunCol) {
+                    $q->where('status', 'draft');
+                    if ($hasNextRunCol) {
+                        $q->orWhereNull('next_run_at');
+                    }
                 })
                 ->get()
-                ->each(function (Automation $automation) {
+                ->each(function (Automation $automation) use ($hasNextRunCol) {
                     if ($automation->status === 'draft') {
                         $automation->status = 'active';
                     }
-                    if (! $automation->next_run_at) {
+                    if ($hasNextRunCol && ! $automation->next_run_at) {
                         $automation->next_run_at = $automation->computeNextRunAt();
                     }
                     $automation->save();
@@ -130,8 +134,8 @@ class SocialPostController extends Controller
         }
 
         [$year, $mon] = explode('-', $month);
-        $start = \Carbon\Carbon::createFromDate((int) $year, (int) $mon, 1, $tz)->startOfMonth()->utc();
-        $end   = \Carbon\Carbon::createFromDate((int) $year, (int) $mon, 1, $tz)->endOfMonth()->utc();
+        $start = \Illuminate\Support\Carbon::createFromDate((int) $year, (int) $mon, 1, $tz)->startOfMonth()->utc();
+        $end   = \Illuminate\Support\Carbon::createFromDate((int) $year, (int) $mon, 1, $tz)->endOfMonth()->utc();
 
         $accounts = SocialAccount::where('workspace_id', $wid)
             ->where('active', true)
@@ -167,7 +171,7 @@ class SocialPostController extends Controller
                     }
                 });
             })
-            ->get(['id', 'title', 'body', 'status', 'scheduled_at', 'published_at', 'created_at', 'timezone', 'target_accounts', 'automation_id']);
+            ->get();
 
         $posts = $rawPosts->map(fn (SocialPost $p) => [
             'id' => $p->id,
@@ -176,33 +180,37 @@ class SocialPostController extends Controller
             'scheduled_at' => ($p->scheduled_at ?? $p->published_at ?? $p->created_at)?->toIso8601String(),
             'timezone' => $p->timezone,
             'target_accounts' => $p->target_accounts,
-            'automation_id' => $p->automation_id,
+            'automation_id' => $p->automation_id ?? null,
         ])->values()->all();
 
         // Also project upcoming scheduled runs from active recurring social automations in this workspace
         if (! $filterStatus || $filterStatus === 'scheduled') {
-            $projectionStart = $start->gt(now()) ? $start : now();
-            if ($projectionStart->lte($end)) {
-                $activeAutomations = Automation::where('workspace_id', $wid)
-                    ->where('status', 'active')
-                    ->where('trigger_type', 'schedule.recurring')
-                    ->get();
+            try {
+                $projectionStart = $start->gt(now()) ? $start : now();
+                if ($projectionStart->lte($end)) {
+                    $activeAutomations = Automation::where('workspace_id', $wid)
+                        ->where('status', 'active')
+                        ->where('trigger_type', 'schedule.recurring')
+                        ->get();
 
-                foreach ($activeAutomations as $automation) {
-                    $slots = $automation->computeRunsBetween($projectionStart, $end, 45);
-                    foreach ($slots as $slot) {
-                        $posts[] = [
-                            'id' => "auto-{$automation->id}-{$slot->timestamp}",
-                            'title' => '⚡ ' . $automation->name . ' (' . $slot->copy()->setTimezone($tz)->format('H:i') . ')',
-                            'status' => 'scheduled',
-                            'scheduled_at' => $slot->toIso8601String(),
-                            'timezone' => (string) ($automation->trigger_config['timezone'] ?? $userTz),
-                            'target_accounts' => $accounts->pluck('id')->all(),
-                            'automation_uuid' => $automation->uuid,
-                            'is_automation_slot' => true,
-                        ];
+                    foreach ($activeAutomations as $automation) {
+                        $slots = $automation->computeRunsBetween($projectionStart, $end, 45);
+                        foreach ($slots as $slot) {
+                            $posts[] = [
+                                'id' => "auto-{$automation->id}-{$slot->timestamp}",
+                                'title' => '⚡ ' . $automation->name . ' (' . $slot->copy()->setTimezone($tz)->format('H:i') . ')',
+                                'status' => 'scheduled',
+                                'scheduled_at' => $slot->toIso8601String(),
+                                'timezone' => (string) ($automation->trigger_config['timezone'] ?? $userTz),
+                                'target_accounts' => $accounts->pluck('id')->all(),
+                                'automation_uuid' => $automation->uuid,
+                                'is_automation_slot' => true,
+                            ];
+                        }
                     }
                 }
+            } catch (\Throwable) {
+                // Non-blocking projection
             }
         }
 

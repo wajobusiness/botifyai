@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
-import { useCallback, useContext, useState, createContext } from 'react';
+import { useCallback, useContext, useEffect, useState, createContext } from 'react';
 import {
     ArrowLeft, Save, Play, Pause, Copy, Check, RefreshCw,
     X, Zap, Mail, Phone, Clock, GitBranch,

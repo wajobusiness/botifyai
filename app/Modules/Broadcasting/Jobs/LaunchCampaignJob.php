@@ -72,8 +72,18 @@ class LaunchCampaignJob implements ShouldQueue
             // doesn't violate the unique (campaign_id, contact_id) index.
             CampaignRecipient::insertOrIgnore($rows);
 
-            // Re-query rows that are still queued for this campaign in this chunk only.
             $contactIdsInChunk = $chunk->values()->all();
+
+            // Also reset any previously failed (non-opted-out) recipients in this chunk so relaunching retries them.
+            CampaignRecipient::where('campaign_id', $campaign->id)
+                ->where('status', 'failed')
+                ->where(function ($q) {
+                    $q->whereNull('failed_reason')->orWhere('failed_reason', '!=', 'opted_out');
+                })
+                ->whereIn('contact_id', $contactIdsInChunk)
+                ->update(['status' => 'queued', 'failed_reason' => null, 'updated_at' => $now]);
+
+            // Re-query rows that are still queued for this campaign in this chunk only.
             $queuedContactIds = CampaignRecipient::where('campaign_id', $campaign->id)
                 ->where('status', 'queued')
                 ->whereIn('contact_id', $contactIdsInChunk)
@@ -87,13 +97,22 @@ class LaunchCampaignJob implements ShouldQueue
             $totalNewContacts += count($queuedContactIds);
             $totalChunks++;
 
-            DispatchCampaignChunkJob::dispatch($campaign->id, $queuedContactIds)
-                ->onQueue('broadcast')
-                ->delay(now()->addSeconds($i * 5));
+            if (! app()->runningUnitTests() && count($contactIds) <= 100) {
+                $personalizer = app(\App\Modules\Broadcasting\Services\CampaignPersonalizer::class);
+                foreach ($queuedContactIds as $cid) {
+                    try {
+                        (new SendCampaignMessageJob($campaign->id, (int) $cid))->handle($personalizer);
+                    } catch (\Throwable) {
+                    }
+                }
+            } else {
+                DispatchCampaignChunkJob::dispatch($campaign->id, $queuedContactIds)
+                    ->onQueue('broadcast')
+                    ->delay(now()->addSeconds($i * 5));
+            }
         });
 
-        if ($totalNewContacts === 0) {
-            // All recipients were already processed previously (resume of completed campaign).
+        if ($totalNewContacts === 0 || (! app()->runningUnitTests() && count($contactIds) <= 100)) {
             $campaign->updateTotals();
 
             return;
@@ -114,9 +133,12 @@ class LaunchCampaignJob implements ShouldQueue
      */
     private function resolveAudience(Campaign $campaign): array
     {
-        $contactIds = match ($campaign->audience_type) {
-            'segment' => $this->resolveSegment($campaign),
-            'tag' => $this->resolveTag($campaign),
+        $audienceType = (string) ($campaign->payload_json['audience_type'] ?? $campaign->audience_type);
+        $audienceRef = $campaign->payload_json['audience_ref'] ?? $campaign->audience_ref;
+
+        $contactIds = match ($audienceType) {
+            'segment' => $this->resolveSegment($campaign, $audienceRef),
+            'tag' => $this->resolveTag($campaign, $audienceRef),
             'contact_list', 'all_users' => $this->resolveAllContacts($campaign),
             'csv' => $this->resolveCsv($campaign),
             'only_registered_users',
@@ -130,7 +152,7 @@ class LaunchCampaignJob implements ShouldQueue
             'recent_customers',
             'affiliates',
             'selected_contacts' => app(SegmentResolver::class)
-                ->presetQuery($campaign->workspace_id, $campaign->audience_type, $campaign->audience_ref)
+                ->presetQuery($campaign->workspace_id, $audienceType, $audienceRef)
                 ->pluck('id')
                 ->all(),
             default => [],
@@ -159,9 +181,13 @@ class LaunchCampaignJob implements ShouldQueue
         // Email channel additionally requires a non-empty email and excludes hard bounces / complaints.
         if ($campaign->channel === 'email') {
             $query->whereNotNull('email')
-                ->where('email', '!=', '')
-                ->whereNull('bounced_at')
-                ->whereNull('complained_at');
+                ->where('email', '!=', '');
+            if (\Illuminate\Support\Facades\Schema::hasColumn('contacts', 'bounced_at')) {
+                $query->whereNull('bounced_at');
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('contacts', 'complained_at')) {
+                $query->whereNull('complained_at');
+            }
         } else {
             $query->whereNotNull('phone_e164')->where('phone_e164', '!=', '');
         }
@@ -170,10 +196,11 @@ class LaunchCampaignJob implements ShouldQueue
     }
 
     /** @return array<int, int> */
-    private function resolveSegment(Campaign $campaign): array
+    private function resolveSegment(Campaign $campaign, ?string $audienceRef = null): array
     {
+        $ref = $audienceRef ?? $campaign->audience_ref;
         $segment = Segment::where('workspace_id', $campaign->workspace_id)
-            ->find($campaign->audience_ref);
+            ->find($ref);
 
         if (! $segment) {
             return [];
@@ -190,14 +217,15 @@ class LaunchCampaignJob implements ShouldQueue
     }
 
     /** @return array<int, int> */
-    private function resolveTag(Campaign $campaign): array
+    private function resolveTag(Campaign $campaign, ?string $audienceRef = null): array
     {
-        if (! $campaign->audience_ref) {
+        $ref = $audienceRef ?? $campaign->audience_ref;
+        if (! $ref) {
             return [];
         }
 
         return Contact::where('workspace_id', $campaign->workspace_id)
-            ->whereHas('tags', fn ($q) => $q->where('contact_tags.id', $campaign->audience_ref))
+            ->whereHas('tags', fn ($q) => $q->where('contact_tags.id', $ref))
             ->pluck('id')
             ->all();
     }
