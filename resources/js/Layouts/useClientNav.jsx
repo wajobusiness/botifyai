@@ -96,10 +96,11 @@ export default function useClientNav() {
     ];
 
     const socialItems = [
-        { label: t('nav.post_composer'),   href: safeRoute('client.social.composer'),        icon: <FileText className={iconClass} />,       activePattern: 'client.social.composer' },
-        { label: t('nav.posts'),           href: safeRoute('client.social.posts.index'),     icon: <Radio className={iconClass} />,           activePattern: 'client.social.posts.*' },
-        { label: t('nav.calendar'),        href: safeRoute('client.social.calendar'),         icon: <LayoutDashboard className={iconClass} />, activePattern: 'client.social.calendar' },
-        { label: t('nav.social_accounts'), href: safeRoute('client.social.accounts.index'),  icon: <Share2 className={iconClass} />,          activePattern: 'client.social.accounts.*' },
+        { label: t('nav.post_composer'),     href: safeRoute('client.social.composer'),                      icon: <FileText className={iconClass} />,        activePattern: 'client.social.composer' },
+        { label: t('nav.posts'),             href: safeRoute('client.social.posts.index'),                   icon: <Radio className={iconClass} />,           activePattern: 'client.social.posts.*' },
+        { label: t('nav.calendar'),          href: safeRoute('client.social.calendar'),                      icon: <LayoutDashboard className={iconClass} />, activePattern: 'client.social.calendar' },
+        { label: t('nav.social_automation', 'Social Automation'), href: `${safeRoute('client.automations.index')}?ai=social`, icon: <Zap className={iconClass} />, activePattern: 'client.automations.social' },
+        { label: t('nav.social_accounts'),   href: safeRoute('client.social.accounts.index'),                icon: <Share2 className={iconClass} />,          activePattern: 'client.social.accounts.*' },
     ];
 
     const leadsItems = [

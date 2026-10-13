@@ -268,6 +268,26 @@ class PaystackGateway implements BillingGatewayInterface
                 ->first();
         }
 
+        if (! $subscription && ! empty($charge['metadata']['user_id'])) {
+            $userId = (int) $charge['metadata']['user_id'];
+            $planId = (int) ($charge['metadata']['plan_id'] ?? 0);
+            $billingCycle = $charge['metadata']['billing_cycle'] ?? 'month';
+            $subCodeToUse = $subCode ?: ('paystack_sub_'.$txRef);
+            $subscription = Subscription::updateOrCreate(
+                ['user_id' => $userId, 'plan_id' => $planId],
+                [
+                    'gateway' => 'paystack',
+                    'gateway_subscription_id' => $subCodeToUse,
+                    'billing_cycle' => $billingCycle,
+                    'status' => 'active',
+                    'starts_at' => now(),
+                    'renews_at' => $billingCycle === 'year' ? now()->addYear() : now()->addMonth(),
+                    'gateway_metadata' => array_merge($charge['metadata'] ?? [], ['reference' => $txRef]),
+                ]
+            );
+            $subscription->load('user', 'plan');
+        }
+
         if (PaymentTransaction::where('gateway', 'paystack')->where('gateway_transaction_id', $txRef)->exists()) {
             return;
         }
@@ -436,7 +456,29 @@ class PaystackGateway implements BillingGatewayInterface
 
     public function fulfillCheckoutSession(string $sessionId): array
     {
-        return ['ok' => false, 'error' => 'Paystack fulfillment is handled via webhook.'];
+        if (! $this->isConfigured()) {
+            return ['ok' => false, 'error' => 'Paystack not configured'];
+        }
+
+        try {
+            $res = $this->http()->get(self::BASE_URL.'/transaction/verify/'.urlencode($sessionId));
+            if (! $res->successful()) {
+                return ['ok' => false, 'error' => 'Paystack verification failed: '.$res->status()];
+            }
+
+            $data = $res->json('data') ?? [];
+            if (($data['status'] ?? '') !== 'success') {
+                return ['ok' => false, 'error' => 'Paystack transaction status is '.($data['status'] ?? 'unknown')];
+            }
+
+            $this->handleChargeSuccess($data);
+
+            return ['ok' => true, 'error' => null];
+        } catch (\Throwable $e) {
+            Log::error('Paystack fulfillCheckoutSession error', ['reference' => $sessionId, 'error' => $e->getMessage()]);
+
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
     }
 
     private function generateInvoicePdf(PaymentTransaction $transaction): void

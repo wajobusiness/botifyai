@@ -399,6 +399,10 @@ class PublicCheckoutController extends Controller
                 'customer_phone' => $order->customer_phone,
                 'paid_at' => $order->paid_at?->toFormattedDateString(),
             ],
+            'google_ads' => [
+                'conversion_id' => (string) (env('GOOGLE_ADS_CONVERSION_ID') ?: env('VITE_GOOGLE_ADS_CONVERSION_ID', '')),
+                'conversion_label' => (string) (env('GOOGLE_ADS_CONVERSION_LABEL') ?: env('VITE_GOOGLE_ADS_CONVERSION_LABEL', '')),
+            ],
             'store' => [
                 'name' => $order->store?->name ?: 'BotifyAI Store',
                 'support_email' => $order->store?->support_email,

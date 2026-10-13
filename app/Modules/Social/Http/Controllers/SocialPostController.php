@@ -38,7 +38,8 @@ class SocialPostController extends Controller
             : collect();
 
         $query = SocialPost::where('workspace_id', $wid)
-            ->when($status, fn ($q) => $q->where('status', $status))
+            ->when($status === 'approval_queue', fn ($q) => $q->where('requires_approval', true)->where('status', 'draft'))
+            ->when($status && $status !== 'approval_queue', fn ($q) => $q->where('status', $status))
             ->when($network && $networkAccountIds->isNotEmpty(), function ($q) use ($networkAccountIds) {
                 $q->where(function ($inner) use ($networkAccountIds) {
                     foreach ($networkAccountIds as $aid) {
@@ -231,7 +232,7 @@ class SocialPostController extends Controller
         abort_if($post->status === 'publishing', 422, 'Post is already being published.');
         abort_if($post->status === 'published', 422, 'Post is already published.');
 
-        $post->update(['scheduled_at' => null, 'status' => 'publishing']);
+        $post->update(['scheduled_at' => null, 'status' => 'publishing', 'requires_approval' => false]);
         PublishSocialPostJob::dispatch($post->id)->onQueue('social');
 
         return back()->with('success', 'Post queued for immediate publishing.');

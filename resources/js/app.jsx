@@ -31,6 +31,20 @@ function syncCsrfToken(page) {
 
 router.on('success', (event) => syncCsrfToken(event.detail.page));
 
+// Track SPA navigations across Meta Pixel and Google Analytics
+router.on('navigate', () => {
+    if (typeof window.fbq === 'function') {
+        window.fbq('track', 'PageView');
+    }
+    if (typeof window.gtag === 'function') {
+        window.gtag('event', 'page_view', {
+            page_location: window.location.href,
+            page_path: window.location.pathname,
+            page_title: document.title,
+        });
+    }
+});
+
 // Demo mode: every write is rejected server-side by EnsureNotDemoMode with a
 // 403 { code: 'demo_mode' }. Because that is not a valid Inertia response,
 // Inertia fires the cancelable `invalid` event — intercept it to suppress the

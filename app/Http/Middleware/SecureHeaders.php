@@ -45,15 +45,20 @@ class SecureHeaders
         $iyzico = $request->routeIs('checkout.iyzico.form') ? ' https://iyzipay.com https://*.iyzipay.com' : '';
 
         $unsafeEval = config('app.env') !== 'production' ? " 'unsafe-eval'" : '';
-        $extraScripts = ' https://www.youtube.com https://s.ytimg.com https://player.vimeo.com https://js.stripe.com https://checkout.paystack.com https://checkout.razorpay.com https://challenges.cloudflare.com https://www.google.com https://www.gstatic.com';
+        $googleScripts = ' https://www.googletagmanager.com https://*.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://googleads.g.doubleclick.net https://*.googleads.g.doubleclick.net https://www.googleadservices.com https://*.googleadservices.com https://www.google.com https://*.google.com https://www.gstatic.com https://*.gstatic.com https://pagead2.googlesyndication.com';
+        $extraScripts = ' https://www.youtube.com https://s.ytimg.com https://player.vimeo.com https://js.stripe.com https://checkout.paystack.com https://checkout.razorpay.com https://challenges.cloudflare.com'.$googleScripts;
         $scriptSrc = "'self' 'unsafe-inline'".$unsafeEval.$this->viteDevSources().$this->thirdPartyScriptSources().$extraScripts.$iyzico;
         $styleSrc = "'self' 'unsafe-inline' https://fonts.bunny.net https://fonts.googleapis.com".$this->viteDevSources().$this->thirdPartyStyleSources().$iyzico;
         $fontSrc = "'self' data: https://fonts.bunny.net https://fonts.gstatic.com https://fonts.googleapis.com".$iyzico;
 
         $videoFrames = ' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://*.youtube.com https://*.youtube-nocookie.com https://player.vimeo.com https://vimeo.com https://*.vimeo.com https://www.loom.com https://*.loom.com';
         $paymentFrames = ' https://js.stripe.com https://*.stripe.com https://checkout.paystack.com https://*.paystack.co https://checkout.razorpay.com https://*.razorpay.com';
-        $serviceFrames = ' https://challenges.cloudflare.com https://www.google.com https://*.google.com';
+        $serviceFrames = ' https://challenges.cloudflare.com https://www.google.com https://*.google.com https://www.googletagmanager.com https://bid.g.doubleclick.net https://googleads.g.doubleclick.net https://*.googleads.g.doubleclick.net';
         $frameSrc = "'self'".$videoFrames.$paymentFrames.$serviceFrames.$this->metaFrameSources().$iyzico;
+
+        $googleConnect = ' https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://stats.g.doubleclick.net https://*.g.doubleclick.net https://www.googletagmanager.com https://*.googletagmanager.com https://www.googleadservices.com https://*.googleadservices.com https://googleads.g.doubleclick.net https://*.googleads.g.doubleclick.net https://www.google.com https://*.google.com';
+        $mediaConnect = ' https://www.youtube.com https://*.googlevideo.com https://*.ytimg.com https://api.stripe.com https://api.paystack.co';
+        $pusherConnect = ' wss://*.pusher.com https://*.pusher.com wss: ws:';
 
         $directives = array_filter([
             "default-src 'self'",
@@ -61,10 +66,10 @@ class SecureHeaders
             'script-src-elem '.$scriptSrc,
             'style-src '.$styleSrc,
             'style-src-elem '.$styleSrc,
-            "img-src 'self' data: https: blob: https://*.ytimg.com https://i.ytimg.com https://img.youtube.com https://images.unsplash.com",
+            "img-src 'self' data: https: blob: https://*.google-analytics.com https://www.google-analytics.com https://*.googletagmanager.com https://www.googletagmanager.com https://*.googleadservices.com https://www.googleadservices.com https://*.googleads.g.doubleclick.net https://googleads.g.doubleclick.net https://*.google.com https://www.google.com https://*.ytimg.com https://i.ytimg.com https://img.youtube.com https://images.unsplash.com",
             'font-src '.$fontSrc,
             "media-src 'self' data: https: blob:",
-            "connect-src 'self' ".$this->connectSources().$iyzico.' https://www.youtube.com https://*.googlevideo.com https://*.ytimg.com https://api.stripe.com https://api.paystack.co',
+            "connect-src 'self' ".$this->connectSources().$iyzico.$googleConnect.$mediaConnect.$pusherConnect,
             'frame-src '.$frameSrc,
             'child-src blob: '.$frameSrc,
             "frame-ancestors 'self'",
@@ -84,16 +89,13 @@ class SecureHeaders
         return ' http://localhost:5173 http://127.0.0.1:5173';
     }
 
-    /** OneSignal (when configured), Meta JS SDK, and Cloudflare Web Analytics / beacon scripts. */
+    /** OneSignal (when configured), Meta Pixel & JS SDK, and Cloudflare Web Analytics / beacon scripts. */
     private function thirdPartyScriptSources(): string
     {
-        $extra = ' https://static.cloudflareinsights.com';
+        $extra = ' https://static.cloudflareinsights.com https://www.clarity.ms https://*.clarity.ms https://analytics.tiktok.com https://connect.facebook.net https://*.facebook.net';
         if (filled(config('services.onesignal.app_id'))) {
             // SDK loads from cdn; runtime sync/scripts also come from api.* (see OneSignal v16 CSP docs).
             $extra .= ' https://cdn.onesignal.com https://*.onesignal.com';
-        }
-        if ($this->metaSdkEnabled()) {
-            $extra .= ' https://connect.facebook.net';
         }
 
         return $extra;
@@ -124,12 +126,10 @@ class SecureHeaders
             $sources[] = 'https://onesignal.com';
             $sources[] = 'https://*.onesignal.com';
         }
-        if ($this->metaSdkEnabled()) {
-            $sources[] = 'https://graph.facebook.com';
-            $sources[] = 'https://www.facebook.com';
-            $sources[] = 'https://web.facebook.com';
-            $sources[] = 'https://connect.facebook.net';
-        }
+        $sources[] = 'https://graph.facebook.com';
+        $sources[] = 'https://www.facebook.com';
+        $sources[] = 'https://web.facebook.com';
+        $sources[] = 'https://connect.facebook.net';
 
         return implode(' ', array_unique($sources));
     }

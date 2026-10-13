@@ -24,6 +24,11 @@ use App\Modules\Shared\Models\ContactTag;
 use App\Modules\Shared\Models\Conversation;
 use App\Modules\Shared\Models\Message;
 use App\Modules\Shared\Services\ChannelManager;
+use App\Modules\Social\Jobs\PublishSocialPostJob;
+use App\Modules\Social\Models\SocialAccount;
+use App\Modules\Social\Models\SocialPost;
+use App\Modules\Social\Models\WorkspaceBrandProfile;
+use App\Modules\Social\Services\BrandedGraphicService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -47,6 +52,10 @@ use Illuminate\Support\Facades\Mail;
  *   - add_to_campaign    (enqueue contact to broadcast campaign)
  *   - ai_reply           (generate AI response and send)
  *   - webhook            (POST JSON payload to URL)
+ *   - ai_social_ideation (autonomous social topic & pillar ideation)
+ *   - ai_social_caption  (autonomous brand-aware caption & hashtag writer)
+ *   - render_social_graphic (deterministic GD/SVG branded graphic & carousel renderer)
+ *   - publish_social_post (multi-network social publisher / scheduler / approval queue)
  */
 class AutomationEngine
 {
@@ -71,6 +80,35 @@ class AutomationEngine
         ]);
 
         dispatch(new ExecuteAutomationRunJob($run->id))->onQueue('automation');
+    }
+
+    /**
+     * Trigger a workspace-level automation (such as `schedule.recurring` autonomous social workflows)
+     * that operates without a specific CRM contact.
+     */
+    public function triggerForWorkspace(Automation $automation, array $context = []): ?AutomationRun
+    {
+        if (! $automation->isActive()) {
+            return null;
+        }
+
+        $initialContext = array_merge([
+            'workspace_id' => (int) $automation->workspace_id,
+            'triggered_at' => now()->toIso8601String(),
+            'day_of_week' => strtolower(now()->englishDayOfWeek),
+        ], $context);
+
+        $run = AutomationRun::create([
+            'automation_id' => $automation->id,
+            'contact_id' => null,
+            'status' => 'pending',
+            'context' => $initialContext,
+            'started_at' => now(),
+        ]);
+
+        dispatch(new ExecuteAutomationRunJob($run->id))->onQueue('automation');
+
+        return $run;
     }
 
     /**
@@ -310,6 +348,13 @@ class AutomationEngine
             'store_name' => 'Demo Store',
             'cart_total' => '49.00',
             'recovery_url' => 'https://example.com/cart/abc',
+            'day_of_week' => strtolower(now()->englishDayOfWeek),
+            'topic' => 'AI Automation for Business Growth',
+            'hook' => '3 workflows saving teams 10+ hours every week',
+            'content_pillar' => 'AI & Growth',
+            'content_format' => 'carousel',
+            'caption' => 'Ready to scale your operations with AI? Swipe through our latest framework.',
+            'media_url' => 'https://example.com/media/social-sample.png',
         ];
     }
 
@@ -368,6 +413,39 @@ class AutomationEngine
                 : (($data['mode'] ?? 'send_link') === 'read_response'
                     ? $ok('Would read the latest Google Form response.', ['context_update' => [(($data['result_var'] ?? '') ?: 'form').'_json' => '{}']])
                     : $ok('Would share the Google Form link.', ['context_update' => ['form_url' => 'https://docs.google.com/forms/d/sample/viewform']])),
+            // ── SOCIAL AUTONOMOUS NODES ──────────────────────────────────────
+            'ai_social_ideation' => $ok(
+                'Would generate non-repetitive social topic & angle for pillar "'.(($data['pillar'] ?? '') ?: 'Auto-Rotate').'" (format: '.(($data['format'] ?? '') ?: 'auto').').',
+                ['context_update' => [
+                    'topic' => ($data['niche'] ?? '') !== '' ? 'Insight on '.$data['niche'] : 'AI & Digital Growth Strategy',
+                    'hook' => 'Why 90% of teams miss this simple growth lever',
+                    'content_pillar' => ($data['pillar'] ?? '') ?: 'Educational Insights',
+                    'content_format' => ($data['format'] ?? '') ?: 'carousel',
+                ]]
+            ),
+            'ai_social_caption' => $ok(
+                'Would write brand-aligned social caption (tone: '.(($data['tone'] ?? '') ?: 'brand default').') with deduplication guard.',
+                ['context_update' => [
+                    'post_title' => (string) ($context['topic'] ?? 'Growth Insight'),
+                    'caption' => '[AI brand-voiced social caption + hashtags]',
+                    'full_caption' => '[AI brand-voiced social caption + hashtags]',
+                ]]
+            ),
+            'render_social_graphic' => $ok(
+                'Would render branded 1080x1080 '.(($data['template'] ?? '') ?: ($context['content_format'] ?? 'carousel')).' graphic using workspace brand colors.',
+                ['context_update' => [
+                    'media_url' => 'https://example.com/storage/media/social-preview.png',
+                    'media_urls' => ['https://example.com/storage/media/social-preview.png'],
+                ]]
+            ),
+            'publish_social_post' => $ok(
+                'Would '.match ($data['publish_mode'] ?? 'immediate') {
+                    'approval_queue' => 'queue social post for approval in Drafts',
+                    'scheduled', 'optimal_slot' => 'schedule social post for next optimal slot',
+                    default => 'publish social post immediately',
+                }.' with caption "'.$this->snippet($render($data['body'] ?? '{{context.caption}}'), 36).'".',
+                ['context_update' => ['social_post_id' => 999]]
+            ),
             default => $skip('Unknown node type: '.$type),
         };
     }
@@ -425,6 +503,11 @@ class AutomationEngine
                 'google_sheets' => $this->executeGoogleSheets($data, $run, $context),
                 'google_docs' => $this->executeGoogleDocs($data, $run, $context),
                 'google_forms' => $this->executeGoogleForms($data, $run, $context),
+                // ── SOCIAL AUTONOMOUS NODES ───────────────────────────────────
+                'ai_social_ideation' => $this->executeAiSocialIdeation($data, $run, $context),
+                'ai_social_caption' => $this->executeAiSocialCaption($data, $run, $context),
+                'render_social_graphic' => $this->executeRenderSocialGraphic($data, $run, $context),
+                'publish_social_post' => $this->executePublishSocialPost($data, $run, $context),
                 default => ['status' => 'skipped', 'message' => "Unknown node type: {$type}"],
             };
         } catch (\Throwable $e) {
@@ -585,19 +668,21 @@ class AutomationEngine
 
     // ─── Token replacement ───────────────────────────────────────────────────
 
-    private function renderTokens(string $template, Contact $contact, array $context): string
+    private function renderTokens(string $template, ?Contact $contact, array $context): string
     {
         // Contact tokens: {{contact.first_name}}, {{contact.last_name}}, {{contact.email}}, etc.
         $template = preg_replace_callback('/\{\{contact\.(\w+)\}\}/', function ($matches) use ($contact) {
-            return (string) ($contact->{$matches[1]} ?? '');
+            return $contact ? (string) ($contact->{$matches[1]} ?? '') : '';
         }, $template);
 
         // Contact name shorthand: {{contact.name}} -> full name
-        $template = str_replace('{{contact.name}}', $contact->full_name, $template);
+        $template = str_replace('{{contact.name}}', $contact ? (string) $contact->full_name : '', $template);
 
         // Context tokens: {{context.key}}
         $template = preg_replace_callback('/\{\{context\.(\w+)\}\}/', function ($matches) use ($context) {
-            return (string) ($context[$matches[1]] ?? '');
+            $val = $context[$matches[1]] ?? '';
+
+            return is_array($val) ? json_encode($val) : (string) $val;
         }, $template);
 
         return $template;
@@ -1494,6 +1579,418 @@ class AutomationEngine
         } catch (\Throwable $e) {
             return ['status' => 'error', 'message' => $e->getMessage()];
         }
+    }
+
+    // ─── SOCIAL AUTONOMOUS nodes ──────────────────────────────────────────────
+
+    /**
+     * Autonomous topic & pillar ideation node (`ai_social_ideation`).
+     * Rotates across the workspace's content pillars, checks recent 25 posts to avoid
+     * repetitive topics, and selects the right format for the current day of the week.
+     */
+    private function executeAiSocialIdeation(array $data, AutomationRun $run, array $context): array
+    {
+        $workspaceId = (int) $run->automation->workspace_id;
+        $profile = WorkspaceBrandProfile::forWorkspace($workspaceId);
+
+        $niche = trim((string) ($data['niche'] ?? $profile->niche ?? 'Digital Marketing, AI & Business Growth'));
+        $audience = trim((string) ($data['target_audience'] ?? $profile->target_audience ?? 'founders, creators, and growing businesses'));
+        $tone = trim((string) ($data['tone'] ?? $profile->tone ?? 'professional'));
+
+        // Gather recent posts for anti-repetition and pillar rotation
+        $recentPosts = SocialPost::where('workspace_id', $workspaceId)
+            ->orderByDesc('created_at')
+            ->limit(25)
+            ->get(['title', 'body', 'content_pillar', 'content_format']);
+
+        $recentTopics = $recentPosts->map(fn ($p) => trim((string) ($p->title ?: mb_substr((string) $p->body, 0, 70))))
+            ->filter()
+            ->unique()
+            ->take(15)
+            ->values()
+            ->all();
+
+        // Determine content pillar (explicit node config -> least-recently-used brand pillar)
+        $configuredPillars = ! empty($data['pillars'])
+            ? $this->toList($data['pillars'])
+            : ($profile->content_pillars ?: ['Educational Insights', 'Industry Trends', 'Actionable Tips', 'Growth Strategies']);
+
+        $pillar = trim((string) ($data['pillar'] ?? ''));
+        if ($pillar === '' || strtolower($pillar) === 'auto') {
+            $recentPillarCounts = $recentPosts->pluck('content_pillar')->filter()->countBy();
+            $pillar = collect($configuredPillars)
+                ->sortBy(fn ($p) => (int) ($recentPillarCounts[$p] ?? 0))
+                ->first() ?: 'Educational Insights';
+        }
+
+        // Determine content format (explicit node config -> day-of-week schedule rule)
+        $dayOfWeek = strtolower((string) ($context['day_of_week'] ?? now()->englishDayOfWeek));
+        $format = strtolower(trim((string) ($data['format'] ?? 'auto')));
+        if ($format === 'auto' || $format === '') {
+            $format = match ($dayOfWeek) {
+                'monday', 'mon' => 'quote',
+                'friday', 'fri' => 'promo',
+                default => 'carousel',
+            };
+        }
+
+        $recentList = ! empty($recentTopics) ? implode("\n- ", $recentTopics) : 'None yet';
+        $customInstructions = trim((string) ($data['instructions'] ?? ''));
+
+        $system = <<<SYSTEM
+You are an elite autonomous social media strategist.
+Generate ONE fresh, high-engagement social media content concept as strict JSON.
+Output ONLY valid JSON — no markdown, no code fences, no commentary.
+
+JSON Schema:
+{
+  "topic": "Specific, compelling post title (max 80 chars)",
+  "hook": "Scroll-stopping opening hook sentence",
+  "angle": "1-2 sentence angle or key takeaway",
+  "quote_text": "Memorable 1-sentence quote for quote graphics (max 110 chars)",
+  "promo_headline": "High-converting promotional headline (max 70 chars)",
+  "slides": [
+    {"title": "Point 1 headline", "body": "Concise 1-sentence explanation"},
+    {"title": "Point 2 headline", "body": "Concise 1-sentence explanation"},
+    {"title": "Point 3 headline", "body": "Concise 1-sentence explanation"}
+  ]
+}
+SYSTEM;
+
+        $userPrompt = <<<USER
+Brand Niche: {$niche}
+Target Audience: {$audience}
+Tone: {$tone}
+Selected Content Pillar: {$pillar}
+Target Format: {$format} (Day: {$dayOfWeek})
+{$customInstructions}
+
+Recent topics already published (DO NOT repeat these angles or headlines):
+- {$recentList}
+USER;
+
+        try {
+            $response = $this->llmGateway->chat($workspaceId, [
+                ['role' => 'system', 'content' => $system],
+                ['role' => 'user', 'content' => $userPrompt],
+            ], ['temperature' => 0.75, 'max_tokens' => 900]);
+
+            $spec = $this->decodeJsonObject($response->content);
+        } catch (\Throwable $e) {
+            return ['status' => 'error', 'message' => 'AI social ideation failed: '.$e->getMessage()];
+        }
+
+        $topic = trim((string) ($spec['topic'] ?? "{$pillar}: Key Strategy for {$niche}"));
+        $hook = trim((string) ($spec['hook'] ?? "Here is what most teams overlook in {$pillar}."));
+        $angle = trim((string) ($spec['angle'] ?? "Actionable insights on {$topic} tailored for {$audience}."));
+        $quoteText = trim((string) ($spec['quote_text'] ?? $hook));
+        $promoHeadline = trim((string) ($spec['promo_headline'] ?? $topic));
+        $slides = is_array($spec['slides'] ?? null) ? $spec['slides'] : [];
+
+        $ctxUpdate = [
+            'topic' => $topic,
+            'hook' => $hook,
+            'angle' => $angle,
+            'content_pillar' => $pillar,
+            'content_format' => $format,
+            'quote_text' => $quoteText,
+            'promo_headline' => $promoHeadline,
+            'slides_json' => json_encode($slides),
+            'brand_name' => $profile->brand_name ?: config('app.name', 'BotifyAI'),
+            'brand_tone' => $tone,
+        ];
+
+        return [
+            'status' => 'ok',
+            'message' => "Ideated {$format} concept for '{$pillar}': {$topic}",
+            'output' => $ctxUpdate,
+            'context_update' => $ctxUpdate,
+        ];
+    }
+
+    /**
+     * Autonomous brand-voiced social caption & hashtag generator (`ai_social_caption`).
+     * Enforces anti-repetition via SHA-256 `caption_hash` and respects banned phrases.
+     */
+    private function executeAiSocialCaption(array $data, AutomationRun $run, array $context): array
+    {
+        $workspaceId = (int) $run->automation->workspace_id;
+        $profile = WorkspaceBrandProfile::forWorkspace($workspaceId);
+        $contact = $run->contact_id ? Contact::find($run->contact_id) : null;
+
+        $topic = $this->renderTokens((string) ($data['topic'] ?? ($context['topic'] ?? 'Business Growth & AI')), $contact, $context);
+        $hook = (string) ($context['hook'] ?? '');
+        $angle = (string) ($context['angle'] ?? '');
+        $pillar = (string) ($context['content_pillar'] ?? ($profile->niche ?? 'Growth'));
+        $format = (string) ($context['content_format'] ?? 'post');
+        $tone = trim((string) ($data['tone'] ?? $context['brand_tone'] ?? $profile->tone ?? 'professional'));
+        $writingStyle = trim((string) ($profile->writing_style ?? 'Clear, authoritative, engaging, zero fluff.'));
+        $bannedPhrases = implode(', ', $profile->banned_phrases ?? []);
+        $cta = trim((string) ($data['cta'] ?? ($profile->cta_templates[0] ?? 'Share your thoughts below!')));
+        $customPrompt = $this->renderTokens((string) ($data['prompt'] ?? ''), $contact, $context);
+
+        $recentOpeners = SocialPost::where('workspace_id', $workspaceId)
+            ->orderByDesc('created_at')
+            ->limit(15)
+            ->pluck('body')
+            ->filter()
+            ->map(fn ($b) => mb_substr(trim((string) $b), 0, 90))
+            ->values()
+            ->all();
+
+        $recentOpenersStr = ! empty($recentOpeners) ? implode("\n- ", $recentOpeners) : 'None';
+
+        $system = <<<SYSTEM
+You are a senior brand copywriter. Write an engaging, non-repetitive social media post caption.
+Output ONLY valid JSON:
+{
+  "title": "Short post title (max 80 chars)",
+  "caption": "Main post body with line breaks and call-to-action (no hashtags here)",
+  "hashtags": "#tag1 #tag2 #tag3 #tag4 #tag5"
+}
+
+Rules:
+- Tone: {$tone}
+- Writing style: {$writingStyle}
+- Content format: {$format}
+- Call to action: {$cta}
+- NEVER use these banned phrases: {$bannedPhrases}
+- DO NOT start with any of these recent opening lines:
+- {$recentOpenersStr}
+SYSTEM;
+
+        $userPrompt = "Topic: {$topic}\nHook: {$hook}\nAngle: {$angle}\nPillar: {$pillar}\n{$customPrompt}";
+
+        try {
+            $response = $this->llmGateway->chat($workspaceId, [
+                ['role' => 'system', 'content' => $system],
+                ['role' => 'user', 'content' => $userPrompt],
+            ], ['temperature' => 0.7, 'max_tokens' => 1000]);
+
+            $spec = $this->decodeJsonObject($response->content);
+        } catch (\Throwable $e) {
+            return ['status' => 'error', 'message' => 'AI caption generation failed: '.$e->getMessage()];
+        }
+
+        $title = trim((string) ($spec['title'] ?? $topic));
+        $caption = trim((string) ($spec['caption'] ?? $response->content));
+        $hashtags = trim((string) ($spec['hashtags'] ?? ''));
+        if ($hashtags === '' && ! empty($profile->default_hashtag_sets)) {
+            $hashtags = implode(' ', (array) $profile->default_hashtag_sets);
+        }
+
+        $fullCaption = trim($caption.($hashtags !== '' ? "\n\n".$hashtags : ''));
+        $captionHash = hash('sha256', strtolower(preg_replace('/\s+/', ' ', $caption)));
+
+        // Deduplication guard: if an identical caption hash exists in this workspace, append a fresh insight line
+        $isDuplicate = SocialPost::where('workspace_id', $workspaceId)
+            ->where('caption_hash', $captionHash)
+            ->exists();
+        if ($isDuplicate && $angle !== '') {
+            $fullCaption = trim($caption."\n\n💡 Key takeaway: ".$angle.($hashtags !== '' ? "\n\n".$hashtags : ''));
+            $captionHash = hash('sha256', strtolower(preg_replace('/\s+/', ' ', $fullCaption)));
+        }
+
+        $ctxUpdate = [
+            'post_title' => $title,
+            'caption' => $caption,
+            'hashtags' => $hashtags,
+            'full_caption' => $fullCaption,
+            'caption_hash' => $captionHash,
+        ];
+
+        return [
+            'status' => 'ok',
+            'message' => 'Generated social caption ("'.$this->snippet($title, 36).'").',
+            'output' => $ctxUpdate,
+            'context_update' => $ctxUpdate,
+        ];
+    }
+
+    /**
+     * Deterministic branded graphic & carousel renderer (`render_social_graphic`).
+     */
+    private function executeRenderSocialGraphic(array $data, AutomationRun $run, array $context): array
+    {
+        $workspaceId = (int) $run->automation->workspace_id;
+        $contact = $run->contact_id ? Contact::find($run->contact_id) : null;
+
+        $template = trim((string) ($data['template'] ?? ($context['content_format'] ?? 'auto')));
+        $headline = $this->renderTokens((string) ($data['headline'] ?? ($context['topic'] ?? 'Key Growth Insight')), $contact, $context);
+        $subheadline = $this->renderTokens((string) ($data['subheadline'] ?? ($context['hook'] ?? $context['angle'] ?? '')), $contact, $context);
+
+        $slides = [];
+        if (! empty($data['slides'])) {
+            $slides = $this->toLines($data['slides']);
+        } elseif (! empty($context['slides_json'])) {
+            $decoded = json_decode((string) $context['slides_json'], true);
+            if (is_array($decoded)) {
+                $slides = $decoded;
+            }
+        }
+
+        $res = app(BrandedGraphicService::class)->render($workspaceId, $template, [
+            'headline' => $headline,
+            'subheadline' => $subheadline,
+            'quote_text' => $context['quote_text'] ?? $subheadline ?: $headline,
+            'promo_headline' => $context['promo_headline'] ?? $headline,
+            'pillar' => $context['content_pillar'] ?? ($data['pillar'] ?? 'INSIGHT'),
+            'slides' => $slides,
+            'day_of_week' => $context['day_of_week'] ?? strtolower(now()->englishDayOfWeek),
+            'primary_color' => $data['primary_color'] ?? null,
+            'secondary_color' => $data['secondary_color'] ?? null,
+            'brand_name' => $data['brand_name'] ?? ($context['brand_name'] ?? null),
+        ]);
+
+        $ctxUpdate = [
+            'media_url' => $res['primary_url'],
+            'media_urls' => $res['urls'],
+            'content_format' => $res['format'],
+        ];
+
+        return [
+            'status' => 'ok',
+            'message' => "Rendered {$res['slide_count']} branded {$res['format']} graphic(s).",
+            'output' => $res,
+            'context_update' => $ctxUpdate,
+        ];
+    }
+
+    /**
+     * Multi-network social post publisher / scheduler / approval queue (`publish_social_post`).
+     */
+    private function executePublishSocialPost(array $data, AutomationRun $run, array $context): array
+    {
+        $workspaceId = (int) $run->automation->workspace_id;
+        $profile = WorkspaceBrandProfile::forWorkspace($workspaceId);
+        $contact = $run->contact_id ? Contact::find($run->contact_id) : null;
+
+        // Resolve target social accounts in this workspace
+        $rawAccounts = $data['target_accounts'] ?? $data['social_account_ids'] ?? [];
+        $requestedIds = collect($rawAccounts)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->values();
+
+        $accountsQuery = SocialAccount::where('workspace_id', $workspaceId)->where('active', true);
+        if ($requestedIds->isNotEmpty()) {
+            $accountsQuery->whereIn('id', $requestedIds);
+        }
+        $accounts = $accountsQuery->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
+
+        // Fallback: if specific IDs were not found or not specified, use all active workspace social accounts
+        if (empty($accounts) && $requestedIds->isEmpty()) {
+            $accounts = SocialAccount::where('workspace_id', $workspaceId)
+                ->where('active', true)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->values()
+                ->all();
+        }
+
+        if (empty($accounts)) {
+            return ['status' => 'error', 'message' => 'No active social media accounts connected in this workspace.'];
+        }
+
+        $rawBody = trim((string) ($data['body'] ?? ''));
+        $body = $rawBody !== ''
+            ? $this->renderTokens($rawBody, $contact, $context)
+            : (string) ($context['full_caption'] ?? $context['caption'] ?? $context['topic'] ?? '');
+
+        if (trim($body) === '') {
+            return ['status' => 'error', 'message' => 'Social post body/caption is empty.'];
+        }
+
+        $rawTitle = trim((string) ($data['title'] ?? ''));
+        $title = $rawTitle !== ''
+            ? $this->renderTokens($rawTitle, $contact, $context)
+            : (string) ($context['post_title'] ?? $context['topic'] ?? '');
+
+        // Resolve media URLs from node config or upstream `render_social_graphic` context
+        $mediaUrls = [];
+        if (! empty($data['media_url'])) {
+            $mediaUrls[] = $this->renderTokens((string) $data['media_url'], $contact, $context);
+        } elseif (! empty($context['media_urls']) && is_array($context['media_urls'])) {
+            $mediaUrls = array_values(array_filter($context['media_urls']));
+        } elseif (! empty($context['media_url'])) {
+            $mediaUrls = [(string) $context['media_url']];
+        }
+
+        $publishMode = (string) ($data['publish_mode'] ?? 'immediate');
+        $requiresApproval = ($publishMode === 'approval_queue')
+            || ! empty($data['require_approval'])
+            || (bool) $profile->requires_approval;
+
+        $scheduledAt = null;
+        if (in_array($publishMode, ['scheduled', 'optimal_slot'], true)) {
+            $delayMinutes = max(5, (int) ($data['delay_minutes'] ?? 15));
+            $scheduledAt = now()->addMinutes($delayMinutes);
+        }
+
+        $status = match (true) {
+            $requiresApproval => 'draft',
+            $scheduledAt !== null => 'scheduled',
+            default => 'publishing',
+        };
+
+        $captionHash = (string) ($context['caption_hash'] ?? hash('sha256', strtolower(preg_replace('/\s+/', ' ', trim($body)))));
+
+        $post = SocialPost::create([
+            'workspace_id' => $workspaceId,
+            'automation_id' => $run->automation_id,
+            'automation_run_id' => $run->id,
+            'title' => mb_substr($title, 0, 256) ?: null,
+            'body' => $body,
+            'media_urls' => $mediaUrls,
+            'target_accounts' => $accounts,
+            'status' => $status,
+            'scheduled_at' => $scheduledAt,
+            'timezone' => (string) ($run->automation->trigger_config['timezone'] ?? 'UTC'),
+            'ai_generated' => true,
+            'ai_prompt' => (string) ($context['topic'] ?? null),
+            'content_pillar' => $context['content_pillar'] ?? null,
+            'content_format' => $context['content_format'] ?? null,
+            'caption_hash' => $captionHash,
+            'requires_approval' => $requiresApproval,
+        ]);
+
+        if ($status === 'publishing') {
+            PublishSocialPostJob::dispatch($post->id)->onQueue('social');
+        }
+
+        $msg = match ($status) {
+            'draft' => "Social post #{$post->id} saved to Approval Queue (Drafts).",
+            'scheduled' => "Social post #{$post->id} scheduled for {$scheduledAt->toDateTimeString()} UTC.",
+            default => "Social post #{$post->id} queued for immediate publishing to ".count($accounts).' account(s).',
+        };
+
+        return [
+            'status' => 'ok',
+            'message' => $msg,
+            'output' => ['post_id' => $post->id, 'status' => $status],
+            'context_update' => ['social_post_id' => $post->id],
+        ];
+    }
+
+    /** Extract a JSON object from an LLM response, stripping optional markdown fences. */
+    private function decodeJsonObject(string $raw): array
+    {
+        $cleaned = preg_replace('/^```(?:json)?\s*/i', '', trim($raw));
+        $cleaned = preg_replace('/\s*```$/', '', (string) $cleaned);
+        $decoded = json_decode(trim((string) $cleaned), true);
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+        $start = strpos($raw, '{');
+        $end = strrpos($raw, '}');
+        if ($start !== false && $end !== false && $end > $start) {
+            $decoded = json_decode(substr($raw, $start, $end - $start + 1), true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return [];
     }
 
     // ─── Shared send helpers ──────────────────────────────────────────────────

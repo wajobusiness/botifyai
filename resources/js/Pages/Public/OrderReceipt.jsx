@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import {
     CheckCircle, Download, ExternalLink, ShieldCheck,
@@ -9,8 +10,101 @@ function currencySymbol(code) {
     return symbols[code] || code || '₦';
 }
 
-export default function OrderReceipt({ order = {}, store = {}, downloads = [] }) {
+export default function OrderReceipt({ order = {}, store = {}, downloads = [], google_ads = {} }) {
     const sym = currencySymbol(order.currency);
+
+    // Multi-Channel Purchase Conversion Tracking (Meta Pixel & Google Ads)
+    useEffect(() => {
+        if (!order?.number || typeof window === 'undefined') {
+            return;
+        }
+
+        // 1. Verify payment is confirmed successful before firing any conversion
+        const isPaid = order.payment_status === 'paid' || order.status === 'completed';
+        if (!isPaid) {
+            return;
+        }
+
+        // Deduplication Guard: Never fire duplicate conversions on reload, bookmark, or revisit
+        const dedupeKey = `purchase_tracked_${order.number}`;
+        if (sessionStorage.getItem(dedupeKey)) {
+            return;
+        }
+        sessionStorage.setItem(dedupeKey, '1');
+
+        const orderValue = Number(order.total || 0);
+        const orderCurrency = order.currency || 'NGN';
+        const productName = downloads && downloads.length > 0 ? (downloads[0].product_name || 'Digital Product') : 'Digital Product';
+
+        // 2. Fire Meta (Facebook) Pixel Purchase Event
+        if (typeof window.fbq === 'function') {
+            window.fbq('track', 'Purchase', {
+                value: orderValue,
+                currency: orderCurrency,
+                content_name: productName,
+                content_type: 'product',
+                content_ids: [String(order.number)],
+                num_items: downloads && downloads.length > 0 ? downloads.length : 1,
+            });
+        }
+
+        // 3. Fire Google Ads Purchase Conversion (if configured)
+        const rawConversionId = (
+            google_ads?.conversion_id ||
+            import.meta.env.VITE_GOOGLE_ADS_CONVERSION_ID ||
+            ''
+        ).trim();
+
+        const rawConversionLabel = (
+            google_ads?.conversion_label ||
+            import.meta.env.VITE_GOOGLE_ADS_CONVERSION_LABEL ||
+            ''
+        ).trim();
+
+        if (rawConversionId) {
+            const conversionId = rawConversionId.startsWith('AW-')
+                ? rawConversionId
+                : (rawConversionId.includes('/') ? rawConversionId.split('/')[0] : `AW-${rawConversionId}`);
+
+            let sendTo = rawConversionId;
+            if (rawConversionLabel) {
+                sendTo = `${conversionId}/${rawConversionLabel}`;
+            } else if (!rawConversionId.includes('/')) {
+                sendTo = conversionId;
+            }
+
+            window.dataLayer = window.dataLayer || [];
+            if (typeof window.gtag !== 'function') {
+                window.gtag = function () {
+                    window.dataLayer.push(arguments);
+                };
+            }
+
+            window.gtag('config', conversionId);
+
+            window.gtag('event', 'purchase', {
+                send_to: sendTo,
+                transaction_id: order.number,
+                value: orderValue,
+                currency: orderCurrency,
+                items: downloads && downloads.length > 0
+                    ? downloads.map((item) => ({
+                        item_id: String(item.id || item.token || order.number),
+                        item_name: item.product_name || 'Digital Product',
+                        price: orderValue,
+                        quantity: 1,
+                    }))
+                    : [
+                        {
+                            item_id: order.number,
+                            item_name: 'Digital Order',
+                            price: orderValue,
+                            quantity: 1,
+                        },
+                    ],
+            });
+        }
+    }, [order?.number, order?.payment_status, order?.total, order?.currency, google_ads?.conversion_id, google_ads?.conversion_label]);
 
     return (
         <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 flex flex-col justify-between antialiased">

@@ -316,7 +316,11 @@ export default function PostsIndex({ posts, accounts, filters }) {
                         <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">{t('social.posts_subtitle')}</p>
                     </div>
                     {(
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Link href={`${route('client.automations.index')}?ai=social`}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/30 px-3 py-2 text-sm font-medium text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition">
+                                <Zap className="h-4 w-4" /> {t('nav.social_automation', 'Social Automation')}
+                            </Link>
                             <button onClick={() => setPlannerOpen(true)}
                                 className="ai-glow inline-flex items-center gap-1.5 rounded-lg border border-brand-600 px-3 py-2 text-sm font-medium text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition">
                                 <Sparkles className="h-4 w-4" /> {t('social.ai_plan')}

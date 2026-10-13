@@ -21,6 +21,8 @@ class EmailSystemController extends Controller
 
     public function index(): Response
     {
+        $this->mailService->ensureDefaultTemplatesSeeded();
+
         $smtpConfigurations = SmtpConfiguration::orderBy('is_active', 'desc')->orderBy('id')->get()->map(fn (SmtpConfiguration $c) => [
             'id' => $c->id,
             'host' => $c->host,

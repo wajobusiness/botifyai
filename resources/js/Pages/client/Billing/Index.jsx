@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
@@ -11,13 +12,95 @@ function formatAmount(cents, currency = 'USD') {
     }).format((cents || 0) / 100);
 }
 
-export default function BillingIndex({ transactions }) {
+export default function BillingIndex({ transactions, google_ads = {} }) {
     const { t } = useTranslation();
     const { timezone } = usePage().props;
     const { url } = usePage();
     const userTz = timezone || 'Asia/Dhaka';
     const formatDate = (iso) => formatDateTz(iso, userTz);
     const hasCheckoutSuccess = url.includes('checkout=success');
+
+    // Multi-Channel Subscription Purchase Conversion Tracking (Meta Pixel & Google Ads)
+    useEffect(() => {
+        if (!hasCheckoutSuccess || typeof window === 'undefined') {
+            return;
+        }
+
+        const latestTx = transactions?.data?.[0];
+        let txId = latestTx?.id;
+        if (!txId) {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                txId = params.get('reference') || params.get('trxref') || params.get('session_id') || params.get('paymentId');
+            } catch (_) {}
+        }
+
+        if (!txId) {
+            return;
+        }
+
+        // Deduplication Guard: Never fire duplicate conversions on reload or revisit
+        const dedupeKey = `sub_purchase_tracked_${txId}`;
+        if (sessionStorage.getItem(dedupeKey)) {
+            return;
+        }
+        sessionStorage.setItem(dedupeKey, '1');
+
+        const value = latestTx && latestTx.amount_cents ? (latestTx.amount_cents / 100) : 0;
+        const currency = latestTx?.currency_code || 'NGN';
+        const planName = latestTx?.plan?.name || 'Subscription Plan';
+
+        // 1. Fire Meta (Facebook) Pixel Subscribe and Purchase Events
+        if (typeof window.fbq === 'function') {
+            window.fbq('track', 'Subscribe', {
+                value: value,
+                currency: currency,
+                predicted_ltv: value,
+                content_name: planName,
+            });
+            window.fbq('track', 'Purchase', {
+                value: value,
+                currency: currency,
+                content_name: planName,
+                content_type: 'product',
+            });
+        }
+
+        // 2. Fire Google Ads Purchase Conversion (if configured)
+        const rawConversionId = (
+            google_ads?.conversion_id ||
+            import.meta.env.VITE_GOOGLE_ADS_CONVERSION_ID ||
+            ''
+        ).trim();
+
+        const rawConversionLabel = (
+            google_ads?.conversion_label ||
+            import.meta.env.VITE_GOOGLE_ADS_CONVERSION_LABEL ||
+            ''
+        ).trim();
+
+        if (rawConversionId && typeof window.gtag === 'function') {
+            const formattedConversionId = rawConversionId.startsWith('AW-')
+                ? rawConversionId
+                : `AW-${rawConversionId}`;
+
+            const sendTo = rawConversionLabel
+                ? `${formattedConversionId}/${rawConversionLabel}`
+                : formattedConversionId;
+
+            window.gtag('event', 'purchase', {
+                send_to: sendTo,
+                transaction_id: String(txId),
+                value: value,
+                currency: currency,
+                items: [{
+                    item_name: planName,
+                    price: value,
+                    quantity: 1,
+                }],
+            });
+        }
+    }, [hasCheckoutSuccess, transactions, google_ads]);
 
     return (
         <ClientLayout title={t('subscription.billing') || 'Billing'}>

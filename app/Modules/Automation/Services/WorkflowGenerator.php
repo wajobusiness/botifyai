@@ -3,6 +3,8 @@
 namespace App\Modules\Automation\Services;
 
 use App\Modules\AI\Services\LlmGateway;
+use App\Modules\Social\Models\SocialAccount;
+use App\Modules\Social\Models\WorkspaceBrandProfile;
 
 /**
  * Turns a natural-language description into a complete, ready-to-run automation graph
@@ -21,27 +23,30 @@ class WorkflowGenerator
         'send_sms', 'send_email', 'ask_question', 'condition', 'wait', 'webhook', 'run_subflow', 'ai_reply',
         'add_tag', 'remove_tag', 'update_contact', 'assign_agent', 'add_to_campaign', 'cta_button',
         'send_location', 'send_poll', 'run_chatbot', 'book_appointment', 'google_meet', 'whatsapp_form',
-        'whatsapp_catalog', 'woocommerce_product', 'shopify_product', 'google_sheets', 'google_docs',
+        'whatsapp_catalog', 'woocommerce_product', 'shopify_product', 'google_sheets', 'google_docs', 'google_forms',
+        'ai_social_ideation', 'ai_social_caption', 'render_social_graphic', 'publish_social_post',
     ];
 
     /** Trigger types the listener understands (mirrors the builder's TRIGGER_TYPES). */
     private const TRIGGER_TYPES = [
+        'schedule.recurring',
         'contact.created', 'contact.tag_added', 'message.received', 'campaign.sent', 'form.submitted',
-        'webhook.received', 'order.placed', 'order.fulfilled', 'order.cancelled', 'cart.abandoned', 'customer.created',
+        'webhook.received', 'order.placed', 'order.paid', 'payment.failed', 'order.fulfilled',
+        'order.cancelled', 'order.refunded', 'cart.abandoned', 'customer.created',
         'lead.stage_changed', 'lead.qualified', 'lead.won', 'lead.lost',
     ];
 
     public function __construct(private readonly LlmGateway $llmGateway) {}
 
     /**
-     * @return array{name: string, trigger_type: string, trigger_config: array, nodes: array, edges: array}
+     * @return array{name: string, trigger_type: string, trigger_config: array, nodes: array, edges: array, brand_profile?: array}
      *
      * @throws \RuntimeException when the provider fails or returns unusable output
      */
     public function generate(int $workspaceId, string $prompt): array
     {
         $messages = [
-            ['role' => 'system', 'content' => $this->systemPrompt()],
+            ['role' => 'system', 'content' => $this->systemPrompt($workspaceId)],
             ['role' => 'user', 'content' => 'Build an automation for this request:'."\n\n".trim($prompt)],
         ];
 
@@ -52,24 +57,79 @@ class WorkflowGenerator
             throw new \RuntimeException('The AI did not return a valid workflow. Try rephrasing your request.');
         }
 
-        return $this->normalise($spec);
+        if ($workspaceId > 0 && is_array($spec['brand_profile'] ?? null)) {
+            $this->persistBrandProfile($workspaceId, $spec['brand_profile']);
+        }
+
+        return $this->normalise($spec, $workspaceId);
     }
 
-    private function systemPrompt(): string
+    private function persistBrandProfile(int $workspaceId, array $raw): void
+    {
+        try {
+            $profile = WorkspaceBrandProfile::forWorkspace($workspaceId);
+            $updates = [];
+            foreach (['brand_name', 'niche', 'target_audience', 'tone', 'writing_style'] as $field) {
+                if (isset($raw[$field]) && is_string($raw[$field]) && trim($raw[$field]) !== '') {
+                    $updates[$field] = mb_substr(trim($raw[$field]), 0, 500);
+                }
+            }
+            if (empty($updates['tone']) && isset($raw['tone_of_voice']) && is_string($raw['tone_of_voice'])) {
+                $updates['tone'] = mb_substr(trim($raw['tone_of_voice']), 0, 120);
+            }
+            if (is_array($raw['content_pillars'] ?? null) && ! empty($raw['content_pillars'])) {
+                $updates['content_pillars'] = array_values(array_filter(array_map('strval', $raw['content_pillars'])));
+            }
+            if (is_array($raw['brand_colors'] ?? null) && ! empty($raw['brand_colors'])) {
+                $updates['brand_colors'] = array_values(array_filter(array_map('strval', $raw['brand_colors'])));
+            }
+            if (array_key_exists('requires_approval', $raw)) {
+                $updates['requires_approval'] = (bool) $raw['requires_approval'];
+            }
+            if (! empty($updates)) {
+                $profile->update($updates);
+            }
+        } catch (\Throwable) {
+            // Best-effort brand profile persistence.
+        }
+    }
+
+    private function systemPrompt(int $workspaceId = 0): string
     {
         $nodeTypes = implode(', ', self::NODE_TYPES);
         $triggerTypes = implode(', ', self::TRIGGER_TYPES);
 
+        $connectedAccountsInfo = '';
+        if ($workspaceId > 0) {
+            try {
+                $accounts = SocialAccount::where('workspace_id', $workspaceId)
+                    ->where('active', true)
+                    ->get(['id', 'network', 'name']);
+                if ($accounts->isNotEmpty()) {
+                    $list = $accounts->map(fn ($a) => "{$a->id}: {$a->network} ({$a->name})")->implode(', ');
+                    $connectedAccountsInfo = "\nConnected social accounts in this workspace: [{$list}]. Use these integer IDs in publish_social_post.target_accounts when applicable.";
+                }
+            } catch (\Throwable) {
+            }
+        }
+
         return <<<PROMPT
-You are an automation workflow architect for a WhatsApp / omnichannel messaging platform.
+You are an automation workflow architect for an omnichannel messaging & autonomous social media platform.
 Convert the user's request into ONE automation expressed as strict JSON. Output ONLY the JSON
-object — no prose, no markdown, no code fences.
+object — no prose, no markdown, no code fences.{$connectedAccountsInfo}
 
 Shape:
 {
   "name": "<short title, max 60 chars>",
   "trigger_type": "<one of: {$triggerTypes}>",
   "trigger_config": { },
+  "brand_profile": {
+    "niche": "<optional: extracted niche if this is a social content strategy>",
+    "target_audience": "<optional>",
+    "tone": "<optional: e.g. professional, witty, bold>",
+    "writing_style": "<optional>",
+    "content_pillars": ["<optional pillar 1>", "<optional pillar 2>"]
+  },
   "nodes": [ { "id": "n1", "type": "<node type>", "data": { ... } } ],
   "edges": [ { "source": "trigger-1", "target": "n1" }, { "source": "n1", "target": "n2" } ]
 }
@@ -79,17 +139,24 @@ Rules:
   reference it as an edge source. Every "nodes" entry needs a unique "id" and a valid "type".
 - Connect nodes with "edges". The flow must start with an edge whose source is "trigger-1".
 - Allowed node types: {$nodeTypes}.
+- When the user describes a recurring social media strategy or content calendar (e.g. "Post twice every weekday", "Create educational carousels", "Generate quote graphics on Mondays"), use:
+  - "trigger_type": "schedule.recurring"
+  - "trigger_config": { "frequency": "daily|weekdays|weekly|custom", "days_of_week": ["mon","tue","wed","thu","fri","sat"], "times": ["09:00","16:00"], "timezone": "UTC" }
+  - And chain the autonomous social nodes: ai_social_ideation -> ai_social_caption -> render_social_graphic -> publish_social_post.
 - Prefer nodes that need no external setup: send_whatsapp, send_template, send_media, quick_replies,
   list_message, ask_question, condition, wait, add_tag, remove_tag, update_contact, send_email, ai_reply,
-  cta_button, send_poll. Only use run_subflow, assign_agent, add_to_campaign, run_chatbot, book_appointment,
-  google_meet, whatsapp_form, whatsapp_catalog, woocommerce_product, shopify_product, google_sheets or
-  google_docs when the request clearly asks for it.
+  cta_button, send_poll, ai_social_ideation, ai_social_caption, render_social_graphic, publish_social_post.
 - Personalise text with tokens: {{contact.name}}, {{contact.first_name}}, {{contact.email}}, {{contact.phone}},
   {{message.body}}, {{context.<key>}}. Order/cart triggers also expose {{context.order_number}},
   {{context.order_total}}, {{context.order_currency}}, {{context.tracking_url}}, {{context.cart_total}},
-  {{context.recovery_url}}.
+  {{context.recovery_url}}. Social nodes expose {{context.topic}}, {{context.hook}}, {{context.content_pillar}},
+  {{context.content_format}}, {{context.full_caption}}, {{context.media_url}}.
 
 Node "data" by type:
+- ai_social_ideation: { "niche": "Digital marketing, AI, web hosting", "pillars": "AI Tools\nWeb Hosting\nGrowth Strategy", "format": "auto|carousel|quote|promo|tip", "tone": "professional" }
+- ai_social_caption: { "tone": "professional", "cta": "Visit our link in bio", "prompt": "Avoid repetitive hooks" }
+- render_social_graphic: { "template": "auto|quote|promo|tip|carousel", "primary_color": "#6366f1", "secondary_color": "#0f172a", "brand_name": "" }
+- publish_social_post: { "target_accounts": [], "publish_mode": "immediate|optimal_slot|approval_queue", "delay_minutes": 15 }
 - send_whatsapp / send_sms: { "body": "text" }
 - send_email: { "subject": "text", "body": "text" }
 - send_template: { "template_name": "name", "language": "en", "variables": "one value per line" }
@@ -147,13 +214,16 @@ PROMPT;
      * @param  array<string, mixed>  $spec
      * @return array{name: string, trigger_type: string, trigger_config: array, nodes: array, edges: array}
      */
-    private function normalise(array $spec): array
+    public function normalise(array $spec, int $workspaceId = 0): array
     {
         $triggerType = is_string($spec['trigger_type'] ?? null) && in_array($spec['trigger_type'], self::TRIGGER_TYPES, true)
             ? $spec['trigger_type']
             : 'contact.created';
 
         $triggerConfig = is_array($spec['trigger_config'] ?? null) ? $spec['trigger_config'] : [];
+        if ($triggerType === 'schedule.recurring') {
+            $triggerConfig = $this->normaliseRecurringSchedule($triggerConfig);
+        }
 
         // ── Action nodes ──────────────────────────────────────────────────
         $nodes = [];
@@ -231,6 +301,46 @@ PROMPT;
             'trigger_config' => $triggerConfig,
             'nodes' => $nodes,
             'edges' => $edges,
+        ];
+    }
+
+    private function normaliseRecurringSchedule(array $raw): array
+    {
+        $freq = strtolower((string) ($raw['frequency'] ?? 'daily'));
+        if (! in_array($freq, ['daily', 'weekdays', 'weekly', 'custom'], true)) {
+            $freq = 'daily';
+        }
+
+        $validDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+        $days = array_values(array_intersect(
+            array_map(fn ($d) => strtolower(substr((string) $d, 0, 3)), (array) ($raw['days_of_week'] ?? [])),
+            $validDays
+        ));
+        if (empty($days)) {
+            $days = $freq === 'weekdays' ? ['mon', 'tue', 'wed', 'thu', 'fri'] : $validDays;
+        }
+
+        $times = [];
+        foreach ((array) ($raw['times'] ?? ['09:00']) as $t) {
+            if (is_string($t) && preg_match('/^\d{1,2}:\d{2}$/', trim($t))) {
+                [$h, $m] = array_map('intval', explode(':', trim($t)));
+                if ($h >= 0 && $h <= 23 && $m >= 0 && $m <= 59) {
+                    $times[] = sprintf('%02d:%02d', $h, $m);
+                }
+            }
+        }
+        $times = array_values(array_unique($times ?: ['09:00']));
+        sort($times);
+
+        $tz = is_string($raw['timezone'] ?? null) && in_array($raw['timezone'], timezone_identifiers_list(), true)
+            ? $raw['timezone']
+            : config('app.timezone', 'UTC');
+
+        return [
+            'frequency' => $freq,
+            'days_of_week' => $days,
+            'times' => $times,
+            'timezone' => $tz,
         ];
     }
 

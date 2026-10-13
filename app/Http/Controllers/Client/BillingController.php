@@ -35,6 +35,12 @@ class BillingController extends Controller
         if ($paymentId) {
             $this->callFulfil('myfatoorah', $paymentId, $userId);
         }
+
+        // Paystack: ?reference=... or ?trxref=...
+        $paystackRef = $request->query('reference') ?: $request->query('trxref');
+        if ($paystackRef) {
+            $this->callFulfil('paystack', $paystackRef, $userId);
+        }
     }
 
     private function callFulfil(string $gatewayKey, string $sessionId, int $userId): void
@@ -84,6 +90,10 @@ class BillingController extends Controller
 
         return Inertia::render('client/Billing/Index', [
             'transactions' => $transactions,
+            'google_ads' => [
+                'conversion_id' => config('services.google.ads_conversion_id') ?: env('GOOGLE_ADS_CONVERSION_ID', ''),
+                'conversion_label' => config('services.google.ads_conversion_label') ?: env('GOOGLE_ADS_CONVERSION_LABEL', ''),
+            ],
         ]);
     }
 }

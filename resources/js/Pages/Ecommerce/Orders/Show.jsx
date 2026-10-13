@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ArrowLeft, RefreshCw, PackageCheck, MessageCircle, User,
-    ShieldCheck, Download, AlertCircle, CheckCircle2, Clock,
+    ShieldCheck, Download, AlertCircle, CheckCircle2, Clock, Mail,
 } from 'lucide-react';
 
 export default function OrderShow({ order }) {
@@ -20,6 +20,11 @@ export default function OrderShow({ order }) {
         router.post(route('client.ecommerce.orders.refresh', order.id), {}, { preserveScroll: true, onFinish: () => setBusy(null) });
     };
 
+    const resendReceipt = () => {
+        setBusy('resend-receipt');
+        router.post(route('client.ecommerce.orders.resend-receipt', order.id), {}, { preserveScroll: true, onFinish: () => setBusy(null) });
+    };
+
     const fulfill = (e) => {
         e.preventDefault();
         setBusy('fulfill');
@@ -29,6 +34,8 @@ export default function OrderShow({ order }) {
     };
 
     const isFulfilled = order.fulfillment_status === 'fulfilled';
+    const isPaid = order.payment_status === 'paid';
+    const hasCustomerEmail = Boolean(order.customer_email || order.contact?.email);
 
     return (
         <ClientLayout title={`${t('ecommerce.order') || 'Order'} ${order.number}`}>
@@ -42,6 +49,13 @@ export default function OrderShow({ order }) {
                         <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{order.number}</h2>
                         <p className="text-sm text-neutral-500">{order.store?.name} · {order.placed_at ? new Date(order.placed_at).toLocaleString() : ''}</p>
                     </div>
+                    {isPaid && hasCustomerEmail && (
+                        <button onClick={resendReceipt} disabled={busy !== null}
+                            className="flex items-center gap-1.5 rounded-lg border border-teal-200 dark:border-teal-800 bg-teal-50/70 dark:bg-teal-950/30 px-3 py-2 text-sm font-medium text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/40 disabled:opacity-60">
+                            <Mail className={`h-4 w-4 ${busy === 'resend-receipt' ? 'animate-pulse' : ''}`} />
+                            {busy === 'resend-receipt' ? (t('ecommerce.sending') || 'Sending…') : (t('ecommerce.resend_receipt') || 'Resend Receipt')}
+                        </button>
+                    )}
                     <button onClick={refresh} disabled={busy !== null}
                         className="flex items-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 px-3 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-60">
                         <RefreshCw className={`h-4 w-4 ${busy === 'refresh' ? 'animate-spin' : ''}`} /> {t('ecommerce.refresh') || 'Refresh'}

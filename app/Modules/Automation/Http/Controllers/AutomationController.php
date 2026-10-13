@@ -12,6 +12,8 @@ use App\Modules\Automation\Services\WorkflowGenerator;
 use App\Modules\Broadcasting\Models\Campaign;
 use App\Modules\Ecommerce\Models\EcommerceStore;
 use App\Modules\Integrations\Models\IntegrationConfig;
+use App\Modules\Social\Models\SocialAccount;
+use App\Modules\Social\Models\WorkspaceBrandProfile;
 use App\Modules\Whatsapp\Models\WhatsappTemplate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -65,8 +67,8 @@ class AutomationController extends Controller
 
     /**
      * Reference data the builder needs to populate node config dropdowns
-     * (templates, campaigns, chatbots, sub-flows, agents, stores) plus a map of
-     * which optional integrations are connected.
+     * (templates, campaigns, chatbots, sub-flows, agents, stores, social accounts, brand profile)
+     * plus a map of which optional integrations are connected.
      */
     private function builderResources(int $workspaceId, int $currentAutomationId): array
     {
@@ -95,6 +97,12 @@ class AutomationController extends Controller
                 ->orderBy('name')->get(['id', 'name'])->values(),
             'stores' => EcommerceStore::where('workspace_id', $workspaceId)
                 ->get(['id', 'platform', 'name'])->values(),
+            'social_accounts' => SocialAccount::where('workspace_id', $workspaceId)
+                ->orderBy('network')
+                ->orderBy('name')
+                ->get(['id', 'network', 'name', 'picture_url', 'active'])
+                ->values(),
+            'brand_profile' => WorkspaceBrandProfile::forWorkspace($workspaceId),
             'integrations' => [
                 'google' => (bool) optional(IntegrationConfig::forProvider('google_workspace'))->enabled,
             ],
@@ -112,9 +120,45 @@ class AutomationController extends Controller
             'nodes' => ['nullable', 'array'],
             'edges' => ['nullable', 'array'],
         ]);
-        $automation->update($validated);
+
+        $automation->fill($validated);
+        if ($automation->trigger_type === 'schedule.recurring') {
+            $automation->next_run_at = $automation->computeNextRunAt();
+        } else {
+            $automation->next_run_at = null;
+        }
+        $automation->save();
 
         return back()->with('success', 'Automation saved.');
+    }
+
+    public function updateBrandProfile(Request $request): JsonResponse
+    {
+        $wid = $this->workspaceId($request);
+        $validated = $request->validate([
+            'brand_name' => ['nullable', 'string', 'max:255'],
+            'niche' => ['nullable', 'string', 'max:255'],
+            'target_audience' => ['nullable', 'string', 'max:500'],
+            'tone' => ['nullable', 'string', 'max:255'],
+            'writing_style' => ['nullable', 'string', 'max:500'],
+            'content_pillars' => ['nullable', 'array'],
+            'content_pillars.*' => ['string', 'max:120'],
+            'brand_colors' => ['nullable', 'array'],
+            'cta_templates' => ['nullable', 'array'],
+            'banned_phrases' => ['nullable', 'array'],
+            'banned_phrases.*' => ['string', 'max:120'],
+            'default_hashtag_sets' => ['nullable', 'array'],
+            'requires_approval' => ['nullable', 'boolean'],
+            'auto_replenish' => ['nullable', 'boolean'],
+        ]);
+
+        $profile = WorkspaceBrandProfile::forWorkspace($wid);
+        $profile->update($validated);
+
+        return response()->json([
+            'ok' => true,
+            'brand_profile' => $profile->fresh(),
+        ]);
     }
 
     public function destroy(Request $request, Automation $automation): RedirectResponse
@@ -164,6 +208,9 @@ class AutomationController extends Controller
         if (array_key_exists('trigger_type', $validated)) {
             $automation->trigger_type = $validated['trigger_type']; // in-memory only, never persisted
         }
+        if (array_key_exists('trigger_config', $validated)) {
+            $automation->trigger_config = $validated['trigger_config']; // in-memory only, never persisted
+        }
 
         $context = [];
         if (! empty($validated['sample_message'])) {
@@ -193,7 +240,7 @@ class AutomationController extends Controller
         }
 
         if ($request->boolean('persist')) {
-            $auto = Automation::create([
+            $auto = new Automation([
                 'workspace_id' => $wid,
                 'name' => $graph['name'],
                 'status' => 'draft',
@@ -202,11 +249,19 @@ class AutomationController extends Controller
                 'nodes' => $graph['nodes'],
                 'edges' => $graph['edges'],
             ]);
+            if ($auto->trigger_type === 'schedule.recurring') {
+                $auto->next_run_at = $auto->computeNextRunAt();
+            }
+            $auto->save();
 
             return response()->json(['ok' => true, 'redirect' => route('client.automations.edit', $auto->uuid)]);
         }
 
-        return response()->json(['ok' => true, 'graph' => $graph]);
+        return response()->json([
+            'ok' => true,
+            'graph' => $graph,
+            'brand_profile' => WorkspaceBrandProfile::forWorkspace($wid),
+        ]);
     }
 
     private function authorise(Request $request, Automation $automation): void

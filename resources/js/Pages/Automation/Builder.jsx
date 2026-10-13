@@ -37,6 +37,7 @@ import '@xyflow/react/dist/style.css';
 /* ─── Constants ─────────────────────────────────────────────── */
 
 const TRIGGER_TYPES = [
+    { value: 'schedule.recurring', labelKey: 'automation.trigger_schedule_recurring', Icon: CalendarClock  },
     { value: 'contact.created',   labelKey: 'automation.trigger_contact_created',   Icon: UserRound      },
     { value: 'contact.tag_added', labelKey: 'automation.trigger_tag_added',         Icon: Tag            },
     { value: 'message.received',  labelKey: 'automation.trigger_message_received',  Icon: MessageCircle  },
@@ -54,7 +55,7 @@ const TRIGGER_TYPES = [
 ];
 
 // Categories rendered (in order) in the node palette — mirrors the product node list.
-const CATEGORY_ORDER = ['send', 'listen', 'logic', 'ai', 'contact', 'engage', 'commerce', 'integrations'];
+const CATEGORY_ORDER = ['send', 'listen', 'logic', 'ai', 'social', 'contact', 'engage', 'commerce', 'integrations'];
 
 const NODE_DEFS = {
     // ── SEND ──────────────────────────────────────────────────────────────
@@ -75,6 +76,11 @@ const NODE_DEFS = {
     run_subflow:         { labelKey: 'automation.node_run_subflow',         color: '#475569', bg: '#f8fafc', icon: Workflow,          category: 'logic' },
     // ── AI ────────────────────────────────────────────────────────────────
     ai_reply:            { labelKey: 'automation.node_ai_reply',            color: '#7c3aed', bg: '#faf5ff', icon: Sparkles,          category: 'ai' },
+    // ── AUTONOMOUS SOCIAL ─────────────────────────────────────────────────
+    ai_social_ideation:    { labelKey: 'automation.node_ai_social_ideation',    color: '#8b5cf6', bg: '#f5f3ff', icon: Sparkles,      category: 'social' },
+    ai_social_caption:     { labelKey: 'automation.node_ai_social_caption',     color: '#ec4899', bg: '#fdf2f8', icon: FileText,      category: 'social' },
+    render_social_graphic: { labelKey: 'automation.node_render_social_graphic', color: '#06b6d4', bg: '#ecfeff', icon: Image,         category: 'social' },
+    publish_social_post:   { labelKey: 'automation.node_publish_social_post',   color: '#2563eb', bg: '#eff6ff', icon: Megaphone,     category: 'social' },
     // ── CONTACT ───────────────────────────────────────────────────────────
     add_tag:             { labelKey: 'automation.node_add_tag',             color: '#10b981', bg: '#ecfdf5', icon: Tag,               category: 'contact' },
     remove_tag:          { labelKey: 'automation.node_remove_tag',          color: '#f43f5e', bg: '#fff1f2', icon: Scissors,          category: 'contact' },
@@ -299,6 +305,10 @@ function summarizeConfig(data, t) {
         case 'add_to_campaign': return data.campaign_id ? t('automation.campaign_ref', { id: data.campaign_id }) : '';
         case 'ai_reply':
         case 'run_chatbot': return clip(data.prompt || data.chatbot_id || '');
+        case 'ai_social_ideation': return clip(data.niche || data.format || 'auto', 28);
+        case 'ai_social_caption': return clip(data.tone || data.cta || 'brand voice', 28);
+        case 'render_social_graphic': return data.template ? `${data.template} graphic` : 'auto graphic';
+        case 'publish_social_post': return data.publish_mode ?? 'immediate';
         case 'webhook': return data.url ? `${data.method ?? 'POST'} ${clip(data.url, 28)}` : '';
         case 'send_template': return data.template_name ?? '';
         case 'send_media': return data.link ? `${data.media_type ?? 'image'} · ${clip(data.link, 24)}` : (data.media_type ?? '');
@@ -345,6 +355,10 @@ const FIELD_COMPONENTS = {
     webhook: WebhookFields,
     run_subflow: SubflowFields,
     ai_reply: AIReplyFields,
+    ai_social_ideation: SocialIdeationFields,
+    ai_social_caption: SocialCaptionFields,
+    render_social_graphic: RenderGraphicFields,
+    publish_social_post: PublishSocialPostFields,
     add_tag: TagFields,
     remove_tag: TagFields,
     update_contact: UpdateContactFields,
@@ -425,12 +439,35 @@ function Field({ label, children }) {
     return <div><label className={labelCls}>{label}</label>{children}</div>;
 }
 
+const WEEK_DAYS = [
+    { key: 'mon', label: 'Mon' },
+    { key: 'tue', label: 'Tue' },
+    { key: 'wed', label: 'Wed' },
+    { key: 'thu', label: 'Thu' },
+    { key: 'fri', label: 'Fri' },
+    { key: 'sat', label: 'Sat' },
+    { key: 'sun', label: 'Sun' },
+];
+
 /* ─── Trigger Config Panel ───────────────────────────────────────
    Edits the automation's trigger directly from the trigger node on the canvas.
    trigger_type / trigger_config remain the saved source of truth. */
 function TriggerConfigPanel({ automation, onTypeChange, onConfigChange, webhookUrl, copied, onCopy, onGenerateToken, generatingToken, onClose }) {
     const { t } = useTranslation();
     const triggerType = automation.trigger_type ?? '';
+    const tc = automation.trigger_config ?? {};
+    const freq = tc.frequency ?? 'daily';
+    const daysOfWeek = Array.isArray(tc.days_of_week) ? tc.days_of_week : ['mon', 'tue', 'wed', 'thu', 'fri'];
+    const timesStr = Array.isArray(tc.times) ? tc.times.join(', ') : (tc.time ?? '09:00');
+    const tz = tc.timezone ?? (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+
+    const toggleDay = (day) => {
+        const next = daysOfWeek.includes(day)
+            ? daysOfWeek.filter(d => d !== day)
+            : [...daysOfWeek, day];
+        onConfigChange({ days_of_week: next.length ? next : ['mon'] });
+    };
+
     const orderTokens = triggerType === 'cart.abandoned'
         ? ['{{context.cart_total}}', '{{context.recovery_url}}', '{{context.order_currency}}']
         : ['{{context.order_number}}', '{{context.order_total}}', '{{context.order_currency}}', '{{context.tracking_url}}', '{{context.store_name}}'];
@@ -464,6 +501,76 @@ function TriggerConfigPanel({ automation, onTypeChange, onConfigChange, webhookU
                         {TRIGGER_TYPES.map(tr => <option key={tr.value} value={tr.value}>{t(tr.labelKey)}</option>)}
                     </select>
                 </Field>
+
+                {triggerType === 'schedule.recurring' && (
+                    <>
+                        <Field label={t('automation.schedule_frequency')}>
+                            <select
+                                className={selectCls}
+                                value={freq}
+                                onChange={e => {
+                                    const nextFreq = e.target.value;
+                                    const patch = { frequency: nextFreq, timezone: tz };
+                                    if (nextFreq === 'weekdays') patch.days_of_week = ['mon', 'tue', 'wed', 'thu', 'fri'];
+                                    onConfigChange(patch);
+                                }}
+                            >
+                                <option value="daily">{t('automation.schedule_freq_daily')}</option>
+                                <option value="weekdays">{t('automation.schedule_freq_weekdays')}</option>
+                                <option value="weekly">{t('automation.schedule_freq_weekly')}</option>
+                                <option value="custom">{t('automation.schedule_freq_custom')}</option>
+                            </select>
+                        </Field>
+
+                        {(freq === 'weekly' || freq === 'custom') && (
+                            <Field label={t('automation.schedule_days_of_week')}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                    {WEEK_DAYS.map(d => {
+                                        const active = daysOfWeek.includes(d.key);
+                                        return (
+                                            <button
+                                                key={d.key}
+                                                type="button"
+                                                onClick={() => toggleDay(d.key)}
+                                                style={{
+                                                    padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                                                    border: `1px solid ${active ? '#6366f1' : '#e2e8f0'}`,
+                                                    background: active ? '#eef2ff' : '#fff',
+                                                    color: active ? '#4f46e5' : '#64748b',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                {d.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </Field>
+                        )}
+
+                        <Field label={t('automation.schedule_times')}>
+                            <p style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>{t('automation.schedule_times_hint')}</p>
+                            <input
+                                className={inputCls}
+                                value={timesStr}
+                                onChange={e => {
+                                    const raw = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                                    onConfigChange({ times: raw.length ? raw : ['09:00'], timezone: tz });
+                                }}
+                                placeholder="09:00, 16:00"
+                            />
+                        </Field>
+
+                        <Field label={t('automation.schedule_timezone')}>
+                            <input
+                                className={inputCls}
+                                value={tz}
+                                onChange={e => onConfigChange({ timezone: e.target.value })}
+                                placeholder="UTC"
+                            />
+                        </Field>
+                    </>
+                )}
 
                 {triggerType === 'message.received' && (
                     <Field label={t('automation.keyword_filter_optional')}>
@@ -1292,6 +1399,265 @@ function WebhookFields({ d, set }) {
     );
 }
 
+/* ─── Autonomous Social Fields ───────────────────────────────── */
+function SocialIdeationFields({ d, set }) {
+    const { t } = useTranslation();
+    const { brand_profile: bp } = useResources();
+    const [showBrandModal, setShowBrandModal] = useState(false);
+    const [bpForm, setBpForm] = useState({
+        brand_name: bp?.brand_name ?? '',
+        niche: bp?.niche ?? '',
+        target_audience: bp?.target_audience ?? '',
+        tone: bp?.tone ?? 'professional',
+        writing_style: bp?.writing_style ?? '',
+        content_pillars: Array.isArray(bp?.content_pillars) ? bp.content_pillars.join('\n') : '',
+        primary_color: bp?.brand_colors?.[0] ?? '#6366f1',
+        secondary_color: bp?.brand_colors?.[1] ?? '#0f172a',
+        requires_approval: !!bp?.requires_approval,
+    });
+    const [savingBp, setSavingBp] = useState(false);
+    const [savedBp, setSavedBp] = useState(false);
+
+    const saveBrandProfile = () => {
+        setSavingBp(true);
+        setSavedBp(false);
+        axios.put(route('client.automations.brand-profile.update'), {
+            brand_name: bpForm.brand_name,
+            niche: bpForm.niche,
+            target_audience: bpForm.target_audience,
+            tone: bpForm.tone,
+            writing_style: bpForm.writing_style,
+            content_pillars: bpForm.content_pillars.split('\n').map(s => s.trim()).filter(Boolean),
+            brand_colors: [bpForm.primary_color, bpForm.secondary_color, '#f8fafc'],
+            requires_approval: bpForm.requires_approval,
+        }).then(() => {
+            setSavedBp(true);
+            setTimeout(() => setSavedBp(false), 2500);
+        }).finally(() => setSavingBp(false));
+    };
+
+    return (
+        <>
+            <Field label={t('automation.social_niche')}>
+                <input
+                    className={inputCls}
+                    value={d.niche ?? ''}
+                    onChange={e => set('niche', e.target.value)}
+                    placeholder={bp?.niche || 'Digital Marketing, AI, Web Hosting & Business Growth'}
+                />
+            </Field>
+            <Field label={t('automation.social_pillars')}>
+                <textarea
+                    className={textareaCls}
+                    rows={4}
+                    value={d.pillars ?? ''}
+                    onChange={e => set('pillars', e.target.value)}
+                    placeholder={Array.isArray(bp?.content_pillars) ? bp.content_pillars.join('\n') : "Digital Marketing\nAI Automation\nWeb Hosting\nBusiness Growth"}
+                />
+            </Field>
+            <Field label={t('automation.social_format')}>
+                <select className={selectCls} value={d.format ?? 'auto'} onChange={e => set('format', e.target.value)}>
+                    <option value="auto">{t('automation.social_format_auto')}</option>
+                    <option value="carousel">{t('automation.social_format_carousel')}</option>
+                    <option value="quote">{t('automation.social_format_quote')}</option>
+                    <option value="promo">{t('automation.social_format_promo')}</option>
+                    <option value="tip">{t('automation.social_format_tip')}</option>
+                </select>
+            </Field>
+            <Field label={t('automation.social_tone')}>
+                <select className={selectCls} value={d.tone ?? (bp?.tone || 'professional')} onChange={e => set('tone', e.target.value)}>
+                    <option value="professional">Professional</option>
+                    <option value="educational">Educational</option>
+                    <option value="inspirational">Inspirational</option>
+                    <option value="casual">Casual & Friendly</option>
+                    <option value="bold">Bold & Direct</option>
+                </select>
+            </Field>
+
+            <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 10 }}>
+                <button
+                    type="button"
+                    onClick={() => setShowBrandModal(v => !v)}
+                    style={{ fontSize: 11, fontWeight: 600, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                    {showBrandModal ? '▾ ' : '▸ '}{t('automation.brand_profile_settings')}
+                </button>
+                {showBrandModal && (
+                    <div style={{ marginTop: 10, padding: 10, borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }} className="space-y-3">
+                        <Field label={t('automation.brand_name')}>
+                            <input className={inputCls} value={bpForm.brand_name} onChange={e => setBpForm(f => ({ ...f, brand_name: e.target.value }))} placeholder="Your Brand" />
+                        </Field>
+                        <Field label={t('automation.social_niche')}>
+                            <input className={inputCls} value={bpForm.niche} onChange={e => setBpForm(f => ({ ...f, niche: e.target.value }))} placeholder="Digital Marketing, AI, Web Hosting" />
+                        </Field>
+                        <Field label={t('automation.social_pillars')}>
+                            <textarea className={textareaCls} rows={3} value={bpForm.content_pillars} onChange={e => setBpForm(f => ({ ...f, content_pillars: e.target.value }))} />
+                        </Field>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            <div style={{ flex: 1 }}>
+                                <label className={labelCls}>{t('automation.primary_color')}</label>
+                                <input type="color" value={bpForm.primary_color} onChange={e => setBpForm(f => ({ ...f, primary_color: e.target.value }))} style={{ width: '100%', height: 30, borderRadius: 6, border: '1px solid #e2e8f0' }} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label className={labelCls}>{t('automation.secondary_color')}</label>
+                                <input type="color" value={bpForm.secondary_color} onChange={e => setBpForm(f => ({ ...f, secondary_color: e.target.value }))} style={{ width: '100%', height: 30, borderRadius: 6, border: '1px solid #e2e8f0' }} />
+                            </div>
+                        </div>
+                        <CheckField label={t('automation.require_approval_default')} checked={bpForm.requires_approval} onChange={v => setBpForm(f => ({ ...f, requires_approval: v }))} />
+                        <button
+                            type="button"
+                            disabled={savingBp}
+                            onClick={saveBrandProfile}
+                            style={{ width: '100%', borderRadius: 6, background: '#6366f1', color: '#fff', fontSize: 11, fontWeight: 600, padding: '6px 10px', border: 'none', cursor: 'pointer' }}
+                        >
+                            {savingBp ? t('automation.saving') : (savedBp ? '✓ ' + t('common.saved') : t('automation.save_brand_profile'))}
+                        </button>
+                    </div>
+                )}
+            </div>
+        </>
+    );
+}
+
+function SocialCaptionFields({ d, set }) {
+    const { t } = useTranslation();
+    const { brand_profile: bp } = useResources();
+    return (
+        <>
+            <Field label={t('automation.social_tone')}>
+                <input
+                    className={inputCls}
+                    value={d.tone ?? ''}
+                    onChange={e => set('tone', e.target.value)}
+                    placeholder={bp?.tone || 'professional'}
+                />
+            </Field>
+            <Field label={t('automation.social_cta')}>
+                <input
+                    className={inputCls}
+                    value={d.cta ?? ''}
+                    onChange={e => set('cta', e.target.value)}
+                    placeholder="Share your thoughts below or visit our link in bio!"
+                />
+            </Field>
+            <Field label={t('automation.social_custom_instructions')}>
+                <textarea
+                    className={textareaCls}
+                    rows={3}
+                    value={d.prompt ?? ''}
+                    onChange={e => set('prompt', e.target.value)}
+                    placeholder="Avoid repetitive captions. Keep paragraphs short and scannable."
+                />
+            </Field>
+        </>
+    );
+}
+
+function RenderGraphicFields({ d, set }) {
+    const { t } = useTranslation();
+    const { brand_profile: bp } = useResources();
+    return (
+        <>
+            <Field label={t('automation.graphic_template')}>
+                <select className={selectCls} value={d.template ?? 'auto'} onChange={e => set('template', e.target.value)}>
+                    <option value="auto">{t('automation.social_format_auto')}</option>
+                    <option value="carousel">{t('automation.social_format_carousel')}</option>
+                    <option value="quote">{t('automation.social_format_quote')}</option>
+                    <option value="promo">{t('automation.social_format_promo')}</option>
+                    <option value="tip">{t('automation.social_format_tip')}</option>
+                </select>
+            </Field>
+            <Field label={t('automation.brand_name')}>
+                <input
+                    className={inputCls}
+                    value={d.brand_name ?? ''}
+                    onChange={e => set('brand_name', e.target.value)}
+                    placeholder={bp?.brand_name || 'Your Brand'}
+                />
+            </Field>
+            <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                    <label className={labelCls}>{t('automation.primary_color')}</label>
+                    <input
+                        type="color"
+                        value={d.primary_color || bp?.brand_colors?.[0] || '#6366f1'}
+                        onChange={e => set('primary_color', e.target.value)}
+                        style={{ width: '100%', height: 32, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                    />
+                </div>
+                <div style={{ flex: 1 }}>
+                    <label className={labelCls}>{t('automation.secondary_color')}</label>
+                    <input
+                        type="color"
+                        value={d.secondary_color || bp?.brand_colors?.[1] || '#0f172a'}
+                        onChange={e => set('secondary_color', e.target.value)}
+                        style={{ width: '100%', height: 32, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                    />
+                </div>
+            </div>
+        </>
+    );
+}
+
+function PublishSocialPostFields({ d, set }) {
+    const { t } = useTranslation();
+    const { social_accounts = [] } = useResources();
+    const selectedIds = Array.isArray(d.target_accounts) ? d.target_accounts.map(Number) : [];
+
+    const toggleAccount = (id) => {
+        const numId = Number(id);
+        const next = selectedIds.includes(numId)
+            ? selectedIds.filter(x => x !== numId)
+            : [...selectedIds, numId];
+        set('target_accounts', next);
+    };
+
+    return (
+        <>
+            <Field label={t('automation.social_target_accounts')}>
+                {social_accounts.length === 0 ? (
+                    <p style={{ fontSize: 11, color: '#94a3b8' }}>{t('automation.social_no_accounts_hint')}</p>
+                ) : (
+                    <div className="space-y-1.5">
+                        {social_accounts.map(acc => (
+                            <label key={acc.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: '#374151', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedIds.includes(Number(acc.id))}
+                                    onChange={() => toggleAccount(acc.id)}
+                                />
+                                <span style={{ textTransform: 'capitalize', fontWeight: 600 }}>{acc.network}</span>
+                                <span style={{ color: '#6b7280' }}>· {acc.name}</span>
+                            </label>
+                        ))}
+                        <p style={{ fontSize: 10, color: '#94a3b8' }}>{t('automation.social_all_accounts_fallback')}</p>
+                    </div>
+                )}
+            </Field>
+
+            <Field label={t('automation.social_publish_mode')}>
+                <select className={selectCls} value={d.publish_mode ?? 'immediate'} onChange={e => set('publish_mode', e.target.value)}>
+                    <option value="immediate">{t('automation.social_mode_immediate')}</option>
+                    <option value="optimal_slot">{t('automation.social_mode_scheduled')}</option>
+                    <option value="approval_queue">{t('automation.social_mode_approval')}</option>
+                </select>
+            </Field>
+
+            {(d.publish_mode === 'optimal_slot' || d.publish_mode === 'scheduled') && (
+                <Field label={t('automation.social_delay_minutes')}>
+                    <input
+                        type="number"
+                        min={5}
+                        className={inputCls}
+                        value={d.delay_minutes ?? 15}
+                        onChange={e => set('delay_minutes', parseInt(e.target.value, 10) || 15)}
+                    />
+                </Field>
+            )}
+        </>
+    );
+}
+
 /* ─── Edge defaults ──────────────────────────────────────────── */
 const defaultEdgeOptions = {
     animated: true,
@@ -1468,7 +1834,12 @@ function ConfirmDeleteModal({ target, onCancel, onConfirm }) {
     );
 }
 
-const AI_EXAMPLES = ['automation.ai_example_welcome', 'automation.ai_example_abandoned', 'automation.ai_example_faq'];
+const AI_EXAMPLES = [
+    'automation.ai_example_social_strategy',
+    'automation.ai_example_welcome',
+    'automation.ai_example_abandoned',
+    'automation.ai_example_faq',
+];
 
 function AiGenerateModal({ prompt, setPrompt, loading, error, onClose, onGenerate }) {
     const { t } = useTranslation();

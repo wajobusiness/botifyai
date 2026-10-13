@@ -8,7 +8,28 @@ class SocialPost extends Model
 {
     protected $table = 'social_media_posts';
 
-    protected $fillable = ['workspace_id', 'title', 'body', 'media_urls', 'target_accounts', 'status', 'scheduled_at', 'timezone', 'published_at', 'provider_post_id', 'post_url', 'publish_results', 'ai_generated', 'ai_prompt'];
+    protected $fillable = [
+        'workspace_id',
+        'automation_id',
+        'automation_run_id',
+        'title',
+        'body',
+        'media_urls',
+        'target_accounts',
+        'status',
+        'scheduled_at',
+        'timezone',
+        'published_at',
+        'provider_post_id',
+        'post_url',
+        'publish_results',
+        'ai_generated',
+        'ai_prompt',
+        'content_pillar',
+        'content_format',
+        'caption_hash',
+        'requires_approval',
+    ];
 
     protected function casts(): array
     {
@@ -17,6 +38,7 @@ class SocialPost extends Model
             'target_accounts' => 'array',
             'publish_results' => 'array',
             'ai_generated' => 'boolean',
+            'requires_approval' => 'boolean',
             'scheduled_at' => 'datetime',
             'published_at' => 'datetime',
         ];

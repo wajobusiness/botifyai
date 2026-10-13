@@ -103,7 +103,7 @@ class MerchantWalletService
 
         $bankAccount = MerchantBankAccount::where('workspace_id', $workspaceId)->findOrFail($bankAccountId);
 
-        return DB::transaction(function () use ($workspaceId, $bankAccount, $amountCents, $currency) {
+        $payout = DB::transaction(function () use ($workspaceId, $bankAccount, $amountCents, $currency) {
             $wallet = MerchantWallet::where('workspace_id', $workspaceId)
                 ->where('currency', $currency)
                 ->lockForUpdate()
@@ -149,6 +149,10 @@ class MerchantWalletService
 
             return $payout;
         });
+
+        $this->notifyMerchantPayoutStatus($payout, 'requested');
+
+        return $payout;
     }
 
     /**
@@ -170,6 +174,8 @@ class MerchantWalletService
                 'processed_by' => $adminUserId,
             ]);
         });
+
+        $this->notifyMerchantPayoutStatus($payout->fresh(['bankAccount']), 'completed');
     }
 
     /**
@@ -206,5 +212,37 @@ class MerchantWalletService
                 'description' => "Refund for rejected payout #{$payout->reference}: {$reason}",
             ]);
         });
+
+        $this->notifyMerchantPayoutStatus($payout->fresh(['bankAccount']), 'rejected');
+    }
+
+    private function notifyMerchantPayoutStatus(MerchantPayoutRequest $payout, string $eventStatus): void
+    {
+        try {
+            app(\App\Services\Mail\MailService::class)->syncActiveSmtpToDefaultMailer();
+
+            $merchantUsers = \App\Models\User::where(function ($query) use ($payout) {
+                $query->where('workspace_id', $payout->workspace_id)
+                    ->orWhereHas('ownedWorkspaces', function ($q) use ($payout) {
+                        $q->where('workspaces.id', $payout->workspace_id);
+                    })
+                    ->orWhereHas('workspaces', function ($q) use ($payout) {
+                        $q->where('workspaces.id', $payout->workspace_id);
+                    });
+            })->get()->unique('id')->values();
+
+            if ($merchantUsers->isNotEmpty()) {
+                \Illuminate\Support\Facades\Notification::sendNow(
+                    $merchantUsers,
+                    new \App\Modules\Ecommerce\Notifications\MerchantPayoutStatusNotification($payout, $eventStatus)
+                );
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to send merchant payout status notification', [
+                'payout_id' => $payout->id,
+                'status' => $eventStatus,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

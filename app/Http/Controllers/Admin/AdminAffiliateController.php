@@ -159,6 +159,15 @@ class AdminAffiliateController extends Controller
             ]
         );
 
+        $referralCode = 'AFF-'.strtoupper(substr(md5($user->id.$user->email), 0, 8));
+        app(\App\Services\Mail\MailService::class)->sendWithTemplate('affiliate_access_granted', $user->email, [
+            'app_name' => config('app.name'),
+            'user_name' => $user->name,
+            'plan_type' => 'Comped (Lifetime)',
+            'referral_code' => $referralCode,
+            'affiliate_url' => route('client.affiliates.index'),
+        ]);
+
         return back()->with('success', "Affiliate access granted to {$user->name} as Comped (Free Access).");
     }
 
@@ -179,6 +188,7 @@ class AdminAffiliateController extends Controller
                 'status' => 'active',
             ]);
         } else {
+            $newExpiry = $duration;
             AffiliateSubscription::create([
                 'user_id' => $user->id,
                 'plan_type' => $cycle,
@@ -194,6 +204,13 @@ class AdminAffiliateController extends Controller
 
         $user->affiliate_status = 'active';
         $user->save();
+
+        app(\App\Services\Mail\MailService::class)->sendWithTemplate('affiliate_access_extended', $user->email, [
+            'app_name' => config('app.name'),
+            'user_name' => $user->name,
+            'expires_at' => $newExpiry->format('M j, Y'),
+            'affiliate_url' => route('client.affiliates.index'),
+        ]);
 
         return back()->with('success', "Affiliate access extended for {$user->name}.");
     }
@@ -212,6 +229,11 @@ class AdminAffiliateController extends Controller
                 'status' => 'cancelled',
                 'expires_at' => now(),
             ]);
+
+        app(\App\Services\Mail\MailService::class)->sendWithTemplate('affiliate_access_revoked', $user->email, [
+            'app_name' => config('app.name'),
+            'user_name' => $user->name,
+        ]);
 
         return back()->with('success', "Affiliate access revoked for {$user->name}.");
     }

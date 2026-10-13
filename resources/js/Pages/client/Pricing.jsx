@@ -32,6 +32,16 @@ export default function Pricing({
 
     const handleCheckout = (planId, gatewayKey) => {
         if (! planId || ! gatewayKey) return;
+        const selectedPlan = plans.find((p) => p.id === planId);
+        if (typeof window.fbq === 'function') {
+            const priceCents = billingCycle === 'year' ? selectedPlan?.yearly_price_cents : selectedPlan?.monthly_price_cents;
+            window.fbq('track', 'InitiateCheckout', {
+                content_name: selectedPlan?.name || 'Subscription Plan',
+                content_category: 'Subscriptions',
+                value: priceCents ? (priceCents / 100) : 0,
+                currency: 'NGN',
+            });
+        }
         const loadingKey = `${planId}-${gatewayKey}`;
         setLoadingGateway(loadingKey);
         router.post(checkout_url ?? route('client.checkout.store'), {

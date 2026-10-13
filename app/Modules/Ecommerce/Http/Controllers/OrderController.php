@@ -164,6 +164,25 @@ class OrderController extends Controller
             ];
         }
 
+        // 6. Transactional Receipt Email Delivery
+        $lastReceiptSentAt = $order->metadata['last_receipt_sent_at'] ?? null;
+        $receiptEmailError = $order->metadata['receipt_email_error'] ?? null;
+        if ($lastReceiptSentAt) {
+            $timeline[] = [
+                'title' => 'Buyer Receipt & Access Email Sent',
+                'description' => 'Purchase confirmation and download links delivered to '.($order->customer_email ?: ($order->contact?->email ?: 'buyer')),
+                'timestamp' => $lastReceiptSentAt,
+                'status' => 'completed',
+            ];
+        } elseif ($receiptEmailError) {
+            $timeline[] = [
+                'title' => 'Buyer Receipt Email Failed',
+                'description' => $receiptEmailError,
+                'timestamp' => $order->updated_at?->toIso8601String(),
+                'status' => 'failed',
+            ];
+        }
+
         return Inertia::render('Ecommerce/Orders/Show', [
             'order' => [
                 'id' => $order->id,
@@ -223,6 +242,49 @@ class OrderController extends Controller
                 ]),
             ],
         ]);
+    }
+
+    public function resendReceipt(
+        Request $request,
+        EcommerceOrder $order,
+        \App\Modules\Ecommerce\Services\DigitalFulfillmentService $fulfillmentService
+    ): RedirectResponse {
+        $this->authorizeOrder($request, $order);
+
+        if (! $order->isPaid()) {
+            return back()->with('error', 'Receipts can only be sent for paid orders.');
+        }
+
+        $order->loadMissing(['contact', 'store', 'downloadTokens']);
+        $recipientEmail = $order->customer_email ?: $order->contact?->email;
+
+        if (empty($recipientEmail)) {
+            return back()->with('error', 'This order does not have a customer email address.');
+        }
+
+        if ($order->downloadTokens->isEmpty()) {
+            $fulfillmentService->fulfillOrder($order);
+        }
+
+        try {
+            app(\App\Services\Mail\MailService::class)->syncActiveSmtpToDefaultMailer();
+
+            \Illuminate\Support\Facades\Notification::route('mail', $recipientEmail)
+                ->notifyNow(new \App\Modules\Ecommerce\Notifications\OrderReceiptNotification(
+                    $order->fresh(['store', 'downloadTokens.product', 'downloadTokens.digitalAsset'])
+                ));
+
+            $order->update([
+                'metadata' => array_merge($order->metadata ?? [], [
+                    'last_receipt_sent_at' => now()->toIso8601String(),
+                    'receipt_email_error' => null,
+                ]),
+            ]);
+
+            return back()->with('success', "Purchase receipt & download links sent to {$recipientEmail}.");
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Failed to send receipt email: '.$e->getMessage());
+        }
     }
 
     public function refresh(Request $request, EcommerceOrder $order, PayloadNormalizer $normalizer, ContactService $contacts, ContactEnricher $enricher): RedirectResponse

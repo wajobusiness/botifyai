@@ -70,4 +70,15 @@ class SmtpConfiguration extends Model
     {
         return "{$this->host}:{$this->port}";
     }
+
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            app(\App\Services\Mail\MailService::class)->syncActiveSmtpToDefaultMailer();
+        });
+
+        static::deleted(function () {
+            app(\App\Services\Mail\MailService::class)->syncActiveSmtpToDefaultMailer();
+        });
+    }
 }

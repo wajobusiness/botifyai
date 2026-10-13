@@ -416,6 +416,15 @@ class AffiliatePortalController extends Controller
             }
             $user->save();
 
+            $referralCode = 'AFF-' . strtoupper(substr(md5($user->id . $user->email), 0, 8));
+            app(\App\Services\Mail\MailService::class)->sendWithTemplate('affiliate_access_granted', $user->email, [
+                'app_name' => config('app.name'),
+                'user_name' => $user->name,
+                'plan_type' => ucfirst($cycle),
+                'referral_code' => $referralCode,
+                'affiliate_url' => route('client.affiliates.index'),
+            ]);
+
             return redirect()->route('client.affiliates.index')
                 ->with('success', '🎉 Affiliate Partner access activated successfully! Welcome to the Affiliate Hub.');
         }

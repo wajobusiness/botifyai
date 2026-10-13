@@ -79,6 +79,7 @@ class AppServiceProvider extends ServiceProvider
         $this->forceHttpsForWebhookUrls();
 
         // Auto-heal currency symbols in DB (e.g. NGN set to '$' during setup)
+        // and synchronize active database SMTP configuration with Laravel's default mailer
         try {
             if (config('app.installed')) {
                 \App\Models\Currency::where('code', 'NGN')
@@ -89,6 +90,8 @@ class AppServiceProvider extends ServiceProvider
                             ->orWhere('symbol', 'NGN');
                     })
                     ->update(['symbol' => '₦']);
+
+                app(\App\Services\Mail\MailService::class)->syncActiveSmtpToDefaultMailer();
             }
         } catch (\Throwable) {}
 

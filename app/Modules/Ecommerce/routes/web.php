@@ -62,6 +62,7 @@ Route::middleware(['web', 'client-app'])->prefix('app/ecommerce')->name('client.
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/refresh', [OrderController::class, 'refresh'])->name('orders.refresh');
     Route::post('/orders/{order}/fulfill', [OrderController::class, 'fulfill'])->name('orders.fulfill');
+    Route::post('/orders/{order}/resend-receipt', [OrderController::class, 'resendReceipt'])->name('orders.resend-receipt');
 
     // Merchant Wallet & Payouts
     Route::get('/wallet', [MerchantWalletController::class, 'index'])->name('wallet.index');

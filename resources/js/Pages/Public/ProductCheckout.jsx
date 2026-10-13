@@ -53,6 +53,20 @@ export default function ProductCheckout(props = {}) {
         } catch (_) {}
     }, []);
 
+    // Meta Pixel: ViewContent tracking for product sales ad funnel
+    useEffect(() => {
+        if (!product?.id || typeof window === 'undefined') return;
+        if (typeof window.fbq === 'function') {
+            window.fbq('track', 'ViewContent', {
+                content_name: product.name,
+                content_ids: [String(product.id)],
+                content_type: 'product',
+                value: Number(product.price || 0),
+                currency: selectedCurrency || product.currency || 'NGN',
+            });
+        }
+    }, [product?.id]);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [pendingOrderUuid, setPendingOrderUuid] = useState(null);
@@ -120,6 +134,16 @@ export default function ProductCheckout(props = {}) {
         try {
             const res = await axios.post(`/buy/${product.slug || product.id}/checkout`, form);
             if (res.data?.url) {
+                if (typeof window.fbq === 'function') {
+                    window.fbq('track', 'InitiateCheckout', {
+                        content_name: product.name,
+                        content_ids: [String(product.id)],
+                        content_type: 'product',
+                        value: Number(product.price || 0),
+                        currency: selectedCurrency || product.currency || 'NGN',
+                        num_items: 1,
+                    });
+                }
                 if (res.data?.order_uuid) {
                     setPendingOrderUuid(res.data.order_uuid);
                     setIsPolling(true);

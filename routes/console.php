@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Automation\Jobs\DispatchScheduledAutomationsJob;
 use App\Modules\Broadcasting\Jobs\LaunchScheduledCampaignsJob;
 use App\Modules\Broadcasting\Models\UsageMeter;
 use App\Modules\Social\Jobs\DispatchScheduledPostsJob;
@@ -42,6 +43,12 @@ Schedule::call(function () {
 Schedule::job(new DispatchScheduledPostsJob, 'social')
     ->everyMinute()
     ->name('dispatch-social-posts')
+    ->withoutOverlapping();
+
+// Dispatch recurring autonomous workflows (every minute)
+Schedule::job(new DispatchScheduledAutomationsJob, 'automation')
+    ->everyMinute()
+    ->name('dispatch-scheduled-automations')
     ->withoutOverlapping();
 
 // Refresh expiring social OAuth tokens. Twitter/Google access tokens live only

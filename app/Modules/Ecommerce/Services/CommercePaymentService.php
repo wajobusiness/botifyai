@@ -52,7 +52,7 @@ class CommercePaymentService
      */
     public function handlePaymentSuccess(EcommerceOrder $order, string $reference, array $gatewayData, string $gateway = 'paystack'): bool
     {
-        return DB::transaction(function () use ($order, $reference, $gatewayData, $gateway) {
+        $txResult = DB::transaction(function () use ($order, $reference, $gatewayData, $gateway) {
             /** @var EcommerceOrder $lockedOrder */
             $lockedOrder = EcommerceOrder::with('store')
                 ->where('id', $order->id)
@@ -61,7 +61,7 @@ class CommercePaymentService
 
             // 1. Idempotency check: Already processed?
             if ($lockedOrder->isPaid()) {
-                return true;
+                return ['status' => 'already_paid', 'order' => $lockedOrder];
             }
 
             // 2. Strict Security: Verify currency & amount match expected order total
@@ -83,7 +83,7 @@ class CommercePaymentService
                     'failure_reason' => 'Amount paid is less than required order total.',
                 ]);
 
-                return false;
+                return ['status' => 'failed', 'order' => $lockedOrder];
             }
 
             // 3. Update order financial and lifecycle state
@@ -118,64 +118,150 @@ class CommercePaymentService
             // 7. CRM Contact Resolution & Metric Enrichment
             $contact = $this->resolveAndEnrichContact($lockedOrder);
 
-            // 8. Dispatch normalized automation event for workflow triggers
-            if ($contact) {
-                $downloadUrl = count($tokens) > 0
-                    ? route('public.checkout.receipt', ['orderUuid' => $lockedOrder->uuid])
-                    : '';
+            return [
+                'status' => 'newly_paid',
+                'order' => $lockedOrder->fresh(['store', 'downloadTokens.product', 'downloadTokens.digitalAsset']),
+                'contact' => $contact,
+                'tokens' => $tokens,
+            ];
+        });
 
-                CommerceEventReceived::dispatch(
-                    $lockedOrder->workspace_id,
-                    $contact->id,
-                    'order.paid',
-                    [
-                        'order_id' => (string) $lockedOrder->id,
-                        'order_number' => $lockedOrder->number,
-                        'total' => (string) $lockedOrder->total,
-                        'currency' => $lockedOrder->currency,
-                        'customer_name' => $lockedOrder->customer_name ?? '',
-                        'customer_email' => $lockedOrder->customer_email ?? '',
-                        'download_url' => $downloadUrl,
-                    ]
-                );
-            }
+        if ($txResult['status'] === 'failed') {
+            return false;
+        }
 
-            // 9. Send Customer Transactional Receipt Email
-            if (! empty($lockedOrder->customer_email)) {
-                try {
-                    Notification::route('mail', $lockedOrder->customer_email)
-                        ->notifyNow(new OrderReceiptNotification($lockedOrder));
-                } catch (\Throwable $e) {
-                    Log::warning('Failed to send buyer order receipt email', [
-                        'order_id' => $lockedOrder->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
+        if ($txResult['status'] === 'already_paid') {
+            return true;
+        }
 
-            // 10. Send Real-time Merchant Notification
+        /** @var EcommerceOrder $paidOrder */
+        $paidOrder = $txResult['order'];
+        $contact = $txResult['contact'];
+        $tokens = $txResult['tokens'];
+
+        // Ensure active database SMTP configuration is synced to Laravel's default mailer
+        app(\App\Services\Mail\MailService::class)->syncActiveSmtpToDefaultMailer();
+
+        // 8. Dispatch normalized automation event for workflow triggers
+        if ($contact) {
+            $downloadUrl = count($tokens) > 0
+                ? route('public.checkout.receipt', ['orderUuid' => $paidOrder->uuid])
+                : '';
+
+            CommerceEventReceived::dispatch(
+                $paidOrder->workspace_id,
+                $contact->id,
+                'order.paid',
+                [
+                    'order_id' => (string) $paidOrder->id,
+                    'order_number' => $paidOrder->number,
+                    'total' => (string) $paidOrder->total,
+                    'currency' => $paidOrder->currency,
+                    'customer_name' => $paidOrder->customer_name ?? '',
+                    'customer_email' => $paidOrder->customer_email ?? '',
+                    'download_url' => $downloadUrl,
+                ]
+            );
+        }
+
+        // 9. Send Customer Transactional Receipt Email
+        if (! empty($paidOrder->customer_email)) {
             try {
-                $merchantUsers = User::whereHas('workspaces', function ($q) use ($lockedOrder) {
-                    $q->where('workspaces.id', $lockedOrder->workspace_id);
-                })->get();
+                Notification::route('mail', $paidOrder->customer_email)
+                    ->notifyNow(new OrderReceiptNotification($paidOrder));
 
-                Notification::send($merchantUsers, new NewOrderMerchantNotification($lockedOrder));
+                $paidOrder->update([
+                    'metadata' => array_merge($paidOrder->metadata ?? [], [
+                        'last_receipt_sent_at' => now()->toIso8601String(),
+                        'receipt_email_error' => null,
+                    ]),
+                ]);
             } catch (\Throwable $e) {
-                Log::warning('Failed to notify merchant users of new order', [
-                    'order_id' => $lockedOrder->id,
+                Log::warning('Failed to send buyer order receipt email', [
+                    'order_id' => $paidOrder->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                $paidOrder->update([
+                    'metadata' => array_merge($paidOrder->metadata ?? [], [
+                        'receipt_email_error' => Str::limit($e->getMessage(), 250),
+                    ]),
+                ]);
+            }
+        }
+
+        // 10. Send Real-time & Email Merchant Notification (Workspace Owners, Members, and Store Support Email)
+        try {
+            $merchantUsers = User::where(function ($query) use ($paidOrder) {
+                $query->where('workspace_id', $paidOrder->workspace_id)
+                    ->orWhereHas('ownedWorkspaces', function ($q) use ($paidOrder) {
+                        $q->where('workspaces.id', $paidOrder->workspace_id);
+                    })
+                    ->orWhereHas('workspaces', function ($q) use ($paidOrder) {
+                        $q->where('workspaces.id', $paidOrder->workspace_id);
+                    });
+            })->get()->unique('id')->values();
+
+            if ($merchantUsers->isNotEmpty()) {
+                Notification::sendNow($merchantUsers, new NewOrderMerchantNotification($paidOrder));
+            }
+
+            $storeSupportEmail = $paidOrder->store?->support_email;
+            if (
+                ! empty($storeSupportEmail)
+                && filter_var($storeSupportEmail, FILTER_VALIDATE_EMAIL)
+                && ! $merchantUsers->contains(fn (User $u) => strcasecmp((string) $u->email, $storeSupportEmail) === 0)
+            ) {
+                Notification::route('mail', $storeSupportEmail)
+                    ->notifyNow(new NewOrderMerchantNotification($paidOrder));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to notify merchant users of new order', [
+                'order_id' => $paidOrder->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // 11. Notify Referring Affiliate Partner (if order was referred via affiliate link)
+        $affiliateMeta = $paidOrder->metadata['affiliate'] ?? null;
+        if (is_array($affiliateMeta) && ! empty($affiliateMeta['referral_code'])) {
+            try {
+                $refCode = strtoupper(trim((string) $affiliateMeta['referral_code']));
+                $affiliateUser = User::where(function ($q) {
+                    $q->where('affiliate_status', '!=', 'inactive')
+                        ->orWhereJsonContains('user_roles', 'affiliate')
+                        ->orWhere('active_role', 'affiliate')
+                        ->orWhereHas('affiliateSubscriptions');
+                })->get()->first(function (User $u) use ($refCode) {
+                    $expectedCode = 'AFF-' . strtoupper(substr(md5($u->id . $u->email), 0, 8));
+
+                    return $expectedCode === $refCode;
+                });
+
+                if ($affiliateUser) {
+                    Notification::sendNow($affiliateUser, new \App\Modules\Ecommerce\Notifications\AffiliateCommissionEarnedNotification(
+                        $paidOrder,
+                        (float) ($affiliateMeta['commission_amount'] ?? 0),
+                        (float) ($affiliateMeta['commission_percentage'] ?? 0),
+                        $refCode
+                    ));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to notify affiliate partner of commission earned', [
+                    'order_id' => $paidOrder->id,
                     'error' => $e->getMessage(),
                 ]);
             }
+        }
 
-            // 11. Dispatch Server-Side Conversion API Events (Meta CAPI / TikTok Events API)
-            try {
-                app(\App\Modules\Ecommerce\Services\MarketingPixelService::class)->trackServerSidePurchase($lockedOrder);
-            } catch (\Throwable $e) {
-                Log::warning('MarketingPixelService server-side conversion dispatch failed: ' . $e->getMessage());
-            }
+        // 12. Dispatch Server-Side Conversion API Events (Meta CAPI / TikTok Events API)
+        try {
+            app(\App\Modules\Ecommerce\Services\MarketingPixelService::class)->trackServerSidePurchase($paidOrder);
+        } catch (\Throwable $e) {
+            Log::warning('MarketingPixelService server-side conversion dispatch failed: ' . $e->getMessage());
+        }
 
-            return true;
-        });
+        return true;
     }
 
     /**
@@ -214,6 +300,20 @@ class CommercePaymentService
                     'reason' => $reason,
                 ]
             );
+        }
+
+        if (! empty($order->customer_email)) {
+            try {
+                app(\App\Services\Mail\MailService::class)->syncActiveSmtpToDefaultMailer();
+
+                Notification::route('mail', $order->customer_email)
+                    ->notifyNow(new \App\Modules\Ecommerce\Notifications\OrderPaymentFailedNotification($order, $reason));
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send buyer payment failure email', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 

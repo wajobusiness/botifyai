@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import LandingLayout from '@/Layouts/LandingLayout';
 import SeoHead from '@/Components/SeoHead';
@@ -31,6 +31,16 @@ export default function Pricing({ landing = {}, plans = [], canRegister }) {
     const [yearly, setYearly] = useState(false);
     const [openFaq, setOpenFaq] = useState(null);
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (typeof window.fbq === 'function') {
+            window.fbq('track', 'ViewContent', {
+                content_name: 'Subscription Pricing Plans',
+                content_category: 'Subscriptions',
+            });
+        }
+    }, []);
 
     const faqs = [1, 2, 3, 4, 5].map((i) => ({
         q: s(`faq_${i}_q`),

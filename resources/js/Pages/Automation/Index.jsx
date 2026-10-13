@@ -2,7 +2,7 @@ import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
 import {
-    Plus, Zap, Play, Pause, Trash2, BarChart2, Pencil, Clock,
+    Plus, Zap, Play, Pause, Trash2, BarChart2, Pencil, Clock, CalendarClock,
     UserRound, Tag, MessageCircle, Megaphone, FileText, Link2,
     ShoppingBag, PackageCheck, XCircle, ShoppingCart, UserPlus,
     Sparkles, Loader2, AlertTriangle, DollarSign, AlertCircle, RefreshCw,
@@ -25,6 +25,7 @@ const STATUS_LABEL_KEYS = {
 
 // Maps a stored trigger_type to its display label + icon (mirrors the builder's TRIGGER_TYPES).
 const TRIGGER_META = {
+    'schedule.recurring':{ labelKey: 'automation.trigger_schedule_recurring', Icon: CalendarClock },
     'contact.created':   { labelKey: 'automation.trigger_contact_created',   Icon: UserRound     },
     'contact.tag_added': { labelKey: 'automation.trigger_tag_added',         Icon: Tag           },
     'message.received':  { labelKey: 'automation.trigger_message_received',  Icon: MessageCircle },
@@ -52,9 +53,12 @@ export default function AutomationIndex({ automations }) {
     const { t } = useTranslation();
     const { props } = usePage();
     const flash = props.flash ?? {};
+    const isSocialAiQuery = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('ai') === 'social';
     const [showCreate, setShowCreate] = useState(false);
-    const [showAi, setShowAi] = useState(false);
-    const [aiPrompt, setAiPrompt] = useState('');
+    const [showAi, setShowAi] = useState(isSocialAiQuery);
+    const [aiPrompt, setAiPrompt] = useState(
+        isSocialAiQuery ? t('automation.ai_example_social_strategy') : ''
+    );
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState(null);
 
@@ -99,13 +103,23 @@ export default function AutomationIndex({ automations }) {
         <ClientLayout title={t('automation.title')}>
             <Head title={t('automation.title')} />
             <div className="space-y-5">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{t('automation.title')}</h2>
                         <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">{t('automation.subtitle')}</p>
                     </div>
                     {(
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    setAiError(null);
+                                    setAiPrompt(t('automation.ai_example_social_strategy'));
+                                    setShowAi(true);
+                                }}
+                                className="flex items-center gap-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-2 text-sm font-medium text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition"
+                            >
+                                <CalendarClock className="h-4 w-4" /> {t('nav.social_automation', 'Social Automation')}
+                            </button>
                             <button onClick={() => { setAiError(null); setShowAi(true); }} className="ai-glow flex items-center gap-1.5 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/30 px-3 py-2 text-sm font-medium text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition">
                                 <Sparkles className="h-4 w-4" /> {t('automation.ai_generate')}
                             </button>
@@ -247,7 +261,7 @@ export default function AutomationIndex({ automations }) {
                             className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-500"
                         />
                         <div className="flex flex-wrap gap-2">
-                            {['automation.ai_example_welcome', 'automation.ai_example_abandoned', 'automation.ai_example_faq'].map(k => (
+                            {['automation.ai_example_social_strategy', 'automation.ai_example_welcome', 'automation.ai_example_abandoned', 'automation.ai_example_faq'].map(k => (
                                 <button key={k} disabled={aiLoading} onClick={() => setAiPrompt(t(k))} className="rounded-full border border-neutral-200 dark:border-neutral-700 px-3 py-1 text-xs text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition">
                                     {t(k)}
                                 </button>
