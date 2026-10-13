@@ -40,13 +40,17 @@ Schedule::call(function () {
 })->daily()->name('sync-whatsapp-templates');
 
 // Dispatch scheduled social posts (every minute)
-Schedule::job(new DispatchScheduledPostsJob, 'social')
+Schedule::call(function () {
+    (new DispatchScheduledPostsJob)->handle();
+})
     ->everyMinute()
     ->name('dispatch-social-posts')
     ->withoutOverlapping();
 
 // Dispatch recurring autonomous workflows (every minute)
-Schedule::job(new DispatchScheduledAutomationsJob, 'automation')
+Schedule::call(function () {
+    (new DispatchScheduledAutomationsJob)->handle(app(\App\Modules\Automation\Services\AutomationEngine::class));
+})
     ->everyMinute()
     ->name('dispatch-scheduled-automations')
     ->withoutOverlapping();

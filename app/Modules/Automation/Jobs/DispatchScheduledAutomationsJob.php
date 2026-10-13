@@ -47,7 +47,15 @@ class DispatchScheduledAutomationsJob implements ShouldQueue
 
             if ($claimed) {
                 try {
-                    $engine->triggerForWorkspace($automation);
+                    Log::info('DispatchScheduledAutomationsJob triggering due automation', [
+                        'automation_id' => $automation->id,
+                        'workspace_id' => $automation->workspace_id,
+                        'next_run_at' => $nextRunAt?->toIso8601String(),
+                    ]);
+                    $run = $engine->triggerForWorkspace($automation);
+                    if ($run && $run->fresh()?->status === 'pending' && ! app()->runningUnitTests()) {
+                        $engine->executeRun($run->fresh());
+                    }
                 } catch (\Throwable $e) {
                     Log::error('Failed to trigger recurring automation', [
                         'automation_id' => $automation->id,

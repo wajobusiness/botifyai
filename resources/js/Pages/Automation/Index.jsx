@@ -73,7 +73,8 @@ export default function AutomationIndex({ automations }) {
     const handleGenerate = () => {
         setAiLoading(true);
         setAiError(null);
-        axios.post(route('client.automations.generate'), { prompt: aiPrompt, persist: true })
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        axios.post(route('client.automations.generate'), { prompt: aiPrompt, persist: true, timezone })
             .then(res => {
                 if (res.data?.ok && res.data.redirect) {
                     router.visit(res.data.redirect);

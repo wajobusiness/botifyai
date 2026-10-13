@@ -390,5 +390,89 @@ class AutonomousSocialAutomationTest extends TestCase
         $this->assertSame('Digital marketing, AI, web hosting and business growth', $profile->niche);
         $this->assertSame(['Digital Marketing', 'AI', 'Web Hosting', 'Business Growth'], $profile->content_pillars);
     }
+
+    public function test_automation_engine_executes_react_flow_trigger_node_and_action_node_serialization(): void
+    {
+        Queue::fake([PublishSocialPostJob::class]);
+
+        $wid = $this->ctx['workspace']->id;
+        $account = SocialAccount::create([
+            'workspace_id' => $wid,
+            'network' => 'linkedin',
+            'account_id' => 'li_rf_node',
+            'name' => 'ReactFlow LinkedIn',
+            'access_token' => 'secret',
+            'active' => true,
+        ]);
+
+        // Simulate a workflow saved from React Flow with type="triggerNode" and type="actionNode"
+        $automation = Automation::create([
+            'workspace_id' => $wid,
+            'name' => 'ReactFlow Saved Automation',
+            'status' => 'active',
+            'trigger_type' => 'schedule.recurring',
+            'trigger_config' => [
+                'frequency' => 'daily',
+                'times' => ['09:00'],
+                'timezone' => 'UTC',
+            ],
+            'nodes' => [
+                ['id' => 'trigger-1', 'type' => 'triggerNode', 'data' => ['nodeType' => 'trigger', 'triggerType' => 'schedule.recurring']],
+                ['id' => 'n1', 'type' => 'actionNode', 'data' => [
+                    'nodeType' => 'publish_social_post',
+                    'title' => 'ReactFlow Scheduled Post',
+                    'body' => 'Testing triggerNode and actionNode execution.',
+                    'target_accounts' => [$account->id],
+                    'publish_mode' => 'immediate',
+                ]],
+            ],
+            'edges' => [
+                ['source' => 'trigger-1', 'target' => 'n1'],
+            ],
+        ]);
+
+        $run = app(AutomationEngine::class)->triggerForWorkspace($automation);
+        $this->assertNotNull($run);
+        $this->assertSame('completed', $run->fresh()->status);
+
+        $post = SocialPost::where('workspace_id', $wid)->first();
+        $this->assertNotNull($post);
+        $this->assertNotNull($post->scheduled_at, 'Immediate automated posts must populate scheduled_at for calendar visibility');
+        $this->assertSame('publishing', $post->status);
+    }
+
+    public function test_social_calendar_projects_upcoming_recurring_automation_slots(): void
+    {
+        $wid = $this->ctx['workspace']->id;
+
+        $automation = Automation::create([
+            'workspace_id' => $wid,
+            'name' => 'Daily AI Social Schedule',
+            'status' => 'active',
+            'trigger_type' => 'schedule.recurring',
+            'trigger_config' => [
+                'frequency' => 'daily',
+                'times' => ['09:00', '16:00'],
+                'timezone' => 'UTC',
+            ],
+            'next_run_at' => now()->addHours(2),
+            'nodes' => [
+                ['id' => 'trigger-1', 'type' => 'trigger', 'data' => ['triggerType' => 'schedule.recurring']],
+                ['id' => 'n1', 'type' => 'publish_social_post', 'data' => [
+                    'nodeType' => 'publish_social_post',
+                    'title' => 'Daily AI Tip',
+                    'publish_mode' => 'immediate',
+                ]],
+            ],
+            'edges' => [
+                ['source' => 'trigger-1', 'target' => 'n1'],
+            ],
+        ]);
+
+        $slots = $automation->computeRunsBetween(now(), now()->addDays(3), 10);
+        $this->assertNotEmpty($slots);
+        $this->assertGreaterThanOrEqual(4, count($slots));
+    }
 }
+
 

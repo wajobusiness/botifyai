@@ -32,7 +32,6 @@ export default function useClientNav() {
 
     const accountItems = [
         { label: t('nav.dashboard'), href: safeRoute('client.dashboard'), icon: <LayoutDashboard className={iconClass} />, activePattern: 'client.dashboard' },
-        { label: t('nav.marketing_hub', 'Marketing Hub'), href: '/app/marketing', icon: <Megaphone className={iconClass} />, activePattern: 'client.marketing.*' },
     ];
 
     const accountSettingsItems = [

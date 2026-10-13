@@ -458,8 +458,14 @@ function TriggerConfigPanel({ automation, onTypeChange, onConfigChange, webhookU
     const tc = automation.trigger_config ?? {};
     const freq = tc.frequency ?? 'daily';
     const daysOfWeek = Array.isArray(tc.days_of_week) ? tc.days_of_week : ['mon', 'tue', 'wed', 'thu', 'fri'];
+    const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
     const timesStr = Array.isArray(tc.times) ? tc.times.join(', ') : (tc.time ?? '09:00');
-    const tz = tc.timezone ?? (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+    const tz = tc.timezone || browserTz;
+    const [timesInput, setTimesInput] = useState(timesStr);
+
+    useEffect(() => {
+        setTimesInput(Array.isArray(tc.times) ? tc.times.join(', ') : (tc.time ?? '09:00'));
+    }, [automation.uuid, triggerType]);
 
     const toggleDay = (day) => {
         const next = daysOfWeek.includes(day)
@@ -552,22 +558,46 @@ function TriggerConfigPanel({ automation, onTypeChange, onConfigChange, webhookU
                             <p style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>{t('automation.schedule_times_hint')}</p>
                             <input
                                 className={inputCls}
-                                value={timesStr}
+                                value={timesInput}
                                 onChange={e => {
-                                    const raw = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                                    const val = e.target.value;
+                                    setTimesInput(val);
+                                    const raw = val.split(',').map(s => s.trim()).filter(Boolean);
                                     onConfigChange({ times: raw.length ? raw : ['09:00'], timezone: tz });
+                                }}
+                                onBlur={() => {
+                                    const raw = timesInput.split(',').map(s => s.trim()).filter(Boolean);
+                                    const normalized = raw.length ? raw : ['09:00'];
+                                    setTimesInput(normalized.join(', '));
+                                    onConfigChange({ times: normalized, timezone: tz });
                                 }}
                                 placeholder="09:00, 16:00"
                             />
                         </Field>
 
                         <Field label={t('automation.schedule_timezone')}>
-                            <input
-                                className={inputCls}
-                                value={tz}
-                                onChange={e => onConfigChange({ timezone: e.target.value })}
-                                placeholder="UTC"
-                            />
+                            <div style={{ display: 'flex', gap: 6 }}>
+                                <input
+                                    className={inputCls}
+                                    value={tz}
+                                    onChange={e => onConfigChange({ timezone: e.target.value })}
+                                    placeholder={browserTz}
+                                />
+                                {tz !== browserTz && (
+                                    <button
+                                        type="button"
+                                        onClick={() => onConfigChange({ timezone: browserTz })}
+                                        style={{
+                                            fontSize: 10, fontWeight: 600, padding: '0 8px', borderRadius: 6,
+                                            border: '1px solid #c7d2fe', background: '#eef2ff', color: '#4f46e5',
+                                            whiteSpace: 'nowrap', cursor: 'pointer',
+                                        }}
+                                        title={`Use browser timezone (${browserTz})`}
+                                    >
+                                        Use Local ({browserTz})
+                                    </button>
+                                )}
+                            </div>
                         </Field>
                     </>
                 )}
@@ -1679,7 +1709,7 @@ function makeNode(type, existingCount, position) {
 function serializeNodes(nodes) {
     return nodes.map(n => ({
         id: n.id,
-        type: n.data?.nodeType ?? n.type,
+        type: (n.type === 'triggerNode' || n.type === 'trigger') ? 'trigger' : (n.data?.nodeType ?? n.type),
         position: n.position,
         data: n.data,
     }));
@@ -2015,7 +2045,14 @@ function AutomationBuilderInner({ automation: initial }) {
 
     const toggleStatus = () => {
         const newStatus = automation.status === 'active' ? 'paused' : 'active';
-        router.put(route('client.automations.update', automation.uuid), { status: newStatus }, {
+        router.put(route('client.automations.update', automation.uuid), {
+            status: newStatus,
+            nodes: serializeNodes(nodes),
+            edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target, sourceHandle: e.sourceHandle, targetHandle: e.targetHandle })),
+            trigger_type: automation.trigger_type,
+            trigger_config: automation.trigger_config,
+            name: automation.name,
+        }, {
             preserveScroll: true,
             onSuccess: () => setAutomation(a => ({ ...a, status: newStatus })),
         });
@@ -2053,7 +2090,8 @@ function AutomationBuilderInner({ automation: initial }) {
     const generateAi = () => {
         setAiLoading(true);
         setAiError(null);
-        axios.post(route('client.automations.generate'), { prompt: aiPrompt, persist: false })
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        axios.post(route('client.automations.generate'), { prompt: aiPrompt, persist: false, timezone })
             .then(res => {
                 if (res.data?.ok && res.data.graph) {
                     applyGraph(res.data.graph);

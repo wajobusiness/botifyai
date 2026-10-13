@@ -4,12 +4,18 @@ namespace App\Modules\Social\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\AI\Services\LlmGateway;
+use App\Modules\Automation\Jobs\DispatchScheduledAutomationsJob;
+use App\Modules\Automation\Models\Automation;
+use App\Modules\Automation\Services\AutomationEngine;
+use App\Modules\Social\Jobs\DispatchScheduledPostsJob;
 use App\Modules\Social\Jobs\PublishSocialPostJob;
 use App\Modules\Social\Models\SocialAccount;
 use App\Modules\Social\Models\SocialPost;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,9 +27,46 @@ class SocialPostController extends Controller
         return (int) ($request->user()->current_workspace_id ?? $request->user()->workspace_id);
     }
 
+    /**
+     * Auto-heal any draft recurring social automations in this workspace and execute
+     * due scheduled automations/posts so users see immediate execution even if cron is delayed.
+     */
+    private function runOpportunisticSchedulerTick(int $workspaceId): void
+    {
+        if (app()->runningUnitTests()) {
+            return;
+        }
+
+        try {
+            Automation::where('workspace_id', $workspaceId)
+                ->where('trigger_type', 'schedule.recurring')
+                ->where(function ($q) {
+                    $q->where('status', 'draft')->orWhereNull('next_run_at');
+                })
+                ->get()
+                ->each(function (Automation $automation) {
+                    if ($automation->status === 'draft') {
+                        $automation->status = 'active';
+                    }
+                    if (! $automation->next_run_at) {
+                        $automation->next_run_at = $automation->computeNextRunAt();
+                    }
+                    $automation->save();
+                });
+
+            if (Cache::add('social_automation_due_tick', 1, 20)) {
+                (new DispatchScheduledAutomationsJob)->handle(app(AutomationEngine::class));
+                (new DispatchScheduledPostsJob)->handle();
+            }
+        } catch (\Throwable) {
+            // Non-blocking opportunistic tick
+        }
+    }
+
     public function index(Request $request): Response
     {
         $wid = $this->workspaceId($request);
+        $this->runOpportunisticSchedulerTick($wid);
 
         $status = $request->query('status');
         $network = $request->query('network');
@@ -70,6 +113,8 @@ class SocialPostController extends Controller
     public function calendar(Request $request): Response
     {
         $wid  = $this->workspaceId($request);
+        $this->runOpportunisticSchedulerTick($wid);
+
         $month = $request->query('month', now()->format('Y-m'));
         abort_unless(preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month), 422, 'Invalid month format.');
 
@@ -97,9 +142,16 @@ class SocialPostController extends Controller
             ? $accounts->where('network', $filterNetwork)->pluck('id')->map(fn ($id) => (string) $id)
             : collect();
 
-        $posts = SocialPost::where('workspace_id', $wid)
-            ->whereNotNull('scheduled_at')
-            ->whereBetween('scheduled_at', [$start, $end])
+        $rawPosts = SocialPost::where('workspace_id', $wid)
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('scheduled_at', [$start, $end])
+                    ->orWhere(function ($q2) use ($start, $end) {
+                        $q2->whereNull('scheduled_at')->whereBetween('published_at', [$start, $end]);
+                    })
+                    ->orWhere(function ($q3) use ($start, $end) {
+                        $q3->whereNull('scheduled_at')->whereNull('published_at')->whereBetween('created_at', [$start, $end]);
+                    });
+            })
             ->when($filterStatus, fn ($q) => $q->where('status', $filterStatus))
             ->when($filterAccountId, function ($q) use ($filterAccountId) {
                 $q->where(function ($inner) use ($filterAccountId) {
@@ -115,7 +167,44 @@ class SocialPostController extends Controller
                     }
                 });
             })
-            ->get(['id', 'title', 'status', 'scheduled_at', 'timezone', 'target_accounts']);
+            ->get(['id', 'title', 'body', 'status', 'scheduled_at', 'published_at', 'created_at', 'timezone', 'target_accounts', 'automation_id']);
+
+        $posts = $rawPosts->map(fn (SocialPost $p) => [
+            'id' => $p->id,
+            'title' => $p->title ?: Str::limit(trim((string) $p->body), 42) ?: ('Post #' . $p->id),
+            'status' => $p->status,
+            'scheduled_at' => ($p->scheduled_at ?? $p->published_at ?? $p->created_at)?->toIso8601String(),
+            'timezone' => $p->timezone,
+            'target_accounts' => $p->target_accounts,
+            'automation_id' => $p->automation_id,
+        ])->values()->all();
+
+        // Also project upcoming scheduled runs from active recurring social automations in this workspace
+        if (! $filterStatus || $filterStatus === 'scheduled') {
+            $projectionStart = $start->gt(now()) ? $start : now();
+            if ($projectionStart->lte($end)) {
+                $activeAutomations = Automation::where('workspace_id', $wid)
+                    ->where('status', 'active')
+                    ->where('trigger_type', 'schedule.recurring')
+                    ->get();
+
+                foreach ($activeAutomations as $automation) {
+                    $slots = $automation->computeRunsBetween($projectionStart, $end, 45);
+                    foreach ($slots as $slot) {
+                        $posts[] = [
+                            'id' => "auto-{$automation->id}-{$slot->timestamp}",
+                            'title' => '⚡ ' . $automation->name . ' (' . $slot->copy()->setTimezone($tz)->format('H:i') . ')',
+                            'status' => 'scheduled',
+                            'scheduled_at' => $slot->toIso8601String(),
+                            'timezone' => (string) ($automation->trigger_config['timezone'] ?? $userTz),
+                            'target_accounts' => $accounts->pluck('id')->all(),
+                            'automation_uuid' => $automation->uuid,
+                            'is_automation_slot' => true,
+                        ];
+                    }
+                }
+            }
+        }
 
         return Inertia::render('Social/Calendar', [
             'posts'    => $posts,

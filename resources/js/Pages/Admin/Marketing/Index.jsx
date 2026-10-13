@@ -80,6 +80,7 @@ const SEGMENT_FIELD_OPTIONS = [
 ];
 
 export default function AdminMarketingIndex({
+    scope = null,
     kpis = {},
     campaignPerformance = {},
     productBuyerCohorts = [],
@@ -98,7 +99,7 @@ export default function AdminMarketingIndex({
     filters = {},
 }) {
     const { flash } = usePage().props;
-    const isAppRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/app');
+    const isAppRoute = scope === 'workspace' || (scope !== 'admin' && typeof window !== 'undefined' && window.location.pathname.startsWith('/app'));
     const basePath = isAppRoute ? '/app/marketing' : '/admin/marketing';
     const LayoutComponent = isAppRoute ? ClientLayout : AdminLayout;
     const [activeTab, setActiveTab] = useState(filters.tab || 'overview');
@@ -379,7 +380,7 @@ export default function AdminMarketingIndex({
 
     return (
         <LayoutComponent title="Marketing Hub">
-            <Head title="Admin Marketing Hub & Customer Segmentation" />
+            <Head title={isAppRoute ? 'Marketing Hub & Customer Segmentation' : 'Admin Marketing Hub & Customer Segmentation'} />
 
             <div className="space-y-6">
                 {/* Hero Header */}
@@ -388,13 +389,15 @@ export default function AdminMarketingIndex({
                         <div>
                             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-indigo-200">
                                 <Megaphone className="h-3.5 w-3.5" />
-                                CENTRALIZED PLATFORM MARKETING CONTROL CENTER
+                                {isAppRoute ? 'WORKSPACE MARKETING & CRM CONTROL CENTER' : 'CENTRALIZED PLATFORM MARKETING CONTROL CENTER'}
                             </div>
                             <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-                                Admin Marketing Hub & Customer Segmentation
+                                {isAppRoute ? 'Marketing Hub & Customer Segmentation' : 'Admin Marketing Hub & Customer Segmentation'}
                             </h1>
                             <p className="mt-1 max-w-3xl text-sm text-indigo-200/90">
-                                Unified customer intelligence across Registered Users, SaaS Subscribers, Digital & Ecommerce Product Buyers, and Affiliates—powered by AI campaign generation and isolated bulk email streams.
+                                {isAppRoute
+                                    ? 'Manage your workspace contacts, store buyers, custom segments, and AI-powered email campaigns from a single command center.'
+                                    : 'Unified customer intelligence across Registered Users, SaaS Subscribers, Digital & Ecommerce Product Buyers, and Affiliates—powered by AI campaign generation and isolated bulk email streams.'}
                             </p>
                         </div>
 
@@ -406,7 +409,11 @@ export default function AdminMarketingIndex({
                                 className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-xs font-semibold text-white backdrop-blur hover:bg-white/20 disabled:opacity-50 transition"
                             >
                                 <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-                                {syncing ? 'Syncing Platform Data...' : 'Sync Platform Audience'}
+                                {syncing
+                                    ? 'Syncing Audience...'
+                                    : isAppRoute
+                                    ? 'Sync Store Buyers'
+                                    : 'Sync Platform Audience'}
                             </button>
                             <button
                                 type="button"
@@ -465,14 +472,16 @@ export default function AdminMarketingIndex({
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                             <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-medium text-neutral-500">Registered Users</span>
+                                    <span className="text-xs font-medium text-neutral-500">
+                                        {isAppRoute ? 'Total Contacts' : 'Registered Users'}
+                                    </span>
                                     <Users className="h-4 w-4 text-blue-500" />
                                 </div>
                                 <p className="mt-2 text-2xl font-bold text-neutral-900 dark:text-white">
                                     {(kpis.total_users ?? 0).toLocaleString()}
                                 </p>
                                 <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
-                                    {(kpis.verified_users ?? 0).toLocaleString()} verified • +{kpis.todays_registrations ?? 0} today
+                                    {(kpis.verified_users ?? 0).toLocaleString()} {isAppRoute ? 'opted-in' : 'verified'} • +{kpis.todays_registrations ?? 0} today
                                 </p>
                             </div>
 
@@ -491,7 +500,9 @@ export default function AdminMarketingIndex({
 
                             <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-medium text-neutral-500">Active Subscribers</span>
+                                    <span className="text-xs font-medium text-neutral-500">
+                                        {isAppRoute ? 'Email Subscribers' : 'Active Subscribers'}
+                                    </span>
                                     <CreditCard className="h-4 w-4 text-purple-500" />
                                 </div>
                                 <p className="mt-2 text-2xl font-bold text-neutral-900 dark:text-white">
@@ -521,7 +532,9 @@ export default function AdminMarketingIndex({
 
                             <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-medium text-neutral-500">Inactive Registered</span>
+                                    <span className="text-xs font-medium text-neutral-500">
+                                        {isAppRoute ? 'Non-Buyer Contacts' : 'Inactive Registered'}
+                                    </span>
                                     <Clock className="h-4 w-4 text-orange-500" />
                                 </div>
                                 <p className="mt-2 text-2xl font-bold text-neutral-900 dark:text-white">
@@ -555,10 +568,10 @@ export default function AdminMarketingIndex({
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <h2 className="text-base font-bold text-neutral-900 dark:text-white">
-                                        Platform Campaign Performance & Deliverability
+                                        {isAppRoute ? 'Workspace Campaign Performance & Deliverability' : 'Platform Campaign Performance & Deliverability'}
                                     </h2>
                                     <p className="text-xs text-neutral-500">
-                                        Real-time engagement telemetry across {campaignPerformance.total_campaigns ?? 0} admin marketing campaigns
+                                        Real-time engagement telemetry across {campaignPerformance.total_campaigns ?? 0} {isAppRoute ? 'workspace' : 'admin'} marketing campaigns
                                     </p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
@@ -814,31 +827,35 @@ export default function AdminMarketingIndex({
 
                             <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
                                 <h3 className="text-base font-bold text-neutral-900 dark:text-white mb-3">
-                                    Recent User Signups
+                                    {isAppRoute ? 'Recent Contacts & Leads' : 'Recent User Signups'}
                                 </h3>
                                 <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                                    {recentSignups.map((u) => (
-                                        <div key={u.id} className="flex items-center justify-between py-2.5 text-xs">
-                                            <div>
-                                                <p className="font-semibold text-neutral-900 dark:text-white">{u.name}</p>
-                                                <p className="text-neutral-500">{u.email}</p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                {u.email_verified_at ? (
-                                                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                                                        Verified
+                                    {recentSignups.length === 0 ? (
+                                        <p className="py-6 text-center text-xs text-neutral-400">No contacts recorded yet.</p>
+                                    ) : (
+                                        recentSignups.map((u) => (
+                                            <div key={u.id} className="flex items-center justify-between py-2.5 text-xs">
+                                                <div>
+                                                    <p className="font-semibold text-neutral-900 dark:text-white">{u.name}</p>
+                                                    <p className="text-neutral-500">{u.email}</p>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {u.email_verified_at ? (
+                                                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                                            {isAppRoute ? 'Opted-In' : 'Verified'}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
+                                                            {isAppRoute ? 'Unsubscribed' : 'Unverified'}
+                                                        </span>
+                                                    )}
+                                                    <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+                                                        {u.active_role || u.role}
                                                     </span>
-                                                ) : (
-                                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
-                                                        Unverified
-                                                    </span>
-                                                )}
-                                                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
-                                                    {u.active_role || u.role}
-                                                </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </div>

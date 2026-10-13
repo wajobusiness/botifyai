@@ -132,5 +132,32 @@ class Automation extends Model
 
         return $base->copy()->addDay()->setTime(9, 0, 0)->utc();
     }
+
+    /**
+     * Compute all scheduled UTC execution timestamps within [$start, $end] (future or within window)
+     * for projecting recurring social automations onto the Social Calendar.
+     *
+     * @return array<int, \Illuminate\Support\Carbon>
+     */
+    public function computeRunsBetween(\Illuminate\Support\Carbon $start, \Illuminate\Support\Carbon $end, int $maxRuns = 60): array
+    {
+        if ($this->trigger_type !== 'schedule.recurring') {
+            return [];
+        }
+
+        $cursor = $start->copy()->subSecond();
+        $slots = [];
+
+        while (count($slots) < $maxRuns) {
+            $next = $this->computeNextRunAt($cursor);
+            if (! $next || $next->gt($end)) {
+                break;
+            }
+            $slots[] = $next;
+            $cursor = $next->copy()->addMinute();
+        }
+
+        return $slots;
+    }
 }
 

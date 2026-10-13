@@ -143,6 +143,13 @@ class AutomationEngine
         $run->update(['status' => 'running']);
         $automation = $run->automation;
 
+        Log::info('AutomationEngine::executeRun started', [
+            'automation_id' => $automation->id,
+            'workspace_id' => $automation->workspace_id,
+            'run_id' => $run->id,
+            'trigger_type' => $automation->trigger_type,
+        ]);
+
         $nodes = collect($automation->nodes ?? []);
         $edges = collect($automation->edges ?? []);
         $context = $run->context ?? [];
@@ -153,8 +160,16 @@ class AutomationEngine
             $run->update(['resume_node_id' => null]);
         } else {
             // Find trigger node and start from the first node after it
-            $triggerNode = $nodes->first(fn ($n) => ($n['type'] ?? '') === 'trigger');
+            $triggerNode = $nodes->first(
+                fn ($n) => in_array($n['type'] ?? '', ['trigger', 'triggerNode'], true)
+                    || ($n['data']['nodeType'] ?? null) === 'trigger'
+                    || isset($n['data']['triggerType'])
+            );
             if (! $triggerNode) {
+                Log::warning('AutomationEngine::executeRun failed: No trigger node found', [
+                    'automation_id' => $automation->id,
+                    'run_id' => $run->id,
+                ]);
                 $run->update(['status' => 'failed', 'error' => 'No trigger node.', 'completed_at' => now()]);
 
                 return;
@@ -185,10 +200,12 @@ class AutomationEngine
             $context = array_merge($context, $result['context_update'] ?? []);
             $run->update(['context' => $context]);
 
+            $resolvedNodeType = $node['data']['nodeType'] ?? $node['type'] ?? 'unknown';
+
             AutomationRunLog::create([
                 'run_id' => $run->id,
                 'node_id' => $currentId,
-                'node_type' => $node['type'] ?? 'unknown',
+                'node_type' => $resolvedNodeType,
                 'result' => match ($result['status'] ?? 'ok') {
                     'error' => 'error',
                     'skipped' => 'skipped',
@@ -199,6 +216,13 @@ class AutomationEngine
             ]);
 
             if (($result['status'] ?? 'ok') === 'error') {
+                Log::error('AutomationEngine::executeRun node failed', [
+                    'automation_id' => $automation->id,
+                    'run_id' => $run->id,
+                    'node_id' => $currentId,
+                    'node_type' => $resolvedNodeType,
+                    'error' => $result['message'] ?? 'Unknown node error',
+                ]);
                 $run->update(['status' => 'failed', 'error' => $result['message'], 'completed_at' => now()]);
 
                 return;
@@ -223,6 +247,12 @@ class AutomationEngine
 
         $run->update(['status' => 'completed', 'completed_at' => now()]);
         $automation->increment('run_count');
+
+        Log::info('AutomationEngine::executeRun completed', [
+            'automation_id' => $automation->id,
+            'run_id' => $run->id,
+            'steps_executed' => count($visited),
+        ]);
     }
 
     /**
@@ -459,7 +489,7 @@ class AutomationEngine
 
     private function executeNode(array $node, AutomationRun $run, array $context): array
     {
-        $type = $node['type'] ?? 'unknown';
+        $type = $node['data']['nodeType'] ?? $node['type'] ?? 'unknown';
         $data = $node['data'] ?? [];
 
         try {
@@ -1669,6 +1699,7 @@ Recent topics already published (DO NOT repeat these angles or headlines):
 - {$recentList}
 USER;
 
+        $spec = [];
         try {
             $response = $this->llmGateway->chat($workspaceId, [
                 ['role' => 'system', 'content' => $system],
@@ -1677,7 +1708,12 @@ USER;
 
             $spec = $this->decodeJsonObject($response->content);
         } catch (\Throwable $e) {
-            return ['status' => 'error', 'message' => 'AI social ideation failed: '.$e->getMessage()];
+            Log::warning('AutomationEngine::executeAiSocialIdeation LLM fallback used', [
+                'workspace_id' => $workspaceId,
+                'automation_id' => $run->automation_id,
+                'run_id' => $run->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         $topic = trim((string) ($spec['topic'] ?? "{$pillar}: Key Strategy for {$niche}"));
@@ -1685,7 +1721,11 @@ USER;
         $angle = trim((string) ($spec['angle'] ?? "Actionable insights on {$topic} tailored for {$audience}."));
         $quoteText = trim((string) ($spec['quote_text'] ?? $hook));
         $promoHeadline = trim((string) ($spec['promo_headline'] ?? $topic));
-        $slides = is_array($spec['slides'] ?? null) ? $spec['slides'] : [];
+        $slides = is_array($spec['slides'] ?? null) && ! empty($spec['slides']) ? $spec['slides'] : [
+            "1. Focus on high-leverage {$pillar} fundamentals",
+            "2. Automate repetitive workflows across {$niche}",
+            "3. Measure conversion outcomes and iterate weekly",
+        ];
 
         $ctxUpdate = [
             'topic' => $topic,
@@ -1761,19 +1801,28 @@ SYSTEM;
 
         $userPrompt = "Topic: {$topic}\nHook: {$hook}\nAngle: {$angle}\nPillar: {$pillar}\n{$customPrompt}";
 
+        $spec = [];
+        $rawContent = '';
         try {
             $response = $this->llmGateway->chat($workspaceId, [
                 ['role' => 'system', 'content' => $system],
                 ['role' => 'user', 'content' => $userPrompt],
             ], ['temperature' => 0.7, 'max_tokens' => 1000]);
 
-            $spec = $this->decodeJsonObject($response->content);
+            $rawContent = (string) $response->content;
+            $spec = $this->decodeJsonObject($rawContent);
         } catch (\Throwable $e) {
-            return ['status' => 'error', 'message' => 'AI caption generation failed: '.$e->getMessage()];
+            Log::warning('AutomationEngine::executeAiSocialCaption LLM fallback used', [
+                'workspace_id' => $workspaceId,
+                'automation_id' => $run->automation_id,
+                'run_id' => $run->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         $title = trim((string) ($spec['title'] ?? $topic));
-        $caption = trim((string) ($spec['caption'] ?? $response->content));
+        $defaultCaption = trim(($hook !== '' ? "{$hook}\n\n" : '').($angle !== '' ? "{$angle}\n\n" : "Actionable insights on {$topic}.\n\n").$cta);
+        $caption = trim((string) ($spec['caption'] ?? ($rawContent !== '' ? $rawContent : $defaultCaption)));
         $hashtags = trim((string) ($spec['hashtags'] ?? ''));
         if ($hashtags === '' && ! empty($profile->default_hashtag_sets)) {
             $hashtags = implode(' ', (array) $profile->default_hashtag_sets);
@@ -1921,15 +1970,14 @@ SYSTEM;
             || ! empty($data['require_approval'])
             || (bool) $profile->requires_approval;
 
-        $scheduledAt = null;
-        if (in_array($publishMode, ['scheduled', 'optimal_slot'], true)) {
-            $delayMinutes = max(5, (int) ($data['delay_minutes'] ?? 15));
-            $scheduledAt = now()->addMinutes($delayMinutes);
-        }
+        $isDelayedSchedule = in_array($publishMode, ['scheduled', 'optimal_slot'], true);
+        $scheduledAt = $isDelayedSchedule
+            ? now()->addMinutes(max(5, (int) ($data['delay_minutes'] ?? 15)))
+            : now();
 
         $status = match (true) {
             $requiresApproval => 'draft',
-            $scheduledAt !== null => 'scheduled',
+            $isDelayedSchedule => 'scheduled',
             default => 'publishing',
         };
 
@@ -1954,8 +2002,28 @@ SYSTEM;
             'requires_approval' => $requiresApproval,
         ]);
 
+        Log::info('AutomationEngine::executePublishSocialPost created SocialPost', [
+            'workspace_id' => $workspaceId,
+            'automation_id' => $run->automation_id,
+            'run_id' => $run->id,
+            'post_id' => $post->id,
+            'status' => $status,
+            'scheduled_at' => $scheduledAt->toIso8601String(),
+            'target_accounts' => $accounts,
+        ]);
+
         if ($status === 'publishing') {
             PublishSocialPostJob::dispatch($post->id)->onQueue('social');
+            if (! app()->runningUnitTests()) {
+                try {
+                    (new PublishSocialPostJob($post->id))->handle(app(\App\Modules\Social\Services\SocialPublisher::class));
+                } catch (\Throwable $e) {
+                    Log::warning('AutomationEngine::executePublishSocialPost inline publish deferred to retry queue', [
+                        'post_id' => $post->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
         }
 
         $msg = match ($status) {

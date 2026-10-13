@@ -281,13 +281,192 @@ class PlatformAudienceSyncService
     }
 
     /**
+     * Check whether a given workspace ID is the global Platform Marketing Hub workspace.
+     */
+    public function isPlatformWorkspace(int $workspaceId): bool
+    {
+        $storedId = (int) SystemSetting::get(self::SETTING_WORKSPACE_ID, 0);
+        if ($storedId > 0) {
+            return $workspaceId === $storedId;
+        }
+
+        return Workspace::where('id', $workspaceId)->where('name', 'Platform Marketing Hub')->exists();
+    }
+
+    /**
+     * Synchronize only a specific tenant workspace's paid EcommerceOrders into that workspace's own Contact directory.
+     * Never touches global platform Users or other workspaces' orders.
+     *
+     * @return array{buyers_synced: int, total_contacts: int}
+     */
+    public function syncWorkspaceAudience(int $workspaceId): array
+    {
+        $buyersSynced = 0;
+
+        EcommerceOrder::query()
+            ->where('workspace_id', $workspaceId)
+            ->where(function ($q) {
+                $q->whereIn('payment_status', ['paid', 'completed'])
+                    ->orWhere('financial_status', 'paid')
+                    ->orWhereNotNull('paid_at');
+            })
+            ->whereNotNull('customer_email')
+            ->orderBy('id')
+            ->chunk(200, function ($orders) use ($workspaceId, &$buyersSynced) {
+                foreach ($orders as $order) {
+                    if ($this->syncWorkspaceOrderBuyer($order, $workspaceId)) {
+                        $buyersSynced++;
+                    }
+                }
+            });
+
+        $this->ensureWorkspaceDefaultSegments($workspaceId);
+
+        $totalContacts = Contact::where('workspace_id', $workspaceId)->count();
+
+        return [
+            'buyers_synced' => $buyersSynced,
+            'total_contacts' => $totalContacts,
+        ];
+    }
+
+    /**
+     * Sync a workspace's own paid EcommerceOrder buyer into that workspace's Contact directory.
+     */
+    public function syncWorkspaceOrderBuyer(EcommerceOrder $order, int $workspaceId): ?Contact
+    {
+        if ((int) $order->workspace_id !== $workspaceId) {
+            return null;
+        }
+
+        $email = strtolower(trim((string) $order->customer_email));
+        if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return null;
+        }
+
+        try {
+            $existing = Contact::withTrashed()
+                ->where('workspace_id', $workspaceId)
+                ->whereRaw('LOWER(email) = ?', [$email])
+                ->first();
+
+            $nameParts = preg_split('/\s+/u', trim((string) $order->customer_name), 2) ?: [];
+            $firstName = $nameParts[0] ?? null;
+            $lastName = $nameParts[1] ?? null;
+
+            $orderMetrics = $this->computeOrderMetricsForEmail($email, $workspaceId);
+
+            $existingCustomFields = is_array($existing?->custom_fields) ? $existing->custom_fields : [];
+            $customFields = array_merge($existingCustomFields, [
+                'order_count' => $orderMetrics['order_count'],
+                'lifetime_value' => $orderMetrics['lifetime_value'],
+                'last_order_at' => $orderMetrics['last_order_at'],
+                'purchased_product_ids' => $orderMetrics['purchased_product_ids'],
+                'purchased_product_names' => $orderMetrics['purchased_product_names'],
+            ]);
+
+            $shippingCountry = is_array($order->metadata)
+                ? ($order->metadata['country'] ?? null)
+                : null;
+
+            $payload = [
+                'workspace_id' => $workspaceId,
+                'email' => $email,
+                'first_name' => $firstName ?: $existing?->first_name,
+                'last_name' => $lastName ?: $existing?->last_name,
+                'phone_e164' => $order->customer_phone ?: ($existing?->phone_e164 ?? $orderMetrics['phone_e164']),
+                'country' => $shippingCountry ? strtoupper(substr((string) $shippingCountry, 0, 2)) : $existing?->country,
+                'source' => $existing?->source ?: 'ecommerce_checkout',
+                'custom_fields' => $customFields,
+            ];
+
+            if (! $existing) {
+                $payload['opt_in_email'] = true;
+                $payload['opt_in_whatsapp'] = ! empty($payload['phone_e164']);
+                $payload['opt_in_sms'] = ! empty($payload['phone_e164']);
+                $contact = Contact::create($payload);
+            } else {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
+                $existing->update($payload);
+                $contact = $existing;
+            }
+
+            $this->syncLifecycleTags($workspaceId, $contact, $customFields);
+
+            return $contact;
+        } catch (\Throwable $e) {
+            Log::warning('PlatformAudienceSyncService::syncWorkspaceOrderBuyer failed', [
+                'workspace_id' => $workspaceId,
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
+     * Seed default dynamic segments for a tenant workspace.
+     */
+    public function ensureWorkspaceDefaultSegments(int $workspaceId): void
+    {
+        $defaults = [
+            [
+                'name' => 'All Product Buyers',
+                'type' => 'dynamic',
+                'rules_json' => [
+                    'combinator' => 'AND',
+                    'conditions' => [
+                        ['field' => 'order_count', 'operator' => '>=', 'value' => '1'],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'High-Value Customers (VIP)',
+                'type' => 'dynamic',
+                'rules_json' => [
+                    'combinator' => 'AND',
+                    'conditions' => [
+                        ['field' => 'lifetime_value', 'operator' => '>=', 'value' => (string) $this->vipThreshold()],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'Leads & Contacts (Never Purchased)',
+                'type' => 'dynamic',
+                'rules_json' => [
+                    'combinator' => 'AND',
+                    'conditions' => [
+                        ['field' => 'order_count', 'operator' => '=', 'value' => '0'],
+                    ],
+                ],
+            ],
+        ];
+
+        foreach ($defaults as $def) {
+            Segment::firstOrCreate(
+                ['workspace_id' => $workspaceId, 'name' => $def['name']],
+                [
+                    'type' => $def['type'],
+                    'rules_json' => $def['rules_json'],
+                    'contact_count' => 0,
+                ]
+            );
+        }
+    }
+
+    /**
      * Compute order count, LTV, latest order timestamp, and purchased product IDs/names for an email.
+     * When $workspaceId is provided, strictly scopes orders to that tenant workspace.
      *
      * @return array{order_count: int, lifetime_value: float, last_order_at: ?string, purchased_product_ids: list<int>, purchased_product_names: list<string>, phone_e164: ?string}
      */
-    private function computeOrderMetricsForEmail(string $email): array
+    private function computeOrderMetricsForEmail(string $email, ?int $workspaceId = null): array
     {
         $orders = EcommerceOrder::query()
+            ->when($workspaceId !== null, fn ($q) => $q->where('workspace_id', $workspaceId))
             ->where(function ($q) {
                 $q->whereIn('payment_status', ['paid', 'completed'])
                     ->orWhere('financial_status', 'paid')

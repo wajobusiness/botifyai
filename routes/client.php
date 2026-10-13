@@ -32,19 +32,19 @@ Route::middleware(['verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', ClientDashboardController::class)->name('dashboard');
 
-    // Marketing Hub & Customer Segmentation
-    Route::get('/marketing', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'index'])->name('marketing.index');
-    Route::post('/marketing/sync', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'syncAudience'])->name('marketing.sync');
-    Route::post('/marketing/audience-preview', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'audiencePreview'])->name('marketing.audience-preview');
-    Route::post('/marketing/segments', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'storeSegment'])->name('marketing.segments.store');
-    Route::delete('/marketing/segments/{segment}', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'destroySegment'])->name('marketing.segments.destroy');
-    Route::post('/marketing/campaigns', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'storeCampaign'])->name('marketing.campaigns.store');
-    Route::post('/marketing/campaigns/{campaign}/launch', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'launchCampaign'])->name('marketing.campaigns.launch');
-    Route::post('/marketing/campaigns/{campaign}/pause', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'pauseCampaign'])->name('marketing.campaigns.pause');
-    Route::delete('/marketing/campaigns/{campaign}', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'destroyCampaign'])->name('marketing.campaigns.destroy');
-    Route::post('/marketing/campaigns/{campaign}/test-send', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'testSendCampaign'])->name('marketing.campaigns.test-send');
-    Route::post('/marketing/contacts/{contact}/toggle-opt-in', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'toggleContactOptIn'])->name('marketing.contacts.toggle-opt-in');
-    Route::post('/marketing/ai-assist', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'aiAssist'])->name('marketing.ai-assist');
+    // Workspace Marketing Hub & Customer Segmentation (Tenant-Scoped)
+    Route::get('/marketing', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'index'])->name('marketing.index');
+    Route::post('/marketing/sync', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'syncAudience'])->name('marketing.sync');
+    Route::post('/marketing/audience-preview', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'audiencePreview'])->name('marketing.audience-preview');
+    Route::post('/marketing/segments', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'storeSegment'])->name('marketing.segments.store');
+    Route::delete('/marketing/segments/{segment}', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'destroySegment'])->name('marketing.segments.destroy');
+    Route::post('/marketing/campaigns', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'storeCampaign'])->name('marketing.campaigns.store');
+    Route::post('/marketing/campaigns/{campaign}/launch', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'launchCampaign'])->name('marketing.campaigns.launch');
+    Route::post('/marketing/campaigns/{campaign}/pause', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'pauseCampaign'])->name('marketing.campaigns.pause');
+    Route::delete('/marketing/campaigns/{campaign}', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'destroyCampaign'])->name('marketing.campaigns.destroy');
+    Route::post('/marketing/campaigns/{campaign}/test-send', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'testSendCampaign'])->name('marketing.campaigns.test-send');
+    Route::post('/marketing/contacts/{contact}/toggle-opt-in', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'toggleContactOptIn'])->name('marketing.contacts.toggle-opt-in');
+    Route::post('/marketing/ai-assist', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'aiAssist'])->name('marketing.ai-assist');
 
     // Botify Academy (Free Learning Hub)
     Route::get('/academy', [ClientAcademyController::class, 'index'])->name('academy.index');

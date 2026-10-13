@@ -17,7 +17,10 @@ use App\Modules\Social\Models\WorkspaceBrandProfile;
 use App\Modules\Whatsapp\Models\WhatsappTemplate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use App\Modules\Automation\Jobs\DispatchScheduledAutomationsJob;
+use App\Modules\Social\Jobs\DispatchScheduledPostsJob;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,9 +32,43 @@ class AutomationController extends Controller
         return (int) ($request->user()->current_workspace_id ?? $request->user()->workspace_id);
     }
 
+    private function runOpportunisticSchedulerTick(int $workspaceId): void
+    {
+        if (app()->runningUnitTests()) {
+            return;
+        }
+
+        try {
+            Automation::where('workspace_id', $workspaceId)
+                ->where('trigger_type', 'schedule.recurring')
+                ->where(function ($q) {
+                    $q->where('status', 'draft')->orWhereNull('next_run_at');
+                })
+                ->get()
+                ->each(function (Automation $automation) {
+                    if ($automation->status === 'draft') {
+                        $automation->status = 'active';
+                    }
+                    if (! $automation->next_run_at) {
+                        $automation->next_run_at = $automation->computeNextRunAt();
+                    }
+                    $automation->save();
+                });
+
+            if (Cache::add('social_automation_due_tick', 1, 20)) {
+                (new DispatchScheduledAutomationsJob)->handle(app(AutomationEngine::class));
+                (new DispatchScheduledPostsJob)->handle();
+            }
+        } catch (\Throwable) {
+            // Non-blocking opportunistic tick
+        }
+    }
+
     public function index(Request $request): Response
     {
         $wid = $this->workspaceId($request);
+        $this->runOpportunisticSchedulerTick($wid);
+
         $automations = Automation::where('workspace_id', $wid)
             ->withCount('runs')
             ->latest()->get();
@@ -58,6 +95,8 @@ class AutomationController extends Controller
     {
         $this->authorise($request, $automation);
         $wid = (int) $automation->workspace_id;
+        $this->runOpportunisticSchedulerTick($wid);
+        $automation->refresh();
 
         return Inertia::render('Automation/Builder', [
             'automation' => $automation,
@@ -123,6 +162,9 @@ class AutomationController extends Controller
 
         $automation->fill($validated);
         if ($automation->trigger_type === 'schedule.recurring') {
+            if (! array_key_exists('status', $validated) && $automation->status === 'draft') {
+                $automation->status = 'active';
+            }
             $automation->next_run_at = $automation->computeNextRunAt();
         } else {
             $automation->next_run_at = null;
@@ -231,6 +273,7 @@ class AutomationController extends Controller
         $validated = $request->validate([
             'prompt' => ['required', 'string', 'max:2000'],
             'persist' => ['nullable', 'boolean'],
+            'timezone' => ['nullable', 'string', 'max:64'],
         ]);
 
         try {
@@ -239,17 +282,30 @@ class AutomationController extends Controller
             return response()->json(['ok' => false, 'error' => $e->getMessage()], 422);
         }
 
+        if (($graph['trigger_type'] ?? null) === 'schedule.recurring' && ! empty($validated['timezone'])) {
+            $tz = trim((string) $validated['timezone']);
+            try {
+                new \DateTimeZone($tz);
+                if (empty($graph['trigger_config']['timezone']) || $graph['trigger_config']['timezone'] === 'UTC') {
+                    $graph['trigger_config']['timezone'] = $tz;
+                }
+            } catch (\Throwable) {
+                // Keep default timezone if invalid
+            }
+        }
+
         if ($request->boolean('persist')) {
+            $isRecurring = ($graph['trigger_type'] ?? null) === 'schedule.recurring';
             $auto = new Automation([
                 'workspace_id' => $wid,
                 'name' => $graph['name'],
-                'status' => 'draft',
+                'status' => $isRecurring ? 'active' : 'draft',
                 'trigger_type' => $graph['trigger_type'],
                 'trigger_config' => $graph['trigger_config'],
                 'nodes' => $graph['nodes'],
                 'edges' => $graph['edges'],
             ]);
-            if ($auto->trigger_type === 'schedule.recurring') {
+            if ($isRecurring) {
                 $auto->next_run_at = $auto->computeNextRunAt();
             }
             $auto->save();

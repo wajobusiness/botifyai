@@ -21,7 +21,7 @@ class ExecuteAutomationRunJob implements ShouldQueue
     public function handle(AutomationEngine $engine): void
     {
         $run = AutomationRun::with('automation')->find($this->runId);
-        if (! $run || in_array($run->status, ['cancelled', 'failed'], true)) {
+        if (! $run || in_array($run->status, ['completed', 'cancelled', 'failed'], true)) {
             return;
         }
 

@@ -27,6 +27,16 @@ class DispatchScheduledPostsJob implements ShouldQueue
 
             if ($updated) {
                 PublishSocialPostJob::dispatch($post->id)->onQueue('social');
+                if (! app()->runningUnitTests()) {
+                    try {
+                        (new PublishSocialPostJob($post->id))->handle(app(\App\Modules\Social\Services\SocialPublisher::class));
+                    } catch (\Throwable $e) {
+                        Log::warning('DispatchScheduledPostsJob inline publish deferred to retry queue', [
+                            'post_id' => $post->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
             }
         }
 

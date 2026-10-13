@@ -63,9 +63,21 @@ class SegmentResolver
         return "CAST(COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(custom_fields, '$.{$jsonKey}')), 'null'), '0') AS {$type})";
     }
 
-    private function paidOrdersEmailQuery(): Builder
+    private function isPlatformWorkspace(?int $workspaceId): bool
     {
+        if (! $workspaceId) {
+            return false;
+        }
+
+        return app(PlatformAudienceSyncService::class)->isPlatformWorkspace($workspaceId);
+    }
+
+    private function paidOrdersEmailQuery(?int $workspaceId = null): Builder
+    {
+        $isPlatform = $this->isPlatformWorkspace($workspaceId);
+
         return EcommerceOrder::query()
+            ->when(! $isPlatform && $workspaceId !== null, fn (Builder $q) => $q->where('workspace_id', $workspaceId))
             ->where(function (Builder $q) {
                 $q->whereIn('payment_status', ['paid', 'completed'])
                     ->orWhere('financial_status', 'paid')
@@ -85,7 +97,7 @@ class SegmentResolver
         }
 
         $rules = $segment->rules_json ?? [];
-        $this->applyRules($query, $rules);
+        $this->applyRules($query, $rules, (int) $segment->workspace_id);
 
         return $query;
     }
@@ -97,69 +109,86 @@ class SegmentResolver
     {
         $query = Contact::where('workspace_id', $workspaceId);
         $hasUserId = $this->hasUserIdColumn();
+        $isPlatform = $this->isPlatformWorkspace($workspaceId);
         $orderCountExpr = $this->jsonNumericExpr('order_count', false);
 
         return match ($preset) {
             'all_users', 'contact_list' => $query,
 
-            'only_registered_users' => $query->where(function (Builder $q) use ($hasUserId) {
-                if ($hasUserId) {
-                    $q->whereNotNull('user_id');
-                }
-                $q->orWhere('custom_fields->is_registered_user', true)
-                    ->orWhere('custom_fields->is_registered_user', '1')
-                    ->orWhereIn('email', User::whereNotNull('email')->select('email'));
-            }),
+            'only_registered_users' => $isPlatform
+                ? $query->where(function (Builder $q) use ($hasUserId) {
+                    if ($hasUserId) {
+                        $q->whereNotNull('user_id');
+                    }
+                    $q->orWhere('custom_fields->is_registered_user', true)
+                        ->orWhere('custom_fields->is_registered_user', '1')
+                        ->orWhereIn('email', User::whereNotNull('email')->select('email'));
+                })
+                : $query->where(function (Builder $q) {
+                    $q->whereNotNull('email')->where('email', '!=', '');
+                }),
 
-            'verified_users' => $query->where(function (Builder $q) use ($hasUserId) {
-                if ($hasUserId) {
-                    $q->whereHas('user', fn (Builder $uq) => $uq->whereNotNull('email_verified_at'));
-                }
-                $q->orWhere('custom_fields->email_verified', true)
-                    ->orWhere('custom_fields->email_verified', '1')
-                    ->orWhereIn('email', User::whereNotNull('email_verified_at')->whereNotNull('email')->select('email'));
-            }),
+            'verified_users' => $isPlatform
+                ? $query->where(function (Builder $q) use ($hasUserId) {
+                    if ($hasUserId) {
+                        $q->whereHas('user', fn (Builder $uq) => $uq->whereNotNull('email_verified_at'));
+                    }
+                    $q->orWhere('custom_fields->email_verified', true)
+                        ->orWhere('custom_fields->email_verified', '1')
+                        ->orWhereIn('email', User::whereNotNull('email_verified_at')->whereNotNull('email')->select('email'));
+                })
+                : $query->where('opt_in_email', true)->whereNotNull('email')->where('email', '!=', ''),
 
-            'only_buyers' => $query->where(function (Builder $q) use ($orderCountExpr) {
+            'only_buyers' => $query->where(function (Builder $q) use ($orderCountExpr, $workspaceId) {
                 $q->whereRaw("{$orderCountExpr} >= 1")
-                    ->orWhereIn('email', $this->paidOrdersEmailQuery());
+                    ->orWhereIn('email', $this->paidOrdersEmailQuery($workspaceId));
             }),
 
-            'only_subscribers' => $query->where(function (Builder $q) use ($hasUserId) {
-                $q->whereIn('custom_fields->subscription_status', ['active', 'trialing', 'past_due', 'canceled', 'expired']);
-                if ($hasUserId) {
-                    $q->orWhereHas('user.subscriptions');
-                }
-            }),
+            'only_subscribers' => $isPlatform
+                ? $query->where(function (Builder $q) use ($hasUserId) {
+                    $q->whereIn('custom_fields->subscription_status', ['active', 'trialing', 'past_due', 'canceled', 'expired']);
+                    if ($hasUserId) {
+                        $q->orWhereHas('user.subscriptions');
+                    }
+                })
+                : $query->where(function (Builder $q) {
+                    $q->where('opt_in_email', true)
+                        ->orWhereIn('custom_fields->subscription_status', ['active', 'trialing', 'past_due', 'canceled', 'expired']);
+                }),
 
-            'only_active_subscribers' => $query->where(function (Builder $q) use ($hasUserId) {
-                $q->whereIn('custom_fields->subscription_status', ['active', 'trialing']);
-                if ($hasUserId) {
-                    $q->orWhereHas('user.activeSubscription');
-                }
-            }),
+            'only_active_subscribers' => $isPlatform
+                ? $query->where(function (Builder $q) use ($hasUserId) {
+                    $q->whereIn('custom_fields->subscription_status', ['active', 'trialing']);
+                    if ($hasUserId) {
+                        $q->orWhereHas('user.activeSubscription');
+                    }
+                })
+                : $query->where('opt_in_email', true)->whereNotNull('email')->where('email', '!=', ''),
 
-            'product_buyers' => $this->applyProductBuyerConstraint($query, $ref),
+            'product_buyers' => $this->applyProductBuyerConstraint($query, $ref, false, $workspaceId),
 
-            'inactive_users' => $query->where(function (Builder $q) use ($hasUserId) {
-                if ($hasUserId) {
-                    $q->whereNotNull('user_id');
-                }
-                $q->orWhere('custom_fields->is_registered_user', true)
-                    ->orWhere('custom_fields->is_registered_user', '1');
-            })->where(function (Builder $q) use ($orderCountExpr) {
+            'inactive_users' => ($isPlatform
+                ? $query->where(function (Builder $q) use ($hasUserId) {
+                    if ($hasUserId) {
+                        $q->whereNotNull('user_id');
+                    }
+                    $q->orWhere('custom_fields->is_registered_user', true)
+                        ->orWhere('custom_fields->is_registered_user', '1');
+                })
+                : $query
+            )->where(function (Builder $q) use ($orderCountExpr) {
                 $q->whereNull('custom_fields->order_count')
                     ->orWhereRaw("{$orderCountExpr} = 0");
-            })->whereNotIn('email', $this->paidOrdersEmailQuery()),
+            })->whereNotIn('email', $this->paidOrdersEmailQuery($workspaceId)),
 
             'high_value_customers' => $this->applyHighValueConstraint($query, $ref),
 
-            'recent_customers' => $this->applyRecentCustomerConstraint($query, $ref),
+            'recent_customers' => $this->applyRecentCustomerConstraint($query, $ref, $workspaceId),
 
-            'affiliates' => $query->where(function (Builder $q) use ($hasUserId) {
+            'affiliates' => $query->where(function (Builder $q) use ($hasUserId, $isPlatform) {
                 $q->where('custom_fields->is_affiliate', true)
                     ->orWhereIn('custom_fields->affiliate_status', ['active', 'comped']);
-                if ($hasUserId) {
+                if ($isPlatform && $hasUserId) {
                     $q->orWhereHas('user', fn (Builder $uq) => $uq->whereIn('affiliate_status', ['active', 'comped'])->orWhere('active_role', 'affiliate'));
                 }
             }),
@@ -184,11 +213,11 @@ class SegmentResolver
         return $ids->count();
     }
 
-    public function applyRules(Builder $query, array $rules): void
+    public function applyRules(Builder $query, array $rules, ?int $workspaceId = null): void
     {
         $combinator = strtoupper($rules['combinator'] ?? 'AND');
 
-        $query->where(function (Builder $groupQuery) use ($rules, $combinator) {
+        $query->where(function (Builder $groupQuery) use ($rules, $combinator, $workspaceId) {
             foreach ($rules['conditions'] ?? [] as $condition) {
                 $field = $condition['field'] ?? null;
                 $operator = $condition['operator'] ?? '=';
@@ -203,14 +232,14 @@ class SegmentResolver
 
                 $method = $combinator === 'OR' ? 'orWhere' : 'where';
 
-                $groupQuery->{$method}(function (Builder $sub) use ($field, $operator, $value) {
-                    $this->applySingleCondition($sub, $field, $operator, $value);
+                $groupQuery->{$method}(function (Builder $sub) use ($field, $operator, $value, $workspaceId) {
+                    $this->applySingleCondition($sub, $field, $operator, $value, $workspaceId);
                 });
             }
         });
     }
 
-    private function applySingleCondition(Builder $query, string $field, string $operator, mixed $value): void
+    private function applySingleCondition(Builder $query, string $field, string $operator, mixed $value, ?int $workspaceId = null): void
     {
         $hasUserId = $this->hasUserIdColumn();
 
@@ -283,7 +312,7 @@ class SegmentResolver
                 return;
 
             case 'purchased_product_id':
-                $this->applyProductBuyerConstraint($query, (string) $value, $operator === '!=');
+                $this->applyProductBuyerConstraint($query, (string) $value, $operator === '!=', $workspaceId);
                 return;
 
             case 'order_count':
@@ -335,7 +364,7 @@ class SegmentResolver
         };
     }
 
-    private function applyProductBuyerConstraint(Builder $query, ?string $ref, bool $negate = false): Builder
+    private function applyProductBuyerConstraint(Builder $query, ?string $ref, bool $negate = false, ?int $workspaceId = null): Builder
     {
         $productIds = collect(explode(',', (string) $ref))
             ->map(fn ($v) => (int) trim($v))
@@ -347,8 +376,10 @@ class SegmentResolver
             return $negate ? $query : $query->whereRaw('1 = 0');
         }
 
+        $isPlatform = $this->isPlatformWorkspace($workspaceId);
         $matchedEmails = [];
         EcommerceOrder::query()
+            ->when(! $isPlatform && $workspaceId !== null, fn (Builder $q) => $q->where('workspace_id', $workspaceId))
             ->where(function (Builder $q) {
                 $q->whereIn('payment_status', ['paid', 'completed'])
                     ->orWhere('financial_status', 'paid')
@@ -404,16 +435,16 @@ class SegmentResolver
         return $query->whereRaw("{$expr} >= ?", [$threshold]);
     }
 
-    private function applyRecentCustomerConstraint(Builder $query, ?string $ref): Builder
+    private function applyRecentCustomerConstraint(Builder $query, ?string $ref, ?int $workspaceId = null): Builder
     {
         $days = is_numeric($ref) && (int) $ref > 0 ? (int) $ref : 30;
         $since = now()->subDays($days)->toIso8601String();
 
-        return $query->where(function (Builder $q) use ($since, $days) {
+        return $query->where(function (Builder $q) use ($since, $days, $workspaceId) {
             $q->where('custom_fields->last_order_at', '>=', $since)
                 ->orWhereIn(
                     'email',
-                    $this->paidOrdersEmailQuery()->where('created_at', '>=', now()->subDays($days))
+                    $this->paidOrdersEmailQuery($workspaceId)->where('created_at', '>=', now()->subDays($days))
                 );
         });
     }

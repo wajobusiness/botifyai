@@ -68,12 +68,22 @@ class AdminMarketingController extends Controller
         private SegmentResolver $segmentResolver,
     ) {}
 
+    private function assertPlatformAdmin(Request $request): void
+    {
+        abort_unless(
+            $request->user('admin') !== null || (bool) $request->user()?->isAdmin(),
+            403,
+            'Platform Administrator access is required for the Global Marketing Hub.'
+        );
+    }
+
     /**
      * GET /admin/marketing
      * Centralized Admin Marketing Hub & Customer Segmentation Control Center.
      */
     public function index(Request $request): Response
     {
+        $this->assertPlatformAdmin($request);
         $workspaceId = $this->syncService->platformWorkspaceId();
         $hasBounceCols = Schema::hasColumn('contacts', 'bounced_at') && Schema::hasColumn('contacts', 'complained_at');
 
@@ -391,6 +401,7 @@ class AdminMarketingController extends Controller
             ]);
 
         return Inertia::render('Admin/Marketing/Index', [
+            'scope' => 'admin',
             'kpis' => [
                 'total_users' => $totalUsers,
                 'verified_users' => $verifiedUsers,
@@ -446,8 +457,9 @@ class AdminMarketingController extends Controller
      * POST /admin/marketing/sync
      * Synchronize all platform Users, Subscriptions, Affiliates, and EcommerceOrders into the Marketing Hub.
      */
-    public function syncAudience(): RedirectResponse
+    public function syncAudience(Request $request): RedirectResponse
     {
+        $this->assertPlatformAdmin($request);
         $stats = $this->syncService->syncAll();
 
         return back()->with(
@@ -462,6 +474,7 @@ class AdminMarketingController extends Controller
      */
     public function audiencePreview(Request $request): JsonResponse
     {
+        $this->assertPlatformAdmin($request);
         $workspaceId = $this->syncService->platformWorkspaceId();
         $hasBounceCols = Schema::hasColumn('contacts', 'bounced_at') && Schema::hasColumn('contacts', 'complained_at');
 
@@ -516,6 +529,7 @@ class AdminMarketingController extends Controller
      */
     public function storeSegment(Request $request): RedirectResponse
     {
+        $this->assertPlatformAdmin($request);
         $workspaceId = $this->syncService->platformWorkspaceId();
 
         $validated = $request->validate([
@@ -566,8 +580,9 @@ class AdminMarketingController extends Controller
     /**
      * DELETE /admin/marketing/segments/{segment}
      */
-    public function destroySegment(string|int $segment): RedirectResponse
+    public function destroySegment(Request $request, string|int $segment): RedirectResponse
     {
+        $this->assertPlatformAdmin($request);
         $workspaceId = $this->syncService->platformWorkspaceId();
         $seg = Segment::where('workspace_id', $workspaceId)->findOrFail($segment);
 
@@ -582,6 +597,7 @@ class AdminMarketingController extends Controller
      */
     public function storeCampaign(Request $request): RedirectResponse
     {
+        $this->assertPlatformAdmin($request);
         $workspaceId = $this->syncService->platformWorkspaceId();
 
         $validated = $request->validate([
@@ -664,6 +680,7 @@ class AdminMarketingController extends Controller
 
     private function resolvePlatformCampaign(string|int $idOrUuid): Campaign
     {
+        $this->assertPlatformAdmin(request());
         $workspaceId = $this->syncService->platformWorkspaceId();
 
         return Campaign::where('workspace_id', $workspaceId)
@@ -794,8 +811,9 @@ class AdminMarketingController extends Controller
      * POST /admin/marketing/contacts/{contact}/toggle-opt-in
      * Toggle marketing consent or clear bounce/complaint flags for a contact.
      */
-    public function toggleContactOptIn(string|int $contact): RedirectResponse
+    public function toggleContactOptIn(Request $request, string|int $contact): RedirectResponse
     {
+        $this->assertPlatformAdmin($request);
         $workspaceId = $this->syncService->platformWorkspaceId();
         $model = Contact::where('workspace_id', $workspaceId)
             ->where(function ($q) use ($contact) {
@@ -834,6 +852,7 @@ class AdminMarketingController extends Controller
      */
     public function aiAssist(Request $request): JsonResponse
     {
+        $this->assertPlatformAdmin($request);
         $validated = $request->validate([
             'action' => ['required', 'in:generate_campaign,improve_subject,generate_followup'],
             'campaign_type' => ['nullable', 'string', 'in:' . implode(',', self::CAMPAIGN_TYPES)],

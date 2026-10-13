@@ -284,9 +284,13 @@ export default function SocialCalendar({ posts, month, accounts = [], filters = 
                                             {(postsByDay[day] ?? []).map(post => (
                                                 <Link
                                                     key={post.id}
-                                                    href={route('client.social.posts.index')}
+                                                    href={post.automation_uuid ? route('client.automations.edit', post.automation_uuid) : route('client.social.posts.index')}
                                                     title={post.title ?? post.status}
-                                                    className={`block rounded px-1.5 py-0.5 text-xs mb-0.5 truncate hover:opacity-80 transition ${STATUS_COLORS[post.status] ?? ''}`}
+                                                    className={`block rounded px-1.5 py-0.5 text-xs mb-0.5 truncate hover:opacity-80 transition ${
+                                                        post.is_automation_slot
+                                                            ? 'bg-indigo-100 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800'
+                                                            : (STATUS_COLORS[post.status] ?? '')
+                                                    }`}
                                                 >
                                                     {post.title ?? t('social.post_fallback')}
                                                 </Link>
