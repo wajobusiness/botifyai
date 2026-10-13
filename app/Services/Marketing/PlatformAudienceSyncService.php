@@ -6,11 +6,11 @@ use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Modules\Ecommerce\Models\EcommerceOrder;
-use App\Modules\Ecommerce\Models\EcommerceOrderItem;
 use App\Modules\Shared\Models\Contact;
 use App\Modules\Shared\Models\ContactTag;
 use App\Modules\Shared\Models\Segment;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class PlatformAudienceSyncService
 {
@@ -36,7 +36,7 @@ class PlatformAudienceSyncService
             ]
         );
 
-        SystemSetting::set(self::SETTING_WORKSPACE_ID, (string) $workspace->id, 'marketing');
+        SystemSetting::set(self::SETTING_WORKSPACE_ID, (string) $workspace->id, false, 'marketing');
 
         return (int) $workspace->id;
     }
@@ -94,6 +94,7 @@ class PlatformAudienceSyncService
             $existingCustomFields = is_array($existing?->custom_fields) ? $existing->custom_fields : [];
             $customFields = array_merge($existingCustomFields, [
                 'is_registered_user' => true,
+                'user_id' => $user->id,
                 'user_role' => $user->role ?? 'client',
                 'active_role' => $user->getActiveRole(),
                 'email_verified' => $user->email_verified_at !== null,
@@ -112,7 +113,6 @@ class PlatformAudienceSyncService
 
             $payload = [
                 'workspace_id' => $workspaceId,
-                'user_id' => $user->id,
                 'email' => $email,
                 'first_name' => $firstName ?: $existing?->first_name,
                 'last_name' => $lastName ?: $existing?->last_name,
@@ -121,6 +121,10 @@ class PlatformAudienceSyncService
                 'source' => $existing?->source ?: 'user_registration',
                 'custom_fields' => $customFields,
             ];
+
+            if (Schema::hasColumn('contacts', 'user_id')) {
+                $payload['user_id'] = $user->id;
+            }
 
             if (! $existing) {
                 $payload['opt_in_email'] = true;
@@ -189,8 +193,8 @@ class PlatformAudienceSyncService
                 'purchased_product_names' => $orderMetrics['purchased_product_names'],
             ]);
 
-            $shippingCountry = is_array($order->shipping_address)
-                ? ($order->shipping_address['country'] ?? null)
+            $shippingCountry = is_array($order->metadata)
+                ? ($order->metadata['country'] ?? null)
                 : null;
 
             $payload = [
@@ -250,7 +254,11 @@ class PlatformAudienceSyncService
         });
 
         EcommerceOrder::query()
-            ->where('payment_status', 'paid')
+            ->where(function ($q) {
+                $q->whereIn('payment_status', ['paid', 'completed'])
+                    ->orWhere('financial_status', 'paid')
+                    ->orWhereNotNull('paid_at');
+            })
             ->whereNotNull('customer_email')
             ->orderBy('id')
             ->chunk(200, function ($orders) use (&$buyersSynced) {
@@ -280,11 +288,15 @@ class PlatformAudienceSyncService
     private function computeOrderMetricsForEmail(string $email): array
     {
         $orders = EcommerceOrder::query()
-            ->where('payment_status', 'paid')
+            ->where(function ($q) {
+                $q->whereIn('payment_status', ['paid', 'completed'])
+                    ->orWhere('financial_status', 'paid')
+                    ->orWhereNotNull('paid_at');
+            })
             ->whereRaw('LOWER(customer_email) = ?', [$email])
             ->orderByDesc('paid_at')
             ->orderByDesc('id')
-            ->get(['id', 'total_amount', 'customer_phone', 'paid_at', 'created_at']);
+            ->get(['id', 'total', 'customer_phone', 'line_items', 'paid_at', 'created_at']);
 
         if ($orders->isEmpty()) {
             return [
@@ -297,23 +309,28 @@ class PlatformAudienceSyncService
             ];
         }
 
-        $orderIds = $orders->pluck('id')->all();
-        $items = EcommerceOrderItem::query()
-            ->whereIn('order_id', $orderIds)
-            ->get(['product_id', 'product_name']);
+        $productIds = [];
+        $productNames = [];
 
-        $productIds = $items->pluck('product_id')
-            ->filter()
-            ->map(fn ($id) => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
+        foreach ($orders as $order) {
+            $lineItems = is_array($order->line_items) ? $order->line_items : [];
+            foreach ($lineItems as $item) {
+                if (! is_array($item)) {
+                    continue;
+                }
+                $pid = $item['product_id'] ?? $item['id'] ?? null;
+                if ($pid !== null && is_numeric($pid) && (int) $pid > 0) {
+                    $productIds[] = (int) $pid;
+                }
+                $pname = trim((string) ($item['name'] ?? $item['title'] ?? ''));
+                if ($pname !== '') {
+                    $productNames[] = $pname;
+                }
+            }
+        }
 
-        $productNames = $items->pluck('product_name')
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        $productIds = array_values(array_unique($productIds));
+        $productNames = array_values(array_unique($productNames));
 
         $latestOrder = $orders->first();
         $lastOrderAt = ($latestOrder->paid_at ?? $latestOrder->created_at)?->toIso8601String();
@@ -321,7 +338,7 @@ class PlatformAudienceSyncService
 
         return [
             'order_count' => $orders->count(),
-            'lifetime_value' => round((float) $orders->sum('total_amount'), 2),
+            'lifetime_value' => round((float) $orders->sum('total'), 2),
             'last_order_at' => $lastOrderAt,
             'purchased_product_ids' => $productIds,
             'purchased_product_names' => $productNames,

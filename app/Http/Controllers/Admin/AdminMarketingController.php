@@ -15,7 +15,6 @@ use App\Modules\Broadcasting\Models\Campaign;
 use App\Modules\Broadcasting\Models\CampaignRecipient;
 use App\Modules\Broadcasting\Services\CampaignPersonalizer;
 use App\Modules\Ecommerce\Models\EcommerceOrder;
-use App\Modules\Ecommerce\Models\EcommerceOrderItem;
 use App\Modules\Ecommerce\Models\EcommerceProduct;
 use App\Modules\Shared\Models\Contact;
 use App\Modules\Shared\Models\ContactTag;
@@ -26,9 +25,9 @@ use App\Services\Marketing\PlatformAudienceSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -76,6 +75,7 @@ class AdminMarketingController extends Controller
     public function index(Request $request): Response
     {
         $workspaceId = $this->syncService->platformWorkspaceId();
+        $hasBounceCols = Schema::hasColumn('contacts', 'bounced_at') && Schema::hasColumn('contacts', 'complained_at');
 
         // Auto-sync on first visit if platform marketing workspace is empty
         if (Contact::where('workspace_id', $workspaceId)->count() === 0) {
@@ -89,34 +89,41 @@ class AdminMarketingController extends Controller
         $verifiedUsers = User::whereNotNull('email_verified_at')->count();
         $todaysRegistrations = User::whereDate('created_at', today())->count();
 
-        $paidOrdersQuery = EcommerceOrder::where('payment_status', 'paid');
+        $paidOrdersQuery = EcommerceOrder::query()->where(function ($q) {
+            $q->whereIn('payment_status', ['paid', 'completed'])
+                ->orWhere('financial_status', 'paid')
+                ->orWhereNotNull('paid_at');
+        });
+
         $totalCustomers = (clone $paidOrdersQuery)
             ->whereNotNull('customer_email')
             ->distinct('customer_email')
             ->count('customer_email');
 
         $todaysPurchases = (clone $paidOrdersQuery)->whereDate('created_at', today())->count();
-        $todaysRevenue = (float) (clone $paidOrdersQuery)->whereDate('created_at', today())->sum('total_amount');
-        $totalRevenue = (float) (clone $paidOrdersQuery)->sum('total_amount');
+        $todaysRevenue = (float) (clone $paidOrdersQuery)->whereDate('created_at', today())->sum('total');
+        $totalRevenue = (float) (clone $paidOrdersQuery)->sum('total');
 
         $activeUserSubs = Subscription::whereIn('status', ['active', 'trialing'])->count();
         $activeClientSubs = ClientSubscription::whereIn('status', ['active', 'trialing'])->count();
         $activeSubscribers = $activeUserSubs + $activeClientSubs;
 
         $totalContacts = Contact::where('workspace_id', $workspaceId)->count();
-        $deliverableContacts = Contact::where('workspace_id', $workspaceId)
+        $deliverableContactsQuery = Contact::where('workspace_id', $workspaceId)
             ->where('opt_in_email', true)
             ->whereNotNull('email')
-            ->where('email', '!=', '')
-            ->whereNull('bounced_at')
-            ->whereNull('complained_at')
-            ->count();
+            ->where('email', '!=', '');
+        if ($hasBounceCols) {
+            $deliverableContactsQuery->whereNull('bounced_at')->whereNull('complained_at');
+        }
+        $deliverableContacts = $deliverableContactsQuery->count();
 
         $suppressedContacts = Contact::where('workspace_id', $workspaceId)
-            ->where(function ($q) {
-                $q->where('opt_in_email', false)
-                    ->orWhereNotNull('bounced_at')
-                    ->orWhereNotNull('complained_at');
+            ->where(function ($q) use ($hasBounceCols) {
+                $q->where('opt_in_email', false);
+                if ($hasBounceCols) {
+                    $q->orWhereNotNull('bounced_at')->orWhereNotNull('complained_at');
+                }
             })
             ->count();
 
@@ -151,28 +158,73 @@ class AdminMarketingController extends Controller
         $clickRate = $sentCount > 0 ? round(($clickedCount / $sentCount) * 100, 1) : 0.0;
 
         // 3. Product Buyer Cohorts (Course A Buyers, Course B Buyers, Digital/Physical Products)
-        $productBuyerCohorts = EcommerceOrderItem::query()
-            ->join('ecommerce_orders', 'ecommerce_orders.id', '=', 'ecommerce_order_items.order_id')
-            ->where('ecommerce_orders.payment_status', 'paid')
-            ->whereNotNull('ecommerce_orders.customer_email')
-            ->selectRaw('
-                ecommerce_order_items.product_id,
-                ecommerce_order_items.product_name,
-                COUNT(DISTINCT LOWER(ecommerce_orders.customer_email)) as buyers_count,
-                SUM(ecommerce_order_items.total_price) as total_revenue
-            ')
-            ->groupBy('ecommerce_order_items.product_id', 'ecommerce_order_items.product_name')
-            ->orderByDesc('buyers_count')
-            ->limit(15)
-            ->get();
+        // Computed from EcommerceOrder JSON line_items
+        $cohortMap = [];
+        (clone $paidOrdersQuery)
+            ->whereNotNull('customer_email')
+            ->get(['customer_email', 'line_items', 'total'])
+            ->each(function (EcommerceOrder $order) use (&$cohortMap) {
+                $email = strtolower(trim((string) $order->customer_email));
+                $items = is_array($order->line_items) ? $order->line_items : [];
+                foreach ($items as $item) {
+                    if (! is_array($item)) {
+                        continue;
+                    }
+                    $pid = (int) ($item['product_id'] ?? $item['id'] ?? 0);
+                    $pname = trim((string) ($item['name'] ?? $item['title'] ?? 'Product'));
+                    $key = $pid > 0 ? "pid:{$pid}" : 'name:'.strtolower($pname);
+                    if (! isset($cohortMap[$key])) {
+                        $cohortMap[$key] = [
+                            'product_id' => $pid > 0 ? $pid : null,
+                            'product_name' => $pname ?: 'Product',
+                            'emails' => [],
+                            'total_revenue' => 0.0,
+                        ];
+                    }
+                    if ($email !== '') {
+                        $cohortMap[$key]['emails'][$email] = true;
+                    }
+                    $itemTotal = isset($item['total'])
+                        ? (float) $item['total']
+                        : ((float) ($item['unit_price'] ?? $item['price'] ?? 0) * max(1, (int) ($item['quantity'] ?? 1)));
+                    $cohortMap[$key]['total_revenue'] += $itemTotal;
+                }
+            });
+
+        $productBuyerCohorts = collect($cohortMap)
+            ->map(fn (array $c) => [
+                'product_id' => $c['product_id'],
+                'product_name' => $c['product_name'],
+                'buyers_count' => count($c['emails']),
+                'total_revenue' => round($c['total_revenue'], 2),
+            ])
+            ->sortByDesc('buyers_count')
+            ->take(15)
+            ->values();
 
         // 4. Recent Sales & Recent Signups
-        $recentSales = EcommerceOrder::with('items:id,order_id,product_id,product_name,quantity,total_price')
-            ->where('payment_status', 'paid')
+        $recentSales = (clone $paidOrdersQuery)
             ->latest('paid_at')
             ->latest('id')
             ->limit(8)
-            ->get(['id', 'order_number', 'customer_name', 'customer_email', 'total_amount', 'currency', 'paid_at', 'created_at']);
+            ->get(['id', 'number', 'customer_name', 'customer_email', 'total', 'currency', 'line_items', 'paid_at', 'created_at'])
+            ->map(fn (EcommerceOrder $o) => [
+                'id' => $o->id,
+                'order_number' => $o->number ?: ('ORD-'.$o->id),
+                'customer_name' => $o->customer_name,
+                'customer_email' => $o->customer_email,
+                'total_amount' => (float) $o->total,
+                'currency' => $o->currency ?: 'USD',
+                'paid_at' => $o->paid_at?->toIso8601String(),
+                'created_at' => $o->created_at?->toIso8601String(),
+                'items' => collect($o->line_items ?? [])->map(fn ($item, $idx) => [
+                    'id' => $idx + 1,
+                    'product_id' => $item['product_id'] ?? $item['id'] ?? null,
+                    'product_name' => $item['name'] ?? $item['title'] ?? 'Product',
+                    'quantity' => (int) ($item['quantity'] ?? 1),
+                    'total_price' => (float) ($item['total'] ?? $item['price'] ?? 0),
+                ])->values()->all(),
+            ]);
 
         $recentSignups = User::latest('id')
             ->limit(8)
@@ -186,7 +238,7 @@ class AdminMarketingController extends Controller
             $audienceGrowth[] = [
                 'date' => $date->format('M d'),
                 'signups' => User::whereDate('created_at', $dateStr)->count(),
-                'orders' => EcommerceOrder::where('payment_status', 'paid')->whereDate('created_at', $dateStr)->count(),
+                'orders' => (clone $paidOrdersQuery)->whereDate('created_at', $dateStr)->count(),
             ];
         }
 
@@ -218,10 +270,16 @@ class AdminMarketingController extends Controller
 
         if ($request->filled('opt_in')) {
             if ($request->input('opt_in') === 'subscribed') {
-                $contactsQuery->where('opt_in_email', true)->whereNull('bounced_at')->whereNull('complained_at');
+                $contactsQuery->where('opt_in_email', true);
+                if ($hasBounceCols) {
+                    $contactsQuery->whereNull('bounced_at')->whereNull('complained_at');
+                }
             } elseif ($request->input('opt_in') === 'unsubscribed') {
-                $contactsQuery->where(function ($q) {
-                    $q->where('opt_in_email', false)->orWhereNotNull('bounced_at')->orWhereNotNull('complained_at');
+                $contactsQuery->where(function ($q) use ($hasBounceCols) {
+                    $q->where('opt_in_email', false);
+                    if ($hasBounceCols) {
+                        $q->orWhereNotNull('bounced_at')->orWhereNotNull('complained_at');
+                    }
                 });
             }
         }
@@ -284,7 +342,7 @@ class AdminMarketingController extends Controller
                     'audience_ref' => $c->audience_ref,
                     'payload_json' => $c->payload_json,
                     'schedule_at' => $c->schedule_at?->toIso8601String(),
-                    'recurrence_rule' => $c->recurrence_rule,
+                    'recurrence_rule' => $c->recurrence_rule ?? null,
                     'status' => $c->status,
                     'totals_json' => array_merge($c->totals_json ?? [], [
                         'clicked' => $clicked,
@@ -298,15 +356,39 @@ class AdminMarketingController extends Controller
             ->get(['id', 'name', 'price', 'currency', 'product_type', 'status']);
 
         $plans = Plan::orderBy('sort_order')
-            ->get(['id', 'name', 'slug', 'price_monthly', 'price_yearly']);
+            ->get(['id', 'name', 'slug', 'price_cents', 'monthly_price_cents', 'yearly_price_cents'])
+            ->map(fn (Plan $p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'slug' => $p->slug,
+                'price_monthly' => round((($p->monthly_price_cents ?? $p->price_cents ?? 0) / 100), 2),
+                'price_yearly' => round((($p->yearly_price_cents ?? 0) / 100), 2),
+            ]);
 
-        $coupons = Coupon::where('is_active', true)
+        $coupons = Coupon::where('enabled', true)
             ->orderBy('code')
-            ->get(['id', 'code', 'type', 'value']);
+            ->get(['id', 'code', 'kind', 'amount'])
+            ->map(fn (Coupon $c) => [
+                'id' => $c->id,
+                'code' => $c->code,
+                'type' => $c->kind === 'percent' ? 'percentage' : 'fixed',
+                'value' => $c->kind === 'percent' ? $c->amount : round(($c->amount ?? 0) / 100, 2),
+            ]);
 
         $smtpConfigs = SmtpConfiguration::orderByDesc('is_active')
             ->orderBy('id')
-            ->get(['id', 'name', 'host', 'port', 'from_email', 'from_name', 'purpose', 'rate_limit_per_minute', 'is_active']);
+            ->get()
+            ->map(fn (SmtpConfiguration $s) => [
+                'id' => $s->id,
+                'name' => $s->from_name ?: "{$s->host}:{$s->port}",
+                'host' => $s->host,
+                'port' => $s->port,
+                'from_email' => $s->from_email,
+                'from_name' => $s->from_name,
+                'purpose' => $s->purpose ?? 'both',
+                'rate_limit_per_minute' => $s->rate_limit_per_minute ?? null,
+                'is_active' => (bool) $s->is_active,
+            ]);
 
         return Inertia::render('Admin/Marketing/Index', [
             'kpis' => [
@@ -381,6 +463,7 @@ class AdminMarketingController extends Controller
     public function audiencePreview(Request $request): JsonResponse
     {
         $workspaceId = $this->syncService->platformWorkspaceId();
+        $hasBounceCols = Schema::hasColumn('contacts', 'bounced_at') && Schema::hasColumn('contacts', 'complained_at');
 
         $validated = $request->validate([
             'audience_type' => ['required', 'string', 'in:' . implode(',', self::AUDIENCE_TYPES)],
@@ -407,9 +490,10 @@ class AdminMarketingController extends Controller
         $deliverableQuery = (clone $baseQuery)
             ->where('opt_in_email', true)
             ->whereNotNull('email')
-            ->where('email', '!=', '')
-            ->whereNull('bounced_at')
-            ->whereNull('complained_at');
+            ->where('email', '!=', '');
+        if ($hasBounceCols) {
+            $deliverableQuery->whereNull('bounced_at')->whereNull('complained_at');
+        }
 
         $deliverable = (clone $deliverableQuery)->count();
         $suppressed = max(0, $totalMatched - $deliverable);
@@ -482,12 +566,12 @@ class AdminMarketingController extends Controller
     /**
      * DELETE /admin/marketing/segments/{segment}
      */
-    public function destroySegment(Segment $segment): RedirectResponse
+    public function destroySegment(string|int $segment): RedirectResponse
     {
         $workspaceId = $this->syncService->platformWorkspaceId();
-        abort_unless((int) $segment->workspace_id === $workspaceId, 403);
+        $seg = Segment::where('workspace_id', $workspaceId)->findOrFail($segment);
 
-        $segment->delete();
+        $seg->delete();
 
         return back()->with('success', 'Segment deleted.');
     }
@@ -528,6 +612,7 @@ class AdminMarketingController extends Controller
             'reply_to' => $validated['reply_to'] ?? null,
             'track_opens' => (bool) ($validated['track_opens'] ?? true),
             'track_clicks' => (bool) ($validated['track_clicks'] ?? true),
+            'campaign_type' => $validated['campaign_type'],
         ];
 
         $campaign = null;
@@ -538,15 +623,20 @@ class AdminMarketingController extends Controller
         $attributes = [
             'workspace_id' => $workspaceId,
             'name' => $validated['name'],
-            'campaign_type' => $validated['campaign_type'],
             'channel' => 'email',
             'audience_type' => $validated['audience_type'],
             'audience_ref' => $validated['audience_ref'] ?? null,
             'payload_json' => $payloadJson,
             'schedule_at' => ! empty($validated['schedule_at']) ? $validated['schedule_at'] : null,
-            'recurrence_rule' => $validated['recurrence_rule'] ?? null,
             'timezone' => config('app.timezone', 'UTC'),
         ];
+
+        if (Schema::hasColumn('campaigns', 'campaign_type')) {
+            $attributes['campaign_type'] = $validated['campaign_type'];
+        }
+        if (Schema::hasColumn('campaigns', 'recurrence_rule')) {
+            $attributes['recurrence_rule'] = $validated['recurrence_rule'] ?? null;
+        }
 
         if ($campaign && in_array($campaign->status, ['draft', 'paused'], true)) {
             $campaign->update($attributes);
@@ -572,49 +662,60 @@ class AdminMarketingController extends Controller
         return back()->with('success', "Campaign \"{$campaign->name}\" saved as draft.");
     }
 
+    private function resolvePlatformCampaign(string|int $idOrUuid): Campaign
+    {
+        $workspaceId = $this->syncService->platformWorkspaceId();
+
+        return Campaign::where('workspace_id', $workspaceId)
+            ->where(function ($q) use ($idOrUuid) {
+                if (is_numeric($idOrUuid)) {
+                    $q->where('id', (int) $idOrUuid);
+                } else {
+                    $q->where('uuid', (string) $idOrUuid);
+                }
+            })
+            ->firstOrFail();
+    }
+
     /**
      * POST /admin/marketing/campaigns/{campaign}/launch
      */
-    public function launchCampaign(Campaign $campaign): RedirectResponse
+    public function launchCampaign(string|int $campaign): RedirectResponse
     {
-        $workspaceId = $this->syncService->platformWorkspaceId();
-        abort_unless((int) $campaign->workspace_id === $workspaceId, 403);
-        abort_unless(in_array($campaign->status, ['draft', 'paused'], true), 422, 'Only draft or paused campaigns can be launched.');
+        $model = $this->resolvePlatformCampaign($campaign);
+        abort_unless(in_array($model->status, ['draft', 'paused'], true), 422, 'Only draft or paused campaigns can be launched.');
 
-        $campaign->update(['status' => 'queued']);
+        $model->update(['status' => 'queued']);
 
-        if (! $campaign->schedule_at || $campaign->schedule_at->isPast()) {
-            LaunchCampaignJob::dispatch($campaign->id)->onQueue('broadcast');
+        if (! $model->schedule_at || $model->schedule_at->isPast()) {
+            LaunchCampaignJob::dispatch($model->id)->onQueue('broadcast');
 
-            return back()->with('success', "Campaign \"{$campaign->name}\" launched.");
+            return back()->with('success', "Campaign \"{$model->name}\" launched.");
         }
 
-        return back()->with('success', "Campaign \"{$campaign->name}\" scheduled for launch.");
+        return back()->with('success', "Campaign \"{$model->name}\" scheduled for launch.");
     }
 
     /**
      * POST /admin/marketing/campaigns/{campaign}/pause
      */
-    public function pauseCampaign(Campaign $campaign): RedirectResponse
+    public function pauseCampaign(string|int $campaign): RedirectResponse
     {
-        $workspaceId = $this->syncService->platformWorkspaceId();
-        abort_unless((int) $campaign->workspace_id === $workspaceId, 403);
-        abort_unless(in_array($campaign->status, ['queued', 'sending'], true), 422, 'Only queued or sending campaigns can be paused.');
+        $model = $this->resolvePlatformCampaign($campaign);
+        abort_unless(in_array($model->status, ['queued', 'sending'], true), 422, 'Only queued or sending campaigns can be paused.');
 
-        $campaign->update(['status' => 'paused']);
+        $model->update(['status' => 'paused']);
 
-        return back()->with('success', "Campaign \"{$campaign->name}\" paused.");
+        return back()->with('success', "Campaign \"{$model->name}\" paused.");
     }
 
     /**
      * DELETE /admin/marketing/campaigns/{campaign}
      */
-    public function destroyCampaign(Campaign $campaign): RedirectResponse
+    public function destroyCampaign(string|int $campaign): RedirectResponse
     {
-        $workspaceId = $this->syncService->platformWorkspaceId();
-        abort_unless((int) $campaign->workspace_id === $workspaceId, 403);
-
-        $campaign->delete();
+        $model = $this->resolvePlatformCampaign($campaign);
+        $model->delete();
 
         return back()->with('success', 'Campaign deleted.');
     }
@@ -622,10 +723,10 @@ class AdminMarketingController extends Controller
     /**
      * POST /admin/marketing/campaigns/{campaign}/test-send
      */
-    public function testSendCampaign(Request $request, Campaign $campaign): JsonResponse
+    public function testSendCampaign(Request $request, string|int $campaign): JsonResponse
     {
+        $model = $this->resolvePlatformCampaign($campaign);
         $workspaceId = $this->syncService->platformWorkspaceId();
-        abort_unless((int) $campaign->workspace_id === $workspaceId, 403);
 
         $validated = $request->validate([
             'email' => ['required', 'email', 'max:255'],
@@ -650,8 +751,8 @@ class AdminMarketingController extends Controller
         ]);
 
         try {
-            $payload = $campaign->payload_json ?? [];
-            $subject = $personalizer->renderText('[TEST] ' . ($payload['subject'] ?? $campaign->name), $contact);
+            $payload = $model->payload_json ?? [];
+            $subject = $personalizer->renderText('[TEST] ' . ($payload['subject'] ?? $model->name), $contact);
             $body = $personalizer->renderText($payload['body'] ?? '', $contact, [
                 'unsubscribe_url' => url('/track/email/unsubscribe/test-preview'),
             ]);
@@ -678,7 +779,7 @@ class AdminMarketingController extends Controller
             return response()->json(['ok' => true, 'message' => "Test email sent to {$contact->email}."]);
         } catch (\Throwable $e) {
             Log::warning('AdminMarketingController::testSendCampaign failed', [
-                'campaign_id' => $campaign->id,
+                'campaign_id' => $model->id,
                 'error' => $e->getMessage(),
             ]);
 
@@ -693,23 +794,36 @@ class AdminMarketingController extends Controller
      * POST /admin/marketing/contacts/{contact}/toggle-opt-in
      * Toggle marketing consent or clear bounce/complaint flags for a contact.
      */
-    public function toggleContactOptIn(Contact $contact): RedirectResponse
+    public function toggleContactOptIn(string|int $contact): RedirectResponse
     {
         $workspaceId = $this->syncService->platformWorkspaceId();
-        abort_unless((int) $contact->workspace_id === $workspaceId, 403);
+        $model = Contact::where('workspace_id', $workspaceId)
+            ->where(function ($q) use ($contact) {
+                if (is_numeric($contact)) {
+                    $q->where('id', (int) $contact);
+                } else {
+                    $q->where('uuid', (string) $contact);
+                }
+            })
+            ->firstOrFail();
 
-        $newOptIn = ! $contact->opt_in_email;
-        $contact->update([
-            'opt_in_email' => $newOptIn,
-            'bounced_at' => $newOptIn ? null : $contact->bounced_at,
-            'complained_at' => $newOptIn ? null : $contact->complained_at,
-        ]);
+        $newOptIn = ! $model->opt_in_email;
+        $updatePayload = ['opt_in_email' => $newOptIn];
+
+        if (Schema::hasColumn('contacts', 'bounced_at')) {
+            $updatePayload['bounced_at'] = $newOptIn ? null : $model->bounced_at;
+        }
+        if (Schema::hasColumn('contacts', 'complained_at')) {
+            $updatePayload['complained_at'] = $newOptIn ? null : $model->complained_at;
+        }
+
+        $model->update($updatePayload);
 
         return back()->with(
             'success',
             $newOptIn
-                ? "Marketing consent re-enabled for {$contact->email}."
-                : "{$contact->email} added to marketing suppression list."
+                ? "Marketing consent re-enabled for {$model->email}."
+                : "{$model->email} added to marketing suppression list."
         );
     }
 
@@ -746,7 +860,9 @@ class AdminMarketingController extends Controller
         if (! empty($validated['coupon_code'])) {
             $coupon = Coupon::where('code', $validated['coupon_code'])->first();
             if ($coupon) {
-                $discountLabel = $coupon->type === 'percentage' ? "{$coupon->value}% OFF" : "\${$coupon->value} OFF";
+                $discountLabel = $coupon->kind === 'percent'
+                    ? "{$coupon->amount}% OFF"
+                    : '$' . round(($coupon->amount ?? 0) / 100, 2) . ' OFF';
                 $couponContext = "\nPromotional Coupon Code: {$coupon->code} ({$discountLabel})";
             } else {
                 $couponContext = "\nPromotional Coupon Code: {$validated['coupon_code']}";
