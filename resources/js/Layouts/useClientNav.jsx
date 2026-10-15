@@ -5,7 +5,7 @@ import {
     LayoutDashboard, CreditCard, Package, FileText, Users, Settings,
     Layers, Webhook, Key, BookOpen, Image, Radio, Inbox, Bot, Database,
     Zap, Share2, MapPin, Tag, LifeBuoy, ExternalLink, Mail, MessageSquare,
-    ShoppingBag, KanbanSquare, Wallet, Store, Sparkles, GraduationCap, Megaphone,
+    ShoppingBag, KanbanSquare, Wallet, Store, Sparkles, GraduationCap, Megaphone, Palette,
 } from 'lucide-react';
 
 const iconClass = 'h-4 w-4';
@@ -101,6 +101,7 @@ export default function useClientNav() {
         { label: t('nav.posts'),             href: safeRoute('client.social.posts.index'),                   icon: <Radio className={iconClass} />,           activePattern: 'client.social.posts.*' },
         { label: t('nav.calendar'),          href: safeRoute('client.social.calendar'),                      icon: <LayoutDashboard className={iconClass} />, activePattern: 'client.social.calendar' },
         { label: t('nav.social_automation', 'Social Automation'), href: `${safeRoute('client.automations.index')}?ai=social`, icon: <Zap className={iconClass} />, activePattern: 'client.automations.social' },
+        { label: t('nav.brand_kit', 'Brand Design Kit'), href: safeRoute('client.social.brand-kit.index'), icon: <Palette className={iconClass} />, activePattern: 'client.social.brand-kit.*' },
         { label: t('nav.social_accounts'),   href: safeRoute('client.social.accounts.index'),                icon: <Share2 className={iconClass} />,          activePattern: 'client.social.accounts.*' },
     ];
 

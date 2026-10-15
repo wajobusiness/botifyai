@@ -1653,14 +1653,22 @@ class AutomationEngine
                 ->first() ?: 'Educational Insights';
         }
 
-        // Determine content format (explicit node config -> day-of-week schedule rule)
+        // Determine content format (explicit node config -> day-of-week schedule rule + active brand templates)
         $dayOfWeek = strtolower((string) ($context['day_of_week'] ?? now()->englishDayOfWeek));
         $format = strtolower(trim((string) ($data['format'] ?? 'auto')));
         if ($format === 'auto' || $format === '') {
+            $activeTemplates = is_array($profile->active_templates) && ! empty($profile->active_templates)
+                ? $profile->active_templates
+                : ['tip', 'quote', 'data', 'promo', 'announcement', 'carousel'];
+
             $format = match ($dayOfWeek) {
-                'monday', 'mon' => 'quote',
-                'friday', 'fri' => 'promo',
-                default => 'carousel',
+                'monday', 'mon' => in_array('quote', $activeTemplates, true) ? 'quote' : 'tip',
+                'tuesday', 'tue' => in_array('tip', $activeTemplates, true) ? 'tip' : 'carousel',
+                'wednesday', 'wed' => in_array('data', $activeTemplates, true) ? 'data' : 'carousel',
+                'thursday', 'thu' => in_array('carousel', $activeTemplates, true) ? 'carousel' : 'tip',
+                'friday', 'fri' => in_array('promo', $activeTemplates, true) ? 'promo' : 'announcement',
+                'saturday', 'sat' => in_array('quote', $activeTemplates, true) ? 'quote' : 'tip',
+                default => in_array('carousel', $activeTemplates, true) ? 'carousel' : 'tip',
             };
         }
 
@@ -1889,6 +1897,7 @@ SYSTEM;
             'primary_color' => $data['primary_color'] ?? null,
             'secondary_color' => $data['secondary_color'] ?? null,
             'brand_name' => $data['brand_name'] ?? ($context['brand_name'] ?? null),
+            'aspect_ratio' => $data['aspect_ratio'] ?? ($context['aspect_ratio'] ?? null),
         ]);
 
         $ctxUpdate = [

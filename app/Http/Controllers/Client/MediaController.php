@@ -21,8 +21,20 @@ class MediaController extends Controller
         $usedBytes = $this->mediaService->usedBytes($user);
         $quotaBytes = $this->mediaService->quotaBytes($user);
 
-        $files = Media::where('mediable_type', get_class($user))
-            ->where('mediable_id', $user->id)
+        $workspaceId = (int) ($user->current_workspace_id ?? $user->workspace_id);
+
+        $files = Media::where(function ($q) use ($user, $workspaceId) {
+            $q->where(function ($inner) use ($user) {
+                $inner->where('mediable_type', get_class($user))
+                    ->where('mediable_id', $user->id);
+            });
+            if ($workspaceId > 0) {
+                $q->orWhere(function ($inner) use ($workspaceId) {
+                    $inner->where('mediable_type', \App\Models\Workspace::class)
+                        ->where('mediable_id', $workspaceId);
+                });
+            }
+        })
             ->latest()
             ->paginate(24)
             ->through(fn ($m) => [
@@ -74,7 +86,11 @@ class MediaController extends Controller
 
     public function destroy(Request $request, Media $medium): JsonResponse
     {
-        abort_unless($medium->mediable_type === get_class($request->user()) && $medium->mediable_id === $request->user()->id, 403);
+        $isUserOwner = $medium->mediable_type === get_class($request->user()) && $medium->mediable_id === $request->user()->id;
+        $workspaceId = (int) ($request->user()->current_workspace_id ?? $request->user()->workspace_id);
+        $isWorkspaceOwner = $workspaceId > 0 && $medium->mediable_type === \App\Models\Workspace::class && $medium->mediable_id === $workspaceId;
+
+        abort_unless($isUserOwner || $isWorkspaceOwner, 403);
 
         $medium->delete();
 

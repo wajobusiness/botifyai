@@ -23,4 +23,8 @@ Route::middleware(['web', 'client-app'])->prefix('app/social')->name('client.soc
     Route::post('/ai-plan',    [SocialPostController::class, 'aiPlan'])->name('ai-plan');
     Route::post('/posts/bulk', [SocialPostController::class, 'bulkStore'])->name('posts.bulk')->middleware('limit:social_posts_per_month,social_posts');
     Route::get('/calendar', [SocialPostController::class, 'calendar'])->name('calendar');
+    Route::get('/brand-kit', [\App\Modules\Social\Http\Controllers\BrandKitController::class, 'index'])->name('brand-kit.index');
+    Route::post('/brand-kit', [\App\Modules\Social\Http\Controllers\BrandKitController::class, 'update'])->name('brand-kit.update');
+    Route::post('/brand-kit/upload-asset', [\App\Modules\Social\Http\Controllers\BrandKitController::class, 'uploadAsset'])->name('brand-kit.upload-asset');
+    Route::post('/brand-kit/preview', [\App\Modules\Social\Http\Controllers\BrandKitController::class, 'preview'])->name('brand-kit.preview');
 });
