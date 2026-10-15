@@ -31,7 +31,7 @@ By embedding advanced artificial intelligence directly into the business logic, 
 
 ## Intellectual Property, Provenance & Project History
 
-> ### Notice for Technical Evaluators, Investors & Visa Assessors
+> ### Notice for Technical Evaluators, Investors and partners
 > **BotifyAI.cloud** was conceived, architected, and commercially deployed as proprietary intellectual property by **WAJO Limited** prior to the publication of selected code components on GitHub.
 >
 > - **Product Genesis**: Initial research, architectural design, and platform engineering commenced in **early 2024**.
