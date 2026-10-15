@@ -1591,10 +1591,20 @@ function RenderGraphicFields({ d, set }) {
             <Field label={t('automation.graphic_template')}>
                 <select className={selectCls} value={d.template ?? 'auto'} onChange={e => set('template', e.target.value)}>
                     <option value="auto">{t('automation.social_format_auto')}</option>
-                    <option value="carousel">{t('automation.social_format_carousel')}</option>
+                    <option value="tip">Actionable Tip / Insight</option>
                     <option value="quote">{t('automation.social_format_quote')}</option>
+                    <option value="data">Metrics / Data Spotlight</option>
                     <option value="promo">{t('automation.social_format_promo')}</option>
-                    <option value="tip">{t('automation.social_format_tip')}</option>
+                    <option value="announcement">Announcement / News Alert</option>
+                    <option value="carousel">{t('automation.social_format_carousel')}</option>
+                </select>
+            </Field>
+            <Field label="Aspect Ratio">
+                <select className={selectCls} value={d.aspect_ratio ?? '1:1'} onChange={e => set('aspect_ratio', e.target.value)}>
+                    <option value="1:1">1:1 Square (Instagram / LinkedIn / Facebook)</option>
+                    <option value="4:5">4:5 Portrait (Instagram Feed)</option>
+                    <option value="9:16">9:16 Story / Reel (TikTok / Shorts)</option>
+                    <option value="16:9">16:9 Landscape (Twitter / LinkedIn)</option>
                 </select>
             </Field>
             <Field label={t('automation.brand_name')}>

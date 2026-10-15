@@ -153,9 +153,9 @@ Rules:
   {{context.content_format}}, {{context.full_caption}}, {{context.media_url}}.
 
 Node "data" by type:
-- ai_social_ideation: { "niche": "Digital marketing, AI, web hosting", "pillars": "AI Tools\nWeb Hosting\nGrowth Strategy", "format": "auto|carousel|quote|promo|tip", "tone": "professional" }
+- ai_social_ideation: { "niche": "Digital marketing, AI, web hosting", "pillars": "AI Tools\nWeb Hosting\nGrowth Strategy", "format": "auto|carousel|quote|promo|tip|data|announcement", "tone": "professional" }
 - ai_social_caption: { "tone": "professional", "cta": "Visit our link in bio", "prompt": "Avoid repetitive hooks" }
-- render_social_graphic: { "template": "auto|quote|promo|tip|carousel", "primary_color": "#6366f1", "secondary_color": "#0f172a", "brand_name": "" }
+- render_social_graphic: { "template": "auto|quote|promo|tip|carousel|data|announcement", "aspect_ratio": "1:1|4:5|9:16|16:9", "primary_color": "#6366f1", "secondary_color": "#0f172a", "brand_name": "" }
 - publish_social_post: { "target_accounts": [], "publish_mode": "immediate|optimal_slot|approval_queue", "delay_minutes": 15 }
 - send_whatsapp / send_sms: { "body": "text" }
 - send_email: { "subject": "text", "body": "text" }
