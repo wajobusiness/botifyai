@@ -70,6 +70,13 @@ Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('su
 Route::get('/subscriptions/export', [SubscriptionController::class, 'export'])->name('subscriptions.export')->middleware('permission:view_subscriptions');
 Route::get('/subscriptions/user-search', [SubscriptionController::class, 'userSearch'])->name('subscriptions.user-search')->middleware('permission:manage_subscriptions');
 Route::post('/subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store')->middleware('permission:manage_subscriptions');
+
+// AppSumo Lifetime Deals & License Management
+Route::get('/appsumo-licenses', [\App\Http\Controllers\Admin\AppSumoLicenseController::class, 'index'])->name('appsumo.index')->middleware('permission:view_subscriptions');
+Route::get('/appsumo-licenses/export', [\App\Http\Controllers\Admin\AppSumoLicenseController::class, 'export'])->name('appsumo.export')->middleware('permission:view_subscriptions');
+Route::post('/appsumo-licenses/generate', [\App\Http\Controllers\Admin\AppSumoLicenseController::class, 'generate'])->name('appsumo.generate')->middleware('permission:manage_subscriptions');
+Route::post('/appsumo-licenses/{license}/revoke', [\App\Http\Controllers\Admin\AppSumoLicenseController::class, 'revoke'])->name('appsumo.revoke')->middleware('permission:manage_subscriptions');
+
 Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index')->middleware('permission:view_payment_gateways');
 Route::post('/payments/{transaction}/refund', [TransactionController::class, 'refund'])->name('payments.refund')->middleware('permission:view_payment_gateways');
 Route::get('/payment-gateways', [PaymentGatewayConfigController::class, 'index'])->name('payment-gateways.index')->middleware('permission:view_payment_gateways');

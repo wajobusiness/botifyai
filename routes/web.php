@@ -47,6 +47,21 @@ Route::get('/faq', [LandingController::class, 'faq'])->name('faq');
 Route::get('/use-cases', [LandingController::class, 'useCases'])->name('use-cases');
 Route::get('/about', [LandingController::class, 'about'])->name('about');
 Route::get('/integrations', [LandingController::class, 'integrations'])->name('integrations');
+Route::get('/architecture', [LandingController::class, 'architecture'])->name('architecture');
+Route::get('/technical-overview', fn () => redirect()->route('architecture', [], 301))->name('technical-overview');
+
+// AppSumo Lifetime Deal Redemption Portal
+Route::get('/redeem', [\App\Http\Controllers\AppSumoRedemptionController::class, 'show'])->name('appsumo.redeem');
+Route::get('/appsumo', fn () => redirect()->route('appsumo.redeem', request()->query()))->name('appsumo.landing');
+Route::post('/redeem/validate', [\App\Http\Controllers\AppSumoRedemptionController::class, 'validateCode'])
+    ->middleware('throttle:redemption')
+    ->name('appsumo.validate');
+Route::post('/redeem/new', [\App\Http\Controllers\AppSumoRedemptionController::class, 'redeemNew'])
+    ->middleware('throttle:redemption')
+    ->name('appsumo.redeem.new');
+Route::post('/redeem/existing', [\App\Http\Controllers\AppSumoRedemptionController::class, 'redeemExisting'])
+    ->middleware('throttle:redemption')
+    ->name('appsumo.redeem.existing');
 
 // CMS pages (e.g. /p/privacy, /p/terms)
 Route::get('/p/{slug}', [CmsPageController::class, 'show'])->name('cms-page.show');

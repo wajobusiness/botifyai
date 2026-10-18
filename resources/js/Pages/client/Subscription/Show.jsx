@@ -2,7 +2,7 @@ import { useState } from 'react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import { Package, ArrowRightCircle, CreditCard, ChevronDown, FileText, RefreshCw } from 'lucide-react';
+import { Package, ArrowRightCircle, CreditCard, ChevronDown, FileText, RefreshCw, KeyRound, Sparkles } from 'lucide-react';
 import { formatDateTz } from '@/Utils/datetime';
 
 function formatCurrency(cents, currency = 'USD') {
@@ -105,12 +105,90 @@ function ChangePlanModal({ subscription, plans, onClose }) {
     );
 }
 
+function StackLicenseModal({ isOpen, onClose }) {
+    const { t } = useTranslation();
+    const { data, setData, post, processing, errors, reset } = useForm({
+        code: '',
+    });
+
+    const submit = (e) => {
+        e.preventDefault();
+        post(route('client.subscription.redeem-code'), {
+            onSuccess: () => {
+                reset();
+                onClose();
+            },
+        });
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 w-full max-w-md shadow-xl border border-neutral-200 dark:border-neutral-700">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600">
+                        <KeyRound className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+                            Redeem AppSumo Code
+                        </h3>
+                        <p className="text-xs text-neutral-500">
+                            Apply a new code or stack onto your current lifetime tier
+                        </p>
+                    </div>
+                </div>
+
+                <form onSubmit={submit} className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                            AppSumo License Code
+                        </label>
+                        <input
+                            type="text"
+                            value={data.code}
+                            onChange={(e) => setData('code', e.target.value.toUpperCase())}
+                            placeholder="BOTIFY-XXXX-XXXX-XXXX"
+                            className="w-full uppercase font-mono px-3 py-2 text-sm rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white"
+                            required
+                        />
+                        {errors.code && <p className="text-xs text-coral-600 mt-1">{errors.code}</p>}
+                    </div>
+
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                        Stacking additional codes automatically elevates your workspace limits (e.g. Tier 1 to Tier 2, or Tier 2 to Tier 3 with white-label enabled).
+                    </p>
+
+                    <div className="flex justify-end gap-2 pt-3 border-t border-neutral-200 dark:border-neutral-700">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"
+                        >
+                            {t('common.cancel')}
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={processing || !data.code}
+                            className="px-4 py-2 text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 disabled:opacity-50 rounded-lg shadow-sm"
+                        >
+                            {processing ? 'Redeeming...' : 'Redeem & Stack'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
 export default function SubscriptionShow({ subscription, canCancel, canUpgrade, plans = [], transactions = [] }) {
     const { t } = useTranslation();
     const { flash, timezone } = usePage().props;
     const userTz = timezone || 'Asia/Dhaka';
     const formatDate = (iso) => formatDateTz(iso, userTz);
     const [showChangePlan, setShowChangePlan] = useState(false);
+    const [showStackModal, setShowStackModal] = useState(false);
 
     const handleCancel = () => {
         if (!confirm(t('client.cancel_subscription_confirm') || 'Are you sure you want to cancel your subscription?')) return;
@@ -235,6 +313,38 @@ export default function SubscriptionShow({ subscription, canCancel, canUpgrade, 
                     </div>
                 )}
 
+                {/* AppSumo Lifetime Deal & Code Stacking Card */}
+                <div className="rounded-xl border border-amber-200 dark:border-amber-900/60 bg-gradient-to-r from-amber-50/70 via-white to-amber-50/40 dark:from-amber-950/20 dark:via-neutral-800 dark:to-amber-950/10 p-6 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex items-start gap-3.5">
+                            <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                                <KeyRound className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-base font-bold text-neutral-900 dark:text-white">
+                                        AppSumo Lifetime Deal Stacking
+                                    </h3>
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100">
+                                        Lifetime
+                                    </span>
+                                </div>
+                                <p className="mt-1 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 max-w-xl">
+                                    Have an AppSumo license key? Redeem it here to claim lifetime access or stack additional codes to instantly upgrade your workspace limits.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowStackModal(true)}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition-all flex-shrink-0"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            Redeem / Stack Code
+                        </button>
+                    </div>
+                </div>
+
                 {/* Billing History */}
                 {transactions.length > 0 && (
                     <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/50 overflow-hidden">
@@ -311,6 +421,11 @@ export default function SubscriptionShow({ subscription, canCancel, canUpgrade, 
                     onClose={() => setShowChangePlan(false)}
                 />
             )}
+
+            <StackLicenseModal
+                isOpen={showStackModal}
+                onClose={() => setShowStackModal(false)}
+            />
         </ClientLayout>
     );
 }

@@ -149,6 +149,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute((int) $perMinute)->by((string) $workspaceId);
         });
 
+        RateLimiter::for('redemption', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
         // ── Scramble / OpenAPI ──────────────────────────────────────────────
         Scramble::configure()
             ->withDocumentTransformers(function (OpenApi $openApi) {

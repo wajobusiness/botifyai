@@ -194,4 +194,16 @@ class LandingController extends Controller
             'landing'     => LandingPageController::getPublicSettings(),
         ]);
     }
+
+    public function architecture(): Response|RedirectResponse
+    {
+        if ($redirect = $this->landingDisabledRedirect()) {
+            return $redirect;
+        }
+
+        return Inertia::render('marketing/Architecture', [
+            'canRegister' => Route::has('register'),
+            'landing'     => LandingPageController::getPublicSettings(),
+        ]);
+    }
 }

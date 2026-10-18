@@ -55,6 +55,9 @@ Route::middleware(['verified'])->group(function () {
     // Subscription
     Route::get('/subscription', [ClientSubscriptionController::class, 'show'])->name('subscription.show');
     Route::post('/subscription/change-plan', [ClientSubscriptionController::class, 'changePlan'])->name('subscription.change-plan');
+    Route::post('/subscription/redeem-code', [\App\Http\Controllers\AppSumoRedemptionController::class, 'redeemExisting'])
+        ->middleware('throttle:redemption')
+        ->name('subscription.redeem-code');
     Route::get('/subscription/invoice/{transaction}', [ClientSubscriptionController::class, 'invoiceDownload'])->name('subscription.invoice');
     Route::delete('/subscription', [ClientSubscriptionController::class, 'destroy'])->name('subscription.destroy');
 
