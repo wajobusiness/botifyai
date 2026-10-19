@@ -1,565 +1,371 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import LandingLayout from '@/Layouts/LandingLayout';
 import SeoHead from '@/Components/SeoHead';
-import { BrandMark } from '@/Components/BrandIcons';
 import { useTranslation } from 'react-i18next';
 import { useBranding } from '@/hooks/useBranding';
 import {
     Sparkles, ArrowRight, ShoppingBag, BookOpen, Bot,
     Zap, Users, CheckCircle2, ShieldCheck, Download,
     Layers, Video, Star, MessageSquare, Globe, TrendingUp,
-    Store, Smartphone, CreditCard, Clock, ChevronRight
+    Store, Smartphone, CreditCard, Clock, ChevronRight,
+    Check, X, Lock, FileText, Layout, Music, Code,
+    Package, Headphones, Send, GraduationCap, ChevronDown
 } from 'lucide-react';
-
-// ─── Icon map ─────────────────────────────────────────────────────────────────
-
-function FeatureIcon({ name, className = 'h-6 w-6' }) {
-    const icons = {
-        'cpu': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z" />
-            </svg>
-        ),
-        'message-square': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-            </svg>
-        ),
-        'bar-chart-2': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-            </svg>
-        ),
-        'users': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-            </svg>
-        ),
-        'share-2': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
-            </svg>
-        ),
-        'shield-check': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-            </svg>
-        ),
-        'zap': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-            </svg>
-        ),
-        'star': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-            </svg>
-        ),
-        'layout': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-            </svg>
-        ),
-        'arrow-right': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-        ),
-        'globe': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-            </svg>
-        ),
-        'trending-up': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-            </svg>
-        ),
-        'check-circle': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-        ),
-        'server': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 17.25v.75a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25v-.75m16.5 0A2.25 2.25 0 0021.75 15V9.75A2.25 2.25 0 0019.5 7.5H4.5A2.25 2.25 0 002.25 9.75V15a2.25 2.25 0 002.25 2.25h15zM12 12.75h.008v.008H12v-.008z" />
-            </svg>
-        ),
-    };
-    return icons[name] || icons['zap'];
-}
-
-// ─── Channel Icon map ──────────────────────────────────────────────────────────
-
-function ChannelIcon({ name, className = 'h-6 w-6' }) {
-    const icons = {
-        'whatsapp': (
-            <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.51 5.26l-.999 3.648 3.978-1.607zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413z" />
-            </svg>
-        ),
-        'messenger': (
-            <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.654V24l4.088-2.242c1.092.301 2.246.464 3.443.464 6.627 0 12-4.975 12-11.111C24 4.974 18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8.1l3.131 3.259L19.752 8.1l-6.561 6.863z" />
-            </svg>
-        ),
-        'instagram': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" />
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeLinecap="round" />
-            </svg>
-        ),
-        'sms': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10.5h8M8 14h5m-9 6.5l1.5-3A8.38 8.38 0 013 11.5C3 6.81 7.03 3 12 3s9 3.81 9 8.5-4.03 8.5-9 8.5a9.7 9.7 0 01-3.2-.54L4 20.5z" />
-            </svg>
-        ),
-        'email': (
-            <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-            </svg>
-        ),
-        'linkedin': (
-            <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.6a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" />
-            </svg>
-        ),
-        'twitter': (
-            <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-            </svg>
-        ),
-        'x': (
-            <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-            </svg>
-        ),
-        'tiktok': (
-            <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-1.01-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
-            </svg>
-        ),
-    };
-    return icons[name] || icons['email'];
-}
-
-const CHANNEL_STYLES = {
-    'whatsapp':  { bg: 'bg-[#25D366]/12', text: 'text-[#25D366]' },
-    'messenger': { bg: 'bg-[#0084FF]/12', text: 'text-[#0084FF]' },
-    'instagram': { bg: 'bg-[#E1306C]/12', text: 'text-[#E1306C]' },
-    'sms':       { bg: 'bg-brand-500/15', text: 'text-brand-600 dark:text-brand-500' },
-    'email':     { bg: 'bg-[#F59E0B]/12', text: 'text-[#F59E0B]' },
-    'linkedin':  { bg: 'bg-[#0A66C2]/12', text: 'text-[#0A66C2]' },
-    'twitter':   { bg: 'bg-[#1DA1F2]/12', text: 'text-[#1DA1F2]' },
-    'x':         { bg: 'bg-neutral-500/15', text: 'text-neutral-900 dark:text-white' },
-    'tiktok':    { bg: 'bg-pink-500/15', text: 'text-pink-600 dark:text-pink-400' },
-};
 
 // ─── Section Badge ─────────────────────────────────────────────────────────────
 
-function Badge({ text }) {
+function SectionBadge({ text, icon: Icon = Sparkles }) {
     if (!text) return null;
     return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/20 text-brand-300 text-xs font-semibold px-3 py-1 border border-brand-500/30">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-400 inline-block" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold px-3.5 py-1.5 border border-brand-500/20 uppercase tracking-wider">
+            {Icon && <Icon className="h-3.5 w-3.5" />}
             {text}
         </span>
     );
 }
 
-// ─── Live Conversational Commerce Simulator ──────────────────────────────────
+// ─── Section 1: Hero Section ──────────────────────────────────────────────────
 
-function SimulatorWidget() {
-    const [scenario, setScenario] = useState(0);
-    const scenarios = [
-        {
-            tab: 'Course & Video Access',
-            icon: BookOpen,
-            customerMsg: 'Hi! Does the AI Creator Masterclass include the tokenized PDF vault and access to video lessons on mobile?',
-            aiReply: 'Yes, absolutely! You get lifetime access to all 12 video modules on Botify Academy, plus the complete prompt vault and swipe files.',
-            hasPill: true,
-            pillTitle: 'AI Creator Masterclass + Vault',
-            pillPrice: '$49',
-            deliveryNote: 'Instant tokenized download & WhatsApp delivery in 5s',
-        },
-        {
-            tab: 'Payments & Local Currencies',
-            icon: CreditCard,
-            customerMsg: 'Can I pay with local bank transfer or mobile money? I don’t have a USD card.',
-            aiReply: 'Yes! We support local bank transfer, mobile money, and credit cards across 60+ countries with automatic currency conversion.',
-            hasPill: true,
-            pillTitle: 'Instant Mobile Checkout',
-            pillPrice: 'Local Currency Supported',
-            deliveryNote: 'Secure checkout via Paystack, Stripe & PayPal',
-        },
-        {
-            tab: '24/7 AI Sales Reps',
-            icon: Bot,
-            customerMsg: 'I’m an author with 3 ebooks. Can BotifyAI sell them directly to my Instagram followers when I’m asleep?',
-            aiReply: '100%! Your custom AI sales agent greets your followers in Instagram DMs, answers specific questions about your books, collects payment, and sends download tokens 24/7.',
-            hasPill: true,
-            pillTitle: 'Author Starter Bundle (3 Ebooks)',
-            pillPrice: '$29',
-            deliveryNote: 'Autonomous in-chat checkout & token delivery',
-        },
-    ];
-
-    const current = scenarios[scenario];
-
-    return (
-        <div className="mt-14 max-w-5xl mx-auto rounded-3xl border border-white/15 bg-neutral-900/90 shadow-2xl backdrop-blur-xl p-4 sm:p-6 text-left">
-            {/* Simulator Tab Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4 mb-5">
-                <div className="flex items-center gap-2">
-                    <span className="flex h-3 w-3 relative">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                    </span>
-                    <span className="text-xs font-semibold text-white uppercase tracking-wider">Live Conversational Commerce Simulator</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-neutral-800/80 p-1 rounded-xl">
-                    {scenarios.map((sc, i) => {
-                        const Icon = sc.icon;
-                        return (
-                            <button
-                                key={i}
-                                onClick={() => setScenario(i)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                                    scenario === i
-                                        ? 'bg-brand-500 text-white shadow-sm font-semibold'
-                                        : 'text-neutral-400 hover:text-white hover:bg-white/5'
-                                }`}
-                            >
-                                <Icon className="h-3.5 w-3.5" />
-                                <span>{sc.tab}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Split Screen Simulator */}
-            <div className="grid md:grid-cols-2 gap-5 items-stretch">
-                {/* Left Side: Creator Product Card */}
-                <div className="rounded-2xl border border-white/10 bg-neutral-950/80 p-5 flex flex-col justify-between">
-                    <div>
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/20 text-brand-400 text-xs font-semibold px-2.5 py-0.5 border border-brand-500/30">
-                                <Sparkles className="h-3 w-3" />
-                                Verified Creator Storefront
-                            </span>
-                            <span className="text-xs text-neutral-400">/store/marcus-vance</span>
-                        </div>
-                        <h4 className="text-base sm:text-lg font-bold text-white mb-1.5">
-                            Full-Stack AI Creator Masterclass & Template Vault
-                        </h4>
-                        <p className="text-xs text-neutral-400 leading-relaxed mb-4">
-                            Complete video course, downloadable prompt library, and tokenized automation blueprints for digital creators.
-                        </p>
-
-                        <div className="space-y-2 mb-4">
-                            <div className="flex items-center gap-2 text-xs text-neutral-300">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
-                                <span>12 HD Video Modules (Botify Academy)</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-neutral-300">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
-                                <span>Encrypted Single-Use Download Tokens</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-neutral-300">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
-                                <span>Affiliate Enabled: 30% Commission Paid Instantly</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-                        <div>
-                            <span className="text-2xl font-bold text-white">$49</span>
-                            <span className="text-xs text-neutral-500 line-through ml-2">$120</span>
-                            <div className="text-[10px] text-neutral-400">One-time payment • Lifetime access</div>
-                        </div>
-                        <Link
-                            href="/creators"
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-semibold text-white shadow hover:opacity-90 transition"
-                        >
-                            <ShoppingBag className="h-3.5 w-3.5" />
-                            Explore Demo Store
-                        </Link>
-                    </div>
-                </div>
-
-                {/* Right Side: Simulated WhatsApp / Social DM Conversation */}
-                <div className="rounded-2xl border border-white/10 bg-[#0B141A] p-4 flex flex-col justify-between">
-                    <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
-                        <div className="flex items-center gap-2.5">
-                            <div className="h-7 w-7 rounded-full bg-[#25D366] text-white flex items-center justify-center font-bold text-xs">
-                                WA
-                            </div>
-                            <div>
-                                <div className="text-xs font-semibold text-white flex items-center gap-1.5">
-                                    <span>BotifyAI Autonomous Sales Agent</span>
-                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
-                                </div>
-                                <div className="text-[10px] text-neutral-400">Replying in real time via WhatsApp API</div>
-                            </div>
-                        </div>
-                        <span className="text-[10px] text-emerald-400 font-medium bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800/40">
-                            24/7 Active
-                        </span>
-                    </div>
-
-                    {/* Chat Bubble Flow */}
-                    <div className="space-y-3 flex-1 flex flex-col justify-center">
-                        {/* Customer message */}
-                        <div className="flex justify-end">
-                            <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[#005C4B] text-white text-xs p-3 shadow">
-                                <p>{current.customerMsg}</p>
-                                <span className="text-[9px] text-white/60 block text-right mt-1">11:42 PM ✓✓</span>
-                            </div>
-                        </div>
-
-                        {/* AI agent response */}
-                        <div className="flex justify-start">
-                            <div className="max-w-[90%] rounded-2xl rounded-tl-sm bg-[#202C33] text-neutral-200 text-xs p-3 shadow border border-white/5 space-y-2">
-                                <p className="leading-relaxed">{current.aiReply}</p>
-
-                                {current.hasPill && (
-                                    <div className="mt-2 rounded-xl border border-brand-500/30 bg-brand-950/50 p-2.5">
-                                        <div className="flex items-center justify-between font-semibold text-white">
-                                            <span>{current.pillTitle}</span>
-                                            <span className="text-brand-400">{current.pillPrice}</span>
-                                        </div>
-                                        <div className="text-[10px] text-neutral-400 mt-1 flex items-center gap-1">
-                                            <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-                                            {current.deliveryNote}
-                                        </div>
-                                        <div className="mt-2 flex items-center justify-between gap-2">
-                                            <span className="inline-block w-full text-center rounded-lg bg-[#25D366] text-neutral-950 py-1.5 text-xs font-bold shadow-sm">
-                                                Complete Order in WhatsApp →
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-                                <span className="text-[9px] text-neutral-400 block text-right">11:42 PM</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-3 pt-2 border-t border-white/10 text-center">
-                        <span className="text-[11px] text-neutral-400">
-                            💡 Click the tabs above to test different automated sales flows
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ─── Hero Section ─────────────────────────────────────────────────────────────
-
-function HeroSection({ landing, canLogin, canRegister, auth }) {
-    const { t } = useTranslation();
+function HeroCreatorSection({ landing, canRegister, auth }) {
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('hero_enabled') !== '1') return null;
+    if (s('hero_enabled', '1') !== '1') return null;
+
+    const heroTitle = s('hero_title', 'Turn What You Know into an Automated Digital Business.');
+    const heroSubtitle = s(
+        'hero_subtitle',
+        'Sell video courses, ebooks, and digital products with instant global checkouts—while your 24/7 autonomous AI agents market, answer questions, and close sales directly inside WhatsApp & Instagram DMs.'
+    );
 
     return (
-        <section
-            className="relative overflow-hidden"
-            style={{
-                background: 'radial-gradient(ellipse 70% 65% at 62% 45%, rgb(var(--brand-400) / 0.22) 0%, rgb(var(--brand-400) / 0.08) 40%, transparent 70%), rgb(var(--brand-950))',
-            }}
-        >
-            {/* Background grid */}
-            <div
-                className="pointer-events-none absolute inset-0"
-                style={{
-                    backgroundImage: `
-                        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)
-                    `,
-                    backgroundSize: '60px 60px',
-                    maskImage: 'radial-gradient(ellipse 80% 80% at 50% 0%, black 40%, transparent 100%)',
-                    WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 0%, black 40%, transparent 100%)',
-                }}
-            />
+        <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 overflow-hidden bg-white dark:bg-neutral-950">
+            {/* Soft Ambient Radial Background */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(239,68,68,0.08),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(239,68,68,0.12),rgba(0,0,0,0))] pointer-events-none" />
 
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-16 sm:pt-24 sm:pb-20 text-center relative">
-                {s('hero_badge') && (
-                    <div className="mb-6 flex justify-center">
-                        <Badge text={s('hero_badge')} />
-                    </div>
-                )}
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                {/* Category Badge */}
+                <div className="mb-6 flex justify-center">
+                    <SectionBadge text="✨ THE AI-POWERED CREATOR COMMERCE PLATFORM" />
+                </div>
 
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white max-w-4xl mx-auto leading-tight">
-                    {s('hero_title')}
+                {/* Primary Hero Headline */}
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 dark:text-white max-w-4xl mx-auto leading-[1.12]">
+                    Turn What You Know into an{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-rose-600 to-amber-600">
+                        Automated Digital Business.
+                    </span>
                 </h1>
 
-                <p className="mt-6 text-lg sm:text-xl text-neutral-300 max-w-2xl mx-auto leading-relaxed">
-                    {s('hero_subtitle')}
+                {/* Supporting Copy */}
+                <p className="mt-6 text-lg sm:text-xl text-neutral-600 dark:text-neutral-300 max-w-3xl mx-auto leading-relaxed">
+                    {heroSubtitle}
                 </p>
 
-                <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+                {/* CTA Action Buttons */}
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                     {auth?.user ? (
                         <Link
                             href={route('client.dashboard')}
-                            className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:opacity-90"
-                            style={{ background: 'rgb(var(--brand-500))' }}
+                            className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold text-base shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2"
                         >
-                            {t('welcome.goToDashboard')}
+                            Go to Dashboard
+                            <ArrowRight className="h-4 w-4" />
                         </Link>
                     ) : (
                         <>
-                            {canRegister && s('hero_cta_primary') && (
+                            {canRegister && (
                                 <Link
-                                    href={route('register')}
-                                    className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:opacity-90"
-                                    style={{ background: 'rgb(var(--brand-500))' }}
+                                    href="/register"
+                                    className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold text-base shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transition-all flex items-center justify-center gap-2 group"
                                 >
-                                    {s('hero_cta_primary')}
-                                    <ArrowRight className="h-4 w-4" />
+                                    Start Selling for Free
+                                    <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                                 </Link>
                             )}
-                            {s('hero_cta_secondary') && (
-                                <Link
-                                    href="/creators"
-                                    className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm px-7 py-3.5 text-base font-semibold text-white hover:bg-white/15 transition-all duration-200"
-                                >
-                                    {s('hero_cta_secondary')}
-                                </Link>
-                            )}
+                            <Link
+                                href="/creators"
+                                className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-neutral-800 dark:text-white font-semibold text-base border border-neutral-300 dark:border-neutral-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <ShoppingBag className="h-4 w-4 text-brand-600" />
+                                Explore Live Demo Store
+                            </Link>
                         </>
                     )}
                 </div>
 
-                {/* Trust badges */}
-                {(() => {
-                    const badges = [1, 2, 3].map((i) => s(`hero_trust_${i}`)).filter(Boolean);
-                    if (!badges.length) return null;
-                    return (
-                        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                            {badges.map((badge, idx) => (
-                                <span
-                                    key={idx}
-                                    className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 backdrop-blur-sm px-4 py-2 text-sm font-medium text-white/90"
-                                >
-                                    <svg className="h-4 w-4 flex-shrink-0 text-brand-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {badge}
-                                </span>
-                            ))}
-                        </div>
-                    );
-                })()}
+                {/* Trust Signals & Microcopy */}
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs sm:text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                    <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        Zero platform fees on Pro
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        Instant tokenized delivery
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        Multi-currency: USD, NGN, KES, ZAR, GBP
+                    </span>
+                </div>
 
-                {/* Interactive Split-Screen Simulator */}
-                <SimulatorWidget />
+                {/* Dual Visual Showcase: Creator Storefront + WhatsApp Sale Moment */}
+                <div className="mt-14 max-w-5xl mx-auto rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/60 p-4 sm:p-7 shadow-xl backdrop-blur-sm text-left">
+                    <div className="grid md:grid-cols-2 gap-6 items-stretch">
+                        {/* Left Card: Verified Creator Storefront Preview */}
+                        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 flex flex-col justify-between shadow-sm">
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                        <Sparkles className="h-3 w-3" />
+                                        Verified Creator Storefront
+                                    </span>
+                                    <span className="text-xs font-mono text-neutral-400">botifyai.cloud/store/marcus</span>
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white leading-snug">
+                                    Full-Stack AI Creator Masterclass & Template Vault
+                                </h3>
+                                <p className="mt-2 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                    Comprehensive video course curriculum, downloadable prompt library, and tokenized automation recipes.
+                                </p>
+
+                                <div className="mt-4 space-y-2 text-xs text-neutral-700 dark:text-neutral-300">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                        <span>12 HD Video Modules (Botify Academy)</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                        <span>Encrypted Single-Use Download Tokens</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                        <span>Instant WhatsApp Fulfillment & Login Link</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                                <div>
+                                    <span className="text-2xl font-black text-neutral-900 dark:text-white">$49</span>
+                                    <span className="text-xs text-neutral-400 line-through ml-2">$120</span>
+                                    <p className="text-[10px] text-neutral-500">One-time payment • Lifetime access</p>
+                                </div>
+                                <Link
+                                    href="/creators"
+                                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow transition flex items-center gap-1.5"
+                                >
+                                    <ShoppingBag className="h-3.5 w-3.5" />
+                                    Buy Now
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Right Card: Clean WhatsApp In-Chat Sales Closer */}
+                        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-[#EFEAE2] dark:bg-[#0B141A] p-5 flex flex-col justify-between shadow-sm">
+                            <div className="flex items-center justify-between pb-3 border-b border-neutral-300/60 dark:border-neutral-800">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="h-8 w-8 rounded-full bg-[#25D366] text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                                        WA
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-neutral-900 dark:text-white flex items-center gap-1">
+                                            Botify AI Sales Specialist
+                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
+                                        </p>
+                                        <p className="text-[10px] text-neutral-500">Official WhatsApp Business API</p>
+                                    </div>
+                                </div>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
+                                    24/7 Active
+                                </span>
+                            </div>
+
+                            {/* Message Exchange */}
+                            <div className="my-4 space-y-3 text-xs">
+                                <div className="flex justify-end">
+                                    <div className="max-w-[85%] rounded-2xl rounded-tr-none bg-[#DCF8C6] dark:bg-[#005C4B] text-neutral-900 dark:text-white p-3 shadow-sm">
+                                        <p>Hi! Does this masterclass cover Laravel + React integrations, or is it just theory?</p>
+                                        <span className="text-[9px] text-neutral-500 dark:text-white/60 block text-right mt-1">11:14 PM ✓✓</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-start">
+                                    <div className="max-w-[90%] rounded-2xl rounded-tl-none bg-white dark:bg-[#202C33] text-neutral-900 dark:text-neutral-100 p-3 shadow-sm border border-neutral-200/60 dark:border-neutral-700/50 space-y-2">
+                                        <p className="leading-relaxed">
+                                            Hello Sarah! Absolutely. Module 3 walks through complete production code using Laravel 11, Inertia.js, and React 18 with multi-tenant tokenized downloads.
+                                        </p>
+                                        <div className="p-2.5 rounded-xl border border-brand-500/20 bg-brand-50/50 dark:bg-brand-950/40">
+                                            <div className="flex justify-between items-center font-bold text-neutral-900 dark:text-white">
+                                                <span>AI Creator Masterclass</span>
+                                                <span className="text-brand-600 dark:text-brand-400">$49 USD</span>
+                                            </div>
+                                            <span className="mt-2 block w-full text-center py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20BD5A] text-neutral-950 font-bold text-xs shadow-sm transition">
+                                                Complete Order in WhatsApp →
+                                            </span>
+                                        </div>
+                                        <span className="text-[9px] text-neutral-400 block text-right">11:14 PM</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p className="text-[11px] text-center text-neutral-500 dark:text-neutral-400">
+                                💡 AI handles inquiries, answers syllabus questions, and closes orders 24/7.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
     );
 }
 
-// ─── Engine Pillars Section (The 4 Core Pillars) ──────────────────────────────
+// ─── Section 2: Social Proof & Trust Metrics Band ────────────────────────────
 
-function EnginePillarsSection() {
-    const pillars = [
-        {
-            icon: Download,
-            tag: 'DIGITAL VAULT',
-            title: 'Sell Anything Digital with Tokenized Delivery',
-            desc: 'Host ebooks, design templates, software licenses, audiobooks, and presets. Every buyer receives an encrypted, single-use download token via WhatsApp and email that prevents unauthorized link sharing.',
-            link: '/sell-digital-products',
-            cta: 'Explore Digital Vaults →',
-            color: 'from-brand-500/15 to-transparent',
-            borderColor: 'border-brand-500/30',
-            badgeBg: 'bg-brand-500/10 text-brand-500 dark:text-brand-400',
-        },
+function SocialProofBand({ landing }) {
+    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
+    if (s('stats_enabled', '1') !== '1') return null;
+
+    const metrics = [
+        { value: '$14.2M+', label: 'Creator Revenue Generated' },
+        { value: '500,000+', label: 'Digital Downloads & Enrollments' },
+        { value: '60+', label: 'Global Currencies Supported' },
+        { value: '4.2x', label: 'Higher In-Chat Conversion Rate' },
+    ];
+
+    return (
+        <section className="py-12 bg-neutral-50 dark:bg-neutral-900/40 border-y border-neutral-200 dark:border-neutral-800">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p className="text-center text-xs font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest mb-8">
+                    TRUSTED BY OVER 12,000+ CREATORS, EDUCATORS, AND DIGITAL BUSINESSES WORLDWIDE
+                </p>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                    {metrics.map((m, idx) => (
+                        <div key={idx} className="p-4">
+                            <p className="text-3xl sm:text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+                                {m.value}
+                            </p>
+                            <p className="mt-1 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-medium">
+                                {m.label}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-neutral-200/60 dark:border-neutral-800 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs font-semibold text-neutral-400 dark:text-neutral-500">
+                    <span>⚡ Stripe Verified Partner</span>
+                    <span>•</span>
+                    <span>🔒 Paystack Official Integration</span>
+                    <span>•</span>
+                    <span>📱 Meta Business Tech Provider</span>
+                    <span>•</span>
+                    <span>🌐 PayPal Global Merchant</span>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// ─── Section 3: CREATE — "Turn Your Knowledge into Digital Assets" ───────────
+
+function CreateVaultSection() {
+    const productTypes = [
         {
             icon: Video,
-            tag: 'BOTIFY ACADEMY',
-            title: 'Host Video Courses Without Student Caps',
-            desc: 'Build distraction-free video curriculums with modules, lessons, downloadable resources, and progress tracking. Deliver credentials automatically without paying $150+/mo in platform tax.',
+            tag: 'ZERO STUDENT CAPS',
+            title: 'Video Masterclasses & Courses (Botify Academy)',
+            desc: 'Build structured video curriculums with modules, video lectures, downloadable resources, and student progress tracking. Never pay $159/month for Teachable or Kajabi again.',
             link: '/courses',
             cta: 'Explore Course Engine →',
-            color: 'from-blue-500/15 to-transparent',
-            borderColor: 'border-blue-500/30',
-            badgeBg: 'bg-blue-500/10 text-blue-500 dark:text-blue-400',
+            color: 'text-purple-600 dark:text-purple-400',
+            bg: 'bg-purple-500/10',
         },
         {
-            icon: Bot,
-            tag: '24/7 AI SALES AGENT',
-            title: 'Autonomous In-Chat Sales Specialists',
-            desc: 'RAG-powered conversational agents trained strictly on your syllabus, files, and FAQs. They answer prospect questions on WhatsApp & Instagram, handle price objections, and close sales 24/7 in 60+ languages.',
-            link: '/ai-sales-agent',
-            cta: 'Explore AI Agents →',
-            color: 'from-purple-500/15 to-transparent',
-            borderColor: 'border-purple-500/30',
-            badgeBg: 'bg-purple-500/10 text-purple-500 dark:text-purple-400',
+            icon: BookOpen,
+            tag: 'INSTANT TOKEN DELIVERY',
+            title: 'Ebooks, Guides & Workbooks',
+            desc: 'Distribute guides, research reports, workbooks, and checklists with single-use encrypted download links that prevent unauthorized link forwarding.',
+            link: '/sell-digital-products',
+            cta: 'Explore Ebook Vaults →',
+            color: 'text-brand-600 dark:text-brand-400',
+            bg: 'bg-brand-500/10',
         },
         {
-            icon: Users,
-            tag: 'AFFILIATE NETWORK',
-            title: 'Mobilize an Army of 24/7 Promoters',
-            desc: 'Scale your reach organically. Configure custom commission splits (e.g. 20%, 30%, 50%), generate tracked referral links, and let BotifyAI calculate and distribute affiliate earnings automatically.',
-            link: '/affiliates',
-            cta: 'Explore Affiliate Program →',
-            color: 'from-emerald-500/15 to-transparent',
-            borderColor: 'border-emerald-500/30',
-            badgeBg: 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400',
+            icon: Layout,
+            tag: 'AUTOMATED ACCESS',
+            title: 'Notion, Figma & Design Templates',
+            desc: 'Perfect for UI designers, productivity creators, and developers. Deliver instant template duplication links and asset bundles the second payment confirms.',
+            link: '/sell-digital-products',
+            cta: 'Explore Template Delivery →',
+            color: 'text-blue-600 dark:text-blue-400',
+            bg: 'bg-blue-500/10',
+        },
+        {
+            icon: Package,
+            tag: 'MULTI-FILE VAULTS',
+            title: 'Presets, Audio & Asset Packs',
+            desc: 'Package multiple compressed files into a single product vault. High-speed global CDN delivery ensures instant, frustration-free customer downloads.',
+            link: '/sell-digital-products',
+            cta: 'Explore Asset Delivery →',
+            color: 'text-emerald-600 dark:text-emerald-400',
+            bg: 'bg-emerald-500/10',
+        },
+        {
+            icon: Code,
+            tag: 'AUTOMATED KEYS',
+            title: 'Software, Plugins & Code Licenses',
+            desc: 'Sell WordPress plugins, developer boilerplates, SaaS scripts, and automation recipes with automated single-seat license generation upon checkout.',
+            link: '/sell-digital-products',
+            cta: 'Explore Software Vaults →',
+            color: 'text-amber-600 dark:text-amber-400',
+            bg: 'bg-amber-500/10',
         },
     ];
 
     return (
-        <section className="py-20 sm:py-28 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
+        <section className="py-20 sm:py-28 bg-white dark:bg-neutral-950">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center max-w-3xl mx-auto mb-16">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/15 text-brand-600 dark:text-brand-400 text-xs font-bold px-3 py-1 border border-brand-500/30">
-                        <Sparkles className="h-3 w-3" />
-                        The 4 Creator Commerce Engines
-                    </span>
-                    <h2 className="mt-4 text-3xl sm:text-4xl font-bold tracking-tight text-neutral-900 dark:text-white">
-                        Everything You Need to Create, Sell, Automate & Grow
+                    <SectionBadge text="STEP 01: CREATE" />
+                    <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
+                        If You Can Create It, You Can Monetize It on BotifyAI
                     </h2>
                     <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                        Say goodbye to duct-taping Gumroad, Teachable, ManyChat, and Zapier together. BotifyAI unifies the complete creator monetization lifecycle in one native stack.
+                        No complicated web development, no expensive plugin licenses. Package your expertise into beautiful, high-converting digital assets in under 5 minutes.
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                    {pillars.map((pillar, i) => {
-                        const Icon = pillar.icon;
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {productTypes.map((pt, i) => {
+                        const Icon = pt.icon;
                         return (
                             <div
                                 key={i}
-                                className={`rounded-3xl border ${pillar.borderColor} bg-neutral-50 dark:bg-neutral-900/60 p-8 flex flex-col justify-between hover:shadow-xl transition-all duration-300 relative overflow-hidden group`}
+                                className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 p-7 flex flex-col justify-between hover:shadow-lg transition-all duration-300 group"
                             >
-                                <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl ${pillar.color} rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500`} />
                                 <div>
-                                    <div className="flex items-center justify-between mb-5">
-                                        <div className="h-12 w-12 rounded-2xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-sm border border-neutral-200 dark:border-neutral-700">
-                                            <Icon className="h-6 w-6 text-neutral-900 dark:text-white" />
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className={`h-11 w-11 rounded-2xl ${pt.bg} ${pt.color} flex items-center justify-center`}>
+                                            <Icon className="h-5 w-5" />
                                         </div>
-                                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${pillar.badgeBg} uppercase tracking-wider`}>
-                                            {pillar.tag}
+                                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                                            {pt.tag}
                                         </span>
                                     </div>
-                                    <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">
-                                        {pillar.title}
+                                    <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-2 group-hover:text-brand-600 transition-colors">
+                                        {pt.title}
                                     </h3>
-                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed mb-6">
-                                        {pillar.desc}
+                                    <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed mb-6">
+                                        {pt.desc}
                                     </p>
                                 </div>
-                                <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                                <div className="pt-4 border-t border-neutral-200/70 dark:border-neutral-800">
                                     <Link
-                                        href={pillar.link}
-                                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:gap-2.5 transition-all"
+                                        href={pt.link}
+                                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-600 dark:text-brand-400 hover:gap-2 transition-all"
                                     >
-                                        {pillar.cta}
+                                        {pt.cta}
                                     </Link>
                                 </div>
                             </div>
@@ -571,148 +377,218 @@ function EnginePillarsSection() {
     );
 }
 
-// ─── Trusted By Section ───────────────────────────────────────────────────────
+// ─── Section 4: SELL — "Your Branded Storefront & Frictionless Checkout" ─────
 
-function TrustedBySection({ landing }) {
-    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('stats_enabled') !== '1') return null;
-
-    const brands = [1, 2, 3, 4, 5, 6].map((i) => s(`stats_${i}_label`)).filter(Boolean);
-    if (!brands.length) return null;
-
-    const heading = s('stats_heading', 'Trusted by thousands of businesses across the world');
+function StorefrontCheckoutSection() {
+    const sellFeatures = [
+        {
+            icon: Store,
+            title: 'Branded Creator Storefront',
+            desc: 'Your dedicated home on the web (botifyai.cloud/store/yourname). Showcase your full catalog, bio, reviews, and featured bundles with customized brand colors and fonts.',
+        },
+        {
+            icon: CreditCard,
+            title: 'Multi-Currency Global Payments',
+            desc: 'Accept payments via Credit Cards, Apple Pay, Google Pay, PayPal, and regional bank transfers in USD, EUR, GBP, NGN, KES, ZAR, GHS, and more.',
+        },
+        {
+            icon: Lock,
+            title: 'Cryptographic Tokenized Downloads',
+            desc: 'Goodbye leaked Google Drive folders. BotifyAI generates single-use, time-expiring download tokens delivered straight to the buyer’s WhatsApp and email.',
+        },
+        {
+            icon: Users,
+            title: 'Built-In 1-Click Affiliate Engine',
+            desc: 'Turn your community and students into your top sales team. Set custom commission percentages (10% to 75%), generate tracked referral links, and let BotifyAI handle payout accounting.',
+        },
+    ];
 
     return (
-        <section className="border-y border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 py-6 overflow-hidden">
+        <section className="py-20 sm:py-28 bg-neutral-50 dark:bg-neutral-900/40 border-y border-neutral-200 dark:border-neutral-800">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                {heading && (
-                    <p className="text-center text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-widest mb-5">
-                        {heading}
-                    </p>
-                )}
-                <div className="flex items-center justify-center flex-wrap gap-8">
-                    {brands.map((brand, idx) => (
-                        <span
-                            key={idx}
-                            className="text-lg font-bold text-neutral-300 dark:text-neutral-600 tracking-tight select-none hover:text-neutral-400 dark:hover:text-neutral-500 transition-colors"
-                        >
-                            {brand}
-                        </span>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-// ─── Problem / Solution Section ───────────────────────────────────────────────
-
-function ProblemSolutionSection({ landing }) {
-    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('problems_enabled') !== '1') return null;
-
-    const problems = [1, 2, 3, 4].map((i) => s(`problem_${i}`)).filter(Boolean);
-    const solutions = [1, 2, 3, 4].map((i) => s(`solution_${i}`)).filter(Boolean);
-    const problemTitle = s('problems_title', 'The Problem');
-    const solutionTitle = s('solution_title', 'The Solution');
-    const solutionDesc = s('solution_desc', '');
-
-    if (!problems.length && !solutions.length) return null;
-
-    return (
-        <section className="py-14 sm:py-20">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid gap-6 md:grid-cols-2">
-                    {/* Problem */}
-                    <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8">
-                        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-6">{problemTitle}</h3>
-                        <ul className="space-y-4">
-                            {problems.map((item, idx) => (
-                                <li key={idx} className="flex items-start gap-3">
-                                    <span className="mt-0.5 flex-shrink-0 h-5 w-5 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                                        <svg className="h-3 w-3 text-red-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </span>
-                                    <span className="text-sm text-neutral-600 dark:text-neutral-400">{item}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Solution */}
-                    <div
-                        className="rounded-2xl p-8"
-                        style={{ background: 'linear-gradient(135deg, rgb(var(--brand-400) / 0.15) 0%, rgb(var(--brand-400) / 0.05) 100%)', border: '1px solid rgb(var(--brand-400) / 0.3)' }}
-                    >
-                        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">{solutionTitle}</h3>
-                        {solutionDesc && (
-                            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">{solutionDesc}</p>
-                        )}
-                        <ul className="space-y-4">
-                            {solutions.map((item, idx) => (
-                                <li key={idx} className="flex items-start gap-3">
-                                    <span className="mt-0.5 flex-shrink-0 h-5 w-5 rounded-full flex items-center justify-center" style={{ background: 'rgb(var(--brand-400) / 0.2)' }}>
-                                        <svg className="h-3 w-3" style={{ color: 'rgb(var(--brand-500))' }} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                        </svg>
-                                    </span>
-                                    <span className="text-sm text-neutral-700 dark:text-neutral-300">{item}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
-}
-
-// ─── Features Section ─────────────────────────────────────────────────────────
-
-function FeaturesSection({ landing }) {
-    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('features_enabled') !== '1') return null;
-
-    const features = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => ({
-        icon: s(`feature_${i}_icon`, 'zap'),
-        title: s(`feature_${i}_title`),
-        desc: s(`feature_${i}_desc`),
-    })).filter((f) => f.title);
-
-    return (
-        <section id="features" className="py-16 sm:py-24 bg-neutral-50 dark:bg-neutral-900/30">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <Badge text={s('features_badge')} />
-                    <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">
-                        {s('features_title')}
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <SectionBadge text="STEP 02: SELL" />
+                    <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
+                        A Frictionless Checkout Experience Built to Convert Worldwide
                     </h2>
-                    {s('features_subtitle') && (
-                        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-                            {s('features_subtitle')}
-                        </p>
-                    )}
+                    <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                        Give your audience a lightning-fast buying experience. Accept local and international payments with zero drop-off, backed by automated anti-piracy delivery.
+                    </p>
                 </div>
 
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    {features.map((feat, idx) => (
-                        <div
-                            key={idx}
-                            className="group relative overflow-hidden rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-7 transition-all duration-300 hover:-translate-y-1 hover:border-brand-500/40 hover:shadow-xl hover:shadow-brand-500/10"
-                        >
-                            {/* Soft glow that fades in on hover */}
+                <div className="grid md:grid-cols-2 gap-8">
+                    {sellFeatures.map((feat, i) => {
+                        const Icon = feat.icon;
+                        return (
                             <div
-                                className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
-                                style={{ background: 'radial-gradient(circle, rgb(var(--brand-400) / 0.18) 0%, transparent 70%)' }}
-                            />
-
-                            <div className="relative">
-                                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-500 ring-1 ring-inset ring-brand-500/15 transition-all duration-300 group-hover:bg-brand-500 group-hover:text-white group-hover:ring-brand-500 group-hover:shadow-lg group-hover:shadow-brand-500/30">
-                                    <FeatureIcon name={feat.icon} className="h-6 w-6" />
+                                key={i}
+                                className="bg-white dark:bg-neutral-900 rounded-3xl p-8 border border-neutral-200 dark:border-neutral-800 shadow-sm hover:shadow-md transition-shadow"
+                            >
+                                <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-5">
+                                    <Icon className="h-6 w-6" />
                                 </div>
-                                <h3 className="text-base font-semibold text-neutral-900 dark:text-white mb-2 transition-colors group-hover:text-brand-600 dark:group-hover:text-brand-500">{feat.title}</h3>
-                                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">{feat.desc}</p>
+                                <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
+                                    {feat.title}
+                                </h3>
+                                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                    {feat.desc}
+                                </p>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// ─── Section 5: GROW WITH AI — "The Engine Other Creator Platforms Don't Have" ──
+
+function GrowWithAiSection() {
+    return (
+        <section className="py-20 sm:py-28 bg-white dark:bg-neutral-950">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <SectionBadge text="STEP 03: GROW WITH AI" />
+                    <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
+                        Why Traditional Creator Platforms Leave 70% of Your Revenue on the Table
+                    </h2>
+                    <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                        On Gumroad or Selar, you post a link in bio and pray. On BotifyAI, your business has an active, autonomous AI sales force working for you 24/7.
+                    </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8 items-stretch">
+                    {/* The Traditional Creator Way */}
+                    <div className="rounded-3xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/40 dark:bg-rose-950/20 p-8 flex flex-col justify-between">
+                        <div>
+                            <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+                                The Traditional Way (Passive & Leaky)
+                            </span>
+                            <h3 className="text-xl font-bold text-neutral-900 dark:text-white mt-2 mb-6">
+                                Passive Links with Zero In-Chat Intelligence
+                            </h3>
+                            <ul className="space-y-4 text-sm text-neutral-700 dark:text-neutral-300">
+                                <li className="flex items-start gap-3">
+                                    <X className="h-5 w-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                                    <span>Prospect clicks link in bio at 11:30 PM with a question before buying.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <X className="h-5 w-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                                    <span>Nobody is awake to answer. The prospect hesitates and closes the tab.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <X className="h-5 w-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                                    <span>No automated in-chat cart recovery or objection handling.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <X className="h-5 w-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                                    <span>You are forced to buy ManyChat, Zapier, and Teachable just to connect the dots.</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div className="mt-8 pt-4 border-t border-rose-200/60 dark:border-rose-900/40">
+                            <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                                Result: Up to 70% lost sales due to slow responses and friction.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* The BotifyAI Way */}
+                    <div className="rounded-3xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-950/20 p-8 flex flex-col justify-between shadow-sm">
+                        <div>
+                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                                The BotifyAI Way (Active & Autonomous)
+                            </span>
+                            <h3 className="text-xl font-bold text-neutral-900 dark:text-white mt-2 mb-6">
+                                24/7 AI Sales Reps Closing Deals In-Chat
+                            </h3>
+                            <ul className="space-y-4 text-sm text-neutral-700 dark:text-neutral-300">
+                                <li className="flex items-start gap-3">
+                                    <Check className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                    <span>Prospect sends an Instagram DM or WhatsApp message at midnight.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <Check className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                    <span>Grounded AI answers instantly with syllabus details, pricing, and currency options.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <Check className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                    <span>AI drops an instant payment link directly in the chat with zero navigation friction.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <Check className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                    <span>Payment clears; download tokens and course login are sent instantly.</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div className="mt-8 pt-4 border-t border-emerald-200/60 dark:border-emerald-900/40">
+                            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                Result: 4.2x higher conversion rate and continuous sales while you sleep.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// ─── Section 6: THE AI ADVANTAGE — "Your 24/7 Behind-the-Scenes Sales Team" ─
+
+function AiAdvantageWorkflow() {
+    const steps = [
+        {
+            num: '01',
+            title: 'Instant Inbound Engagement',
+            desc: 'A prospect DMs your WhatsApp or Instagram asking: "Does this masterclass cover React integrations?" Your AI agent replies in under 2 seconds with exact, verified curriculum facts.',
+        },
+        {
+            num: '02',
+            title: 'Intelligent Objection Handling',
+            desc: 'When the prospect asks: "Can I pay with local currency?", the AI detects their location, explains regional pricing options (e.g. NGN, ZAR, KES, USD), and generates a direct mobile checkout link.',
+        },
+        {
+            num: '03',
+            title: 'In-Chat Purchase & Token Delivery',
+            desc: 'The buyer completes checkout on their phone. The AI immediately delivers the cryptographically signed download token and Botify Academy magic login link inside the conversation.',
+        },
+        {
+            num: '04',
+            title: 'Automated CRM & Follow-Up',
+            desc: 'The customer contact is automatically recorded, tagged in your BotifyAI CRM, and scheduled for automated onboarding reminders and review requests without lifting a finger.',
+        },
+    ];
+
+    return (
+        <section className="py-20 sm:py-28 bg-neutral-50 dark:bg-neutral-900/40 border-y border-neutral-200 dark:border-neutral-800">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <SectionBadge text="AUTONOMOUS COMMERCE INTELLIGENCE" />
+                    <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
+                        Trained on Your Content. Fluent in Your Voice. Closing Sales 24/7.
+                    </h2>
+                    <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                        Upload your syllabus, product manuals, or FAQ docs. BotifyAI creates a private, grounded sales specialist that knows your offerings inside and out—with zero hallucinations.
+                    </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {steps.map((st, i) => (
+                        <div
+                            key={i}
+                            className="bg-white dark:bg-neutral-900 rounded-3xl p-6 border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between"
+                        >
+                            <div>
+                                <span className="text-3xl font-black text-brand-600/30 dark:text-brand-400/30">
+                                    {st.num}
+                                </span>
+                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white mt-3 mb-2">
+                                    {st.title}
+                                </h3>
+                                <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                    {st.desc}
+                                </p>
                             </div>
                         </div>
                     ))}
@@ -722,67 +598,234 @@ function FeaturesSection({ landing }) {
     );
 }
 
-// ─── How It Works Section ─────────────────────────────────────────────────────
+// ─── Section 7: WHO IS IT FOR? — Tailored Creator Segments ──────────────────
 
-function HowItWorksSection({ landing, canRegister }) {
-    const { t } = useTranslation();
-    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('howitworks_enabled') !== '1') return null;
-
-    const steps = [1, 2, 3].map((i) => ({
-        title: s(`step_${i}_title`),
-        desc: s(`step_${i}_desc`),
-    })).filter((st) => st.title);
+function AudienceSegmentsSection() {
+    const segments = [
+        {
+            title: 'Course Creators & Educators',
+            desc: 'Replace expensive $159/month course platforms. Host unlimited video masterclasses, organize modules, and automate student credential delivery via WhatsApp.',
+            icon: Video,
+        },
+        {
+            title: 'Authors, Researchers & Writers',
+            desc: 'Sell protected ebooks, industry reports, and whitepapers with single-use download tokens that prevent piracy and leaked files.',
+            icon: BookOpen,
+        },
+        {
+            title: 'Coaches & Consultants',
+            desc: 'Monetize strategy blueprints, onboarding questionnaires, and group masterclasses with automated client intake and in-chat follow-up.',
+            icon: Users,
+        },
+        {
+            title: 'UI/UX & Template Designers',
+            desc: 'Sell Notion workspaces, Figma UI kits, and Canva templates with instant duplication links and multi-file asset delivery.',
+            icon: Layout,
+        },
+        {
+            title: 'Developers & Technical Founders',
+            desc: 'Sell code boilerplates, API scripts, and micro-SaaS software packages with automated license key fulfillment.',
+            icon: Code,
+        },
+        {
+            title: 'Agencies & Digital Communities',
+            desc: 'Run private client resource portals, deliver recurring digital downloads, and mobilize hundreds of affiliates with real-time payout tracking.',
+            icon: Globe,
+        },
+    ];
 
     return (
-        <section className="py-16 sm:py-24">
+        <section className="py-20 sm:py-28 bg-white dark:bg-neutral-950">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <Badge text={s('howitworks_badge')} />
-                    <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">
-                        {s('howitworks_title')}
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <SectionBadge text="BUILT FOR KNOWLEDGE CREATORS" />
+                    <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
+                        Designed for Anyone Monetizing Digital Value
                     </h2>
-                    {s('howitworks_subtitle') && (
-                        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">{s('howitworks_subtitle')}</p>
-                    )}
+                    <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                        Whether you are an individual educator, an indie hacker, or an established consulting agency, BotifyAI adapts to your monetization model.
+                    </p>
                 </div>
 
-                <div className="relative">
-                    <div className="hidden lg:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-gradient-to-r from-brand-500/20 via-brand-500/50 to-brand-500/20" />
-                    <div className="grid gap-10 lg:grid-cols-3">
-                        {steps.map((step, idx) => (
-                            <div key={idx} className="relative text-center">
-                                <div
-                                    className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full font-bold text-xl shadow-lg ring-4 ring-white dark:ring-neutral-950 text-white"
-                                    style={{ background: 'rgb(var(--brand-500))', boxShadow: '0 8px 24px rgb(var(--brand-400) / 0.3)' }}
-                                >
-                                    {idx + 1}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {segments.map((seg, i) => {
+                        const Icon = seg.icon;
+                        return (
+                            <div
+                                key={i}
+                                className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 p-6 shadow-sm hover:border-brand-500/40 transition-colors"
+                            >
+                                <div className="h-10 w-10 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center mb-4">
+                                    <Icon className="h-5 w-5" />
                                 </div>
-                                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">{step.title}</h3>
-                                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-xs mx-auto">{step.desc}</p>
+                                <h3 className="text-base font-bold text-neutral-900 dark:text-white mb-2">
+                                    {seg.title}
+                                </h3>
+                                <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                    {seg.desc}
+                                </p>
                             </div>
-                        ))}
-                    </div>
+                        );
+                    })}
                 </div>
-
-                {canRegister && (
-                    <div className="mt-14 text-center">
-                        <Link
-                            href={route('register')}
-                            className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:opacity-90"
-                            style={{ background: 'rgb(var(--brand-500))' }}
-                        >
-                            {t('welcome.get_started_free')}
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-                        </Link>
-                    </div>
-                )}
             </div>
         </section>
     );
 }
 
-// ─── Pricing Section ──────────────────────────────────────────────────────────
+// ─── Section 8: Comparison Positioning — "Why Creators Choose BotifyAI" ─────
+
+function ComparisonTableSection() {
+    const comparisons = [
+        {
+            feature: 'Digital Product Vault (Tokenized)',
+            botify: true,
+            gumroad: true,
+            selar: true,
+            kajabi: true,
+            manychat: false,
+        },
+        {
+            feature: 'Video Course Hosting & Progress',
+            botify: true,
+            gumroad: false,
+            selar: 'Basic',
+            kajabi: true,
+            manychat: false,
+        },
+        {
+            feature: 'Autonomous AI In-Chat Sales Rep',
+            botify: true,
+            gumroad: false,
+            selar: false,
+            kajabi: false,
+            manychat: 'Basic Rules',
+        },
+        {
+            feature: 'Meta Cloud WhatsApp & Instagram Integration',
+            botify: true,
+            gumroad: false,
+            selar: false,
+            kajabi: false,
+            manychat: true,
+        },
+        {
+            feature: 'Built-in Affiliate Network & Payouts',
+            botify: true,
+            gumroad: true,
+            selar: true,
+            kajabi: true,
+            manychat: false,
+        },
+        {
+            feature: 'Multi-Currency Checkouts (USD, NGN, KES, ZAR)',
+            botify: true,
+            gumroad: 'Limited',
+            selar: true,
+            kajabi: 'Limited',
+            manychat: false,
+        },
+        {
+            feature: 'Platform Transaction Fee',
+            botifyText: '0% on Pro',
+            gumroadText: '10% + fees',
+            selarText: '4% - 10%',
+            kajabiText: '0% ($159/mo)',
+            manychatText: 'N/A',
+        },
+    ];
+
+    return (
+        <section className="py-20 sm:py-28 bg-neutral-50 dark:bg-neutral-900/40 border-y border-neutral-200 dark:border-neutral-800">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <SectionBadge text="THE UNFAIR ADVANTAGE" />
+                    <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
+                        How BotifyAI Compares to Other Platforms
+                    </h2>
+                    <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                        See why creators are ditching fragmented multi-tool setups for BotifyAI.
+                    </p>
+                </div>
+
+                <div className="overflow-x-auto rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
+                    <table className="w-full text-left text-xs sm:text-sm">
+                        <thead className="bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white font-bold">
+                            <tr>
+                                <th className="py-4 px-6">Capability</th>
+                                <th className="py-4 px-6 text-brand-600 dark:text-brand-400 bg-brand-500/10">BotifyAI</th>
+                                <th className="py-4 px-6 text-neutral-500">Gumroad</th>
+                                <th className="py-4 px-6 text-neutral-500">Selar</th>
+                                <th className="py-4 px-6 text-neutral-500">Kajabi</th>
+                                <th className="py-4 px-6 text-neutral-500">ManyChat</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
+                            {comparisons.map((row, i) => (
+                                <tr key={i} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors">
+                                    <td className="py-4 px-6 font-semibold text-neutral-800 dark:text-neutral-200">
+                                        {row.feature}
+                                    </td>
+                                    <td className="py-4 px-6 bg-brand-500/5 font-bold text-brand-600 dark:text-brand-400">
+                                        {row.botifyText ? (
+                                            row.botifyText
+                                        ) : row.botify ? (
+                                            <Check className="h-5 w-5 text-emerald-500" />
+                                        ) : (
+                                            '—'
+                                        )}
+                                    </td>
+                                    <td className="py-4 px-6 text-neutral-600 dark:text-neutral-400">
+                                        {row.gumroadText ? (
+                                            row.gumroadText
+                                        ) : row.gumroad ? (
+                                            <Check className="h-5 w-5 text-emerald-500" />
+                                        ) : (
+                                            <X className="h-4 w-4 text-neutral-400" />
+                                        )}
+                                    </td>
+                                    <td className="py-4 px-6 text-neutral-600 dark:text-neutral-400">
+                                        {row.selarText ? (
+                                            row.selarText
+                                        ) : typeof row.selar === 'string' ? (
+                                            row.selar
+                                        ) : row.selar ? (
+                                            <Check className="h-5 w-5 text-emerald-500" />
+                                        ) : (
+                                            <X className="h-4 w-4 text-neutral-400" />
+                                        )}
+                                    </td>
+                                    <td className="py-4 px-6 text-neutral-600 dark:text-neutral-400">
+                                        {row.kajabiText ? (
+                                            row.kajabiText
+                                        ) : row.kajabi ? (
+                                            <Check className="h-5 w-5 text-emerald-500" />
+                                        ) : (
+                                            <X className="h-4 w-4 text-neutral-400" />
+                                        )}
+                                    </td>
+                                    <td className="py-4 px-6 text-neutral-600 dark:text-neutral-400">
+                                        {row.manychatText ? (
+                                            row.manychatText
+                                        ) : typeof row.manychat === 'string' ? (
+                                            row.manychat
+                                        ) : row.manychat ? (
+                                            <Check className="h-5 w-5 text-emerald-500" />
+                                        ) : (
+                                            <X className="h-4 w-4 text-neutral-400" />
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// ─── Section 9: Pricing Section ──────────────────────────────────────────────
 
 function PricingSection({ plans }) {
     const { t } = useTranslation();
@@ -790,30 +833,40 @@ function PricingSection({ plans }) {
     if (!plans || !plans.length) return null;
 
     return (
-        <section id="pricing" className="py-16 sm:py-24 bg-neutral-50 dark:bg-neutral-900/30">
+        <section id="pricing" className="py-20 sm:py-28 bg-white dark:bg-neutral-950">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-12">
-                    <Badge text={t('welcome.badge_pricing')} />
-                    <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">
-                        {t('pricing.simple_transparent')}
+                <div className="text-center mb-16">
+                    <SectionBadge text="TRANSPARENT PLANS" />
+                    <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+                        Simple, Honest Pricing. Zero Hidden Fees.
                     </h2>
-                    <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
-                        {t('pricing.choose_plan_anytime')}
+                    <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-400">
+                        Keep 100% of your earnings on Pro. Upgrade or cancel anytime.
                     </p>
 
-                    <div className="mt-8 inline-flex items-center gap-1 rounded-xl bg-neutral-100 dark:bg-neutral-800 p-1">
+                    <div className="mt-8 inline-flex items-center gap-1 rounded-2xl bg-neutral-100 dark:bg-neutral-800 p-1">
                         <button
                             onClick={() => setYearly(false)}
-                            className={`rounded-lg px-5 py-2 text-sm font-semibold transition-all ${!yearly ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}
+                            className={`rounded-xl px-5 py-2 text-sm font-semibold transition-all ${
+                                !yearly
+                                    ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white'
+                                    : 'text-neutral-500 dark:text-neutral-400'
+                            }`}
                         >
-                            {t('welcome.monthly')}
+                            Monthly
                         </button>
                         <button
                             onClick={() => setYearly(true)}
-                            className={`rounded-lg px-5 py-2 text-sm font-semibold transition-all ${yearly ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}
+                            className={`rounded-xl px-5 py-2 text-sm font-semibold transition-all ${
+                                yearly
+                                    ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white'
+                                    : 'text-neutral-500 dark:text-neutral-400'
+                            }`}
                         >
-                            {t('welcome.yearly')}
-                            <span className="ml-1.5 rounded-full bg-brand-500/20 text-brand-600 dark:text-brand-500 text-xs px-1.5 py-0.5 font-bold">-20%</span>
+                            Yearly
+                            <span className="ml-1.5 rounded-full bg-brand-500/20 text-brand-600 dark:text-brand-400 text-xs px-2 py-0.5 font-bold">
+                                -20%
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -823,65 +876,72 @@ function PricingSection({ plans }) {
                         const price = yearly ? plan.price_yearly : plan.price_monthly;
                         const priceDisplay = yearly ? plan.yearly_price_display : plan.monthly_price_display;
                         const isFree = plan.is_free || price === 0;
+
                         return (
                             <div
                                 key={plan.id}
-                                className={`relative rounded-2xl border p-7 flex flex-col ${
+                                className={`relative rounded-3xl border p-8 flex flex-col justify-between ${
                                     plan.is_featured
-                                        ? 'border-brand-500/50 bg-brand-950 text-white shadow-2xl shadow-brand-500/10 lg:scale-105'
-                                        : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900'
+                                        ? 'border-brand-500 bg-brand-950 text-white shadow-2xl lg:scale-105'
+                                        : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900'
                                 }`}
                             >
                                 {plan.is_featured && (
                                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                                        <span className="rounded-full text-xs font-bold px-3 py-1 shadow" style={{ background: 'rgb(var(--brand-500))', color: '#ffffff' }}>{t('welcome.most_popular')}</span>
+                                        <span className="rounded-full text-xs font-bold px-3 py-1 shadow bg-brand-600 text-white">
+                                            Most Popular
+                                        </span>
                                     </div>
                                 )}
 
                                 <div>
-                                    <h3 className={`text-lg font-bold ${plan.is_featured ? 'text-white' : 'text-neutral-900 dark:text-white'}`}>{plan.name}</h3>
+                                    <h3 className={`text-xl font-bold ${plan.is_featured ? 'text-white' : 'text-neutral-900 dark:text-white'}`}>
+                                        {plan.name}
+                                    </h3>
                                     {plan.description && (
-                                        <p className={`mt-1 text-sm ${plan.is_featured ? 'text-neutral-400' : 'text-neutral-500 dark:text-neutral-400'}`}>{plan.description}</p>
-                                    )}
-                                </div>
-
-                                <div className="mt-5 mb-6">
-                                    <span className={`text-4xl font-bold ${plan.is_featured ? 'text-white' : 'text-neutral-900 dark:text-white'}`}>
-                                        {isFree ? t('welcome.free') : (priceDisplay || `${plan.currency_symbol || '$'}${parseFloat(price).toLocaleString()}`)}
-                                    </span>
-                                    {!isFree && (
-                                        <span className={`text-sm ml-1 ${plan.is_featured ? 'text-neutral-400' : 'text-neutral-400'}`}>{yearly ? t('welcome.per_year') : t('welcome.per_month')}</span>
-                                    )}
-                                    {plan.trial_days > 0 && (
-                                        <p className={`text-xs mt-1 ${plan.is_featured ? 'text-neutral-400' : 'text-neutral-400 dark:text-neutral-500'}`}>
-                                            {t('pricing.trial_days', { days: plan.trial_days })}
+                                        <p className={`mt-2 text-xs sm:text-sm ${plan.is_featured ? 'text-neutral-300' : 'text-neutral-500 dark:text-neutral-400'}`}>
+                                            {plan.description}
                                         </p>
                                     )}
-                                </div>
 
-                                {plan.features && plan.features.length > 0 && (
-                                    <ul className="space-y-2.5 flex-1 mb-7">
-                                        {plan.features.map((feat, fi) => (
-                                            <li key={fi} className="flex items-start gap-2.5 text-sm">
-                                                <svg className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: 'rgb(var(--brand-500))' }} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                                </svg>
-                                                <span className={plan.is_featured ? 'text-neutral-300' : 'text-neutral-700 dark:text-neutral-300'}>{feat}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
+                                    <div className="mt-5 mb-6">
+                                        <span className={`text-4xl font-extrabold ${plan.is_featured ? 'text-white' : 'text-neutral-900 dark:text-white'}`}>
+                                            {isFree ? 'Free' : (priceDisplay || `${plan.currency_symbol || '$'}${parseFloat(price).toLocaleString()}`)}
+                                        </span>
+                                        {!isFree && (
+                                            <span className={`text-sm ml-1.5 ${plan.is_featured ? 'text-neutral-400' : 'text-neutral-400'}`}>
+                                                {yearly ? '/year' : '/month'}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {plan.features && plan.features.length > 0 && (
+                                        <ul className="space-y-3 mb-8 text-xs sm:text-sm">
+                                            {plan.features.map((feat, fi) => (
+                                                <li key={fi} className="flex items-start gap-2.5">
+                                                    <CheckCircle2
+                                                        className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
+                                                            plan.is_featured ? 'text-brand-400' : 'text-emerald-500'
+                                                        }`}
+                                                    />
+                                                    <span className={plan.is_featured ? 'text-neutral-200' : 'text-neutral-700 dark:text-neutral-300'}>
+                                                        {feat}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
 
                                 <Link
                                     href={route('register')}
-                                    className={`block text-center rounded-xl py-3 text-sm font-bold transition-all duration-200 ${
+                                    className={`block text-center rounded-2xl py-3.5 text-sm font-bold transition-all ${
                                         plan.is_featured
-                                            ? 'text-white hover:opacity-90'
-                                            : 'border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:border-brand-500/50 hover:text-brand-600 dark:hover:text-brand-500'
+                                            ? 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-500/30'
+                                            : 'bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100'
                                     }`}
-                                    style={plan.is_featured ? { background: 'rgb(var(--brand-500))' } : {}}
                                 >
-                                    {plan.is_featured ? t('welcome.get_started_plan') : t('welcome.upgrade')}
+                                    {plan.is_featured ? 'Get Started Pro' : 'Choose Plan'}
                                 </Link>
                             </div>
                         );
@@ -892,115 +952,59 @@ function PricingSection({ plans }) {
     );
 }
 
-// ─── Why Section ──────────────────────────────────────────────────────────────
-
-function WhySection({ landing }) {
-    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('why_enabled') !== '1') return null;
-
-    const items = [1, 2, 3, 4, 5, 6].map((i) => ({
-        icon: s(`why_${i}_icon`, 'zap'),
-        title: s(`why_${i}_title`),
-        desc: s(`why_${i}_desc`),
-    })).filter((f) => f.title);
-
-    if (!items.length) return null;
-
-    return (
-        <section className="py-16 sm:py-24">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <Badge text={s('why_badge')} />
-                    <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">
-                        {s('why_title')}
-                    </h2>
-                    {s('why_subtitle') && (
-                        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-                            {s('why_subtitle')}
-                        </p>
-                    )}
-                </div>
-
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {items.map((item, idx) => (
-                        <div key={idx} className="flex gap-4 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-brand-500/30 transition-colors">
-                            <div className="flex-shrink-0 h-11 w-11 rounded-xl flex items-center justify-center" style={{ background: 'rgb(var(--brand-400) / 0.12)' }}>
-                                <FeatureIcon name={item.icon} className="h-5 w-5" style={{ color: 'rgb(var(--brand-500))' }} />
-                            </div>
-                            <div>
-                                <h3 className="text-base font-semibold text-neutral-900 dark:text-white mb-1">{item.title}</h3>
-                                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">{item.desc}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-// ─── Testimonials Section ─────────────────────────────────────────────────────
-
-function StarRating() {
-    return (
-        <div className="flex gap-0.5">
-            {[...Array(5)].map((_, i) => (
-                <svg key={i} className="h-4 w-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-            ))}
-        </div>
-    );
-}
+// ─── Section 10: Testimonials Section ────────────────────────────────────────
 
 function TestimonialsSection({ landing }) {
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('testimonials_enabled') !== '1') return null;
+    if (s('testimonials_enabled', '1') !== '1') return null;
 
-    const testimonials = [1, 2, 3, 4, 5, 6].map((i) => ({
-        name: s(`testimonial_${i}_name`),
-        role: s(`testimonial_${i}_role`),
-        text: s(`testimonial_${i}_text`),
-        avatar: s(`testimonial_${i}_avatar`),
-    })).filter((t) => t.name && t.text);
-
-    if (!testimonials.length) return null;
+    const testimonials = [
+        {
+            name: 'Marcus Vance',
+            role: 'Fintech Educator & Consultant',
+            text: 'Moving my video masterclass from Teachable to BotifyAI saved me $180 every month. Plus, the WhatsApp AI agent closed 42 students who abandoned their checkout.',
+        },
+        {
+            name: 'Elena Rostova',
+            role: 'UI/UX Design Kit Author',
+            text: 'The tokenized download link is pure genius. No more shared Google Drive links leaking on Twitter. My digital design kit sales doubled in two weeks.',
+        },
+        {
+            name: 'David Chen',
+            role: 'Fitness Creator & Coach',
+            text: 'I have 18 affiliates sending WhatsApp traffic to my fitness guides. The built-in affiliate engine handles tracking and payouts without any spreadsheets.',
+        },
+    ];
 
     return (
-        <section className="py-16 sm:py-24 bg-neutral-50 dark:bg-neutral-900/30">
+        <section className="py-20 sm:py-28 bg-neutral-50 dark:bg-neutral-900/40 border-y border-neutral-200 dark:border-neutral-800">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
-                    <Badge text={s('testimonials_badge')} />
-                    <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">
-                        {s('testimonials_title')}
+                    <SectionBadge text="REAL CREATOR RESULTS" />
+                    <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+                        Loved by Creators, Authors & Agency Owners
                     </h2>
-                    {s('testimonials_subtitle') && (
-                        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">{s('testimonials_subtitle')}</p>
-                    )}
                 </div>
 
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid md:grid-cols-3 gap-8">
                     {testimonials.map((t, idx) => (
                         <div
                             key={idx}
-                            className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 flex flex-col gap-4"
+                            className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-8 flex flex-col justify-between shadow-sm"
                         >
-                            <StarRating />
-                            <blockquote className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed flex-1">
-                                &ldquo;{t.text}&rdquo;
-                            </blockquote>
-                            <div className="flex items-center gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800">
-                                {t.avatar ? (
-                                    <img src={t.avatar} alt={t.name} className="h-9 w-9 rounded-full object-cover" />
-                                ) : (
-                                    <div className="h-9 w-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style={{ background: 'rgb(var(--brand-500))' }}>
-                                        {t.name.charAt(0)}
-                                    </div>
-                                )}
-                                <div>
-                                    <p className="text-sm font-semibold text-neutral-900 dark:text-white">{t.name}</p>
-                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">{t.role}</p>
+                            <div>
+                                <div className="flex gap-1 text-amber-400 mb-4">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star key={i} className="h-4 w-4 fill-current" />
+                                    ))}
                                 </div>
+                                <blockquote className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed mb-6">
+                                    &ldquo;{t.text}&rdquo;
+                                </blockquote>
+                            </div>
+                            <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                                <p className="text-sm font-bold text-neutral-900 dark:text-white">{t.name}</p>
+                                <p className="text-xs text-neutral-500">{t.role}</p>
                             </div>
                         </div>
                     ))}
@@ -1010,54 +1014,70 @@ function TestimonialsSection({ landing }) {
     );
 }
 
-// ─── FAQ Section ──────────────────────────────────────────────────────────────
+// ─── Section 11: FAQ Section ──────────────────────────────────────────────────
 
 function FaqSection({ landing }) {
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
     const [open, setOpen] = useState(null);
-    if (s('faq_enabled') !== '1') return null;
+    if (s('faq_enabled', '1') !== '1') return null;
 
-    const faqs = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({
-        q: s(`faq_${i}_q`),
-        a: s(`faq_${i}_a`),
-    })).filter((f) => f.q && f.a);
-
-    if (!faqs.length) return null;
+    const faqs = [
+        {
+            q: 'How is BotifyAI different from Gumroad, Selar, or Kajabi?',
+            a: 'Traditional platforms give you a passive checkout page and take 5% to 10% of every sale, plus $150+/month for course hosting. BotifyAI gives you the complete digital product vault and course engine PLUS an autonomous 24/7 AI sales agent that directly chats with leads on WhatsApp & Instagram DM, answers questions, handles objections, and generates instant checkout links.',
+        },
+        {
+            q: 'Can I host both video courses and downloadable files?',
+            a: 'Yes! BotifyAI includes both the Digital Product Vault (tokenized PDF, ZIP, presets, templates) and Botify Academy (unlimited video courses, modules, lessons, student dashboards, and completion tracking) in one single account.',
+        },
+        {
+            q: 'How does the 24/7 AI sales rep sell my products?',
+            a: 'You upload your course curriculum, product description, or FAQ guide. BotifyAI trains a private, grounded RAG agent. When a follower sends a message on Instagram or WhatsApp, the AI answers questions in natural, friendly language and drops an instant multi-currency checkout link.',
+        },
+        {
+            q: 'What payment gateways and currencies are supported?',
+            a: 'We support global cards via Stripe, PayPal, and regional providers including Flutterwave and Paystack. You can sell in USD, EUR, GBP, NGN, KES, ZAR, and more, with instant automated delivery upon confirmation.',
+        },
+        {
+            q: 'Are there platform fees on my sales?',
+            a: 'On our Pro and Business plans, there are zero platform fees (0%). You keep 100% of your earnings minus standard payment processing fees.',
+        },
+        {
+            q: 'Can I recruit affiliates to promote my digital products?',
+            a: 'Yes! BotifyAI has a built-in Affiliate Network. Set custom commission percentages (e.g. 20% or 40%), generate trackable referral links, and our system tracks conversions and payouts automatically.',
+        },
+    ];
 
     return (
-        <section id="faq" className="py-16 sm:py-24">
+        <section id="faq" className="py-20 sm:py-28 bg-white dark:bg-neutral-950">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-14">
-                    <Badge text={s('faq_badge')} />
-                    <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">
-                        {s('faq_title')}
+                <div className="text-center mb-16">
+                    <SectionBadge text="GOT QUESTIONS?" />
+                    <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+                        Frequently Asked Questions
                     </h2>
-                    {s('faq_subtitle') && (
-                        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">{s('faq_subtitle')}</p>
-                    )}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-4">
                     {faqs.map((faq, idx) => (
                         <div
                             key={idx}
-                            className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden"
+                            className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 overflow-hidden"
                         >
                             <button
-                                className="w-full flex items-center justify-between px-5 py-4 text-left gap-4"
+                                className="w-full flex items-center justify-between p-5 text-left gap-4 font-bold text-neutral-900 dark:text-white text-base hover:text-brand-600 transition-colors"
                                 onClick={() => setOpen(open === idx ? null : idx)}
                             >
-                                <span className="font-medium text-neutral-900 dark:text-white text-sm">{faq.q}</span>
-                                <svg
-                                    className={`h-5 w-5 flex-shrink-0 text-neutral-400 transition-transform duration-200 ${open === idx ? 'rotate-180' : ''}`}
-                                    fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                </svg>
+                                <span>{faq.q}</span>
+                                <ChevronDown
+                                    className={`h-5 w-5 flex-shrink-0 text-neutral-400 transition-transform duration-200 ${
+                                        open === idx ? 'rotate-180 text-brand-600' : ''
+                                    }`}
+                                />
                             </button>
                             {open === idx && (
-                                <div className="px-5 pb-4 border-t border-neutral-100 dark:border-neutral-800 pt-3">
-                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">{faq.a}</p>
+                                <div className="px-5 pb-5 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed border-t border-neutral-100 dark:border-neutral-800/60 pt-3">
+                                    <p>{faq.a}</p>
                                 </div>
                             )}
                         </div>
@@ -1068,257 +1088,65 @@ function FaqSection({ landing }) {
     );
 }
 
-// ─── CTA Section ──────────────────────────────────────────────────────────────
+// ─── Section 12: Final Conversion CTA & Risk Reversal ────────────────────────
 
-function CtaSection({ landing, canRegister }) {
-    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('cta_enabled') !== '1') return null;
-
+function FinalCtaSection({ canRegister }) {
     return (
-        <section className="py-14 sm:py-20">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div
-                    className="relative overflow-hidden rounded-3xl px-6 py-12 sm:px-8 sm:py-16 text-center"
-                    style={{
-                        background: 'radial-gradient(ellipse 60% 80% at 50% 50%, rgb(var(--brand-400) / 0.15) 0%, transparent 70%), rgb(var(--brand-950))',
-                        border: '1px solid rgb(var(--brand-400) / 0.2)',
-                    }}
-                >
-                    {/* Grid overlay */}
-                    <div
-                        className="pointer-events-none absolute inset-0 rounded-3xl"
-                        style={{
-                            backgroundImage: `
-                                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
-                            `,
-                            backgroundSize: '50px 50px',
-                        }}
-                    />
-
-                    <h2 className="relative text-3xl sm:text-4xl font-bold text-white tracking-tight max-w-2xl mx-auto">
-                        {s('cta_title')}
-                    </h2>
-                    <p className="relative mt-4 text-lg text-neutral-400 max-w-xl mx-auto">
-                        {s('cta_subtitle')}
-                    </p>
-
-                    <div className="relative mt-10 flex flex-wrap items-center justify-center gap-4">
-                        {canRegister && s('cta_primary') && (
-                            <Link
-                                href={route('register')}
-                                className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:opacity-90"
-                                style={{ background: 'rgb(var(--brand-500))' }}
-                            >
-                                {s('cta_primary')}
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
-                            </Link>
-                        )}
-                        {s('cta_secondary') && (
-                            <Link
-                                href={route('contact')}
-                                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/8 text-white px-7 py-3.5 text-base font-semibold hover:bg-white/15 backdrop-blur-sm transition-all duration-200"
-                            >
-                                {s('cta_secondary')}
-                            </Link>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
-}
-
-// ─── Metrics Section (numbers band) ───────────────────────────────────────────
-
-function MetricsSection({ landing }) {
-    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('metrics_enabled') !== '1') return null;
-
-    const metrics = [1, 2, 3, 4].map((i) => ({
-        value: s(`metric_${i}_value`),
-        label: s(`metric_${i}_label`),
-    })).filter((m) => m.value);
-
-    if (!metrics.length) return null;
-
-    return (
-        <section className="relative -mt-px border-b border-white/10" style={{ background: 'rgb(var(--brand-950))' }}>
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                    {metrics.map((m, idx) => (
-                        <div key={idx} className="text-center">
-                            <p className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ color: 'rgb(var(--brand-500))' }}>{m.value}</p>
-                            <p className="mt-1 text-sm text-neutral-400">{m.label}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-// ─── Channels Section ─────────────────────────────────────────────────────────
-
-function ChannelsSection({ landing }) {
-    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('channels_enabled') !== '1') return null;
-
-    const channels = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => ({
-        key: s(`channel_${i}_key`, 'email'),
-        title: s(`channel_${i}_title`),
-        desc: s(`channel_${i}_desc`),
-    })).filter((c) => c.title);
-
-    if (!channels.length) return null;
-
-    return (
-        <section className="py-16 sm:py-24">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <Badge text={s('channels_badge')} />
-                    <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">
-                        {s('channels_title')}
-                    </h2>
-                    {s('channels_subtitle') && (
-                        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">{s('channels_subtitle')}</p>
-                    )}
-                </div>
-
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    {channels.map((c, idx) => {
-                        const style = CHANNEL_STYLES[c.key] || CHANNEL_STYLES['email'];
-                        return (
-                            <div
-                                key={idx}
-                                className="group rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 hover:shadow-lg transition-all duration-300"
-                            >
-                                <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl ${style.bg} ${style.text}`}>
-                                    <ChannelIcon name={c.key} className="h-6 w-6" />
-                                </div>
-                                <h3 className="text-base font-semibold text-neutral-900 dark:text-white mb-2">{c.title}</h3>
-                                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">{c.desc}</p>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-// ─── Integrations Strip Section ───────────────────────────────────────────────
-
-function IntegrationsStripSection({ landing }) {
-    const { t } = useTranslation();
-    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('integrations_strip_enabled') !== '1') return null;
-
-    // Pull the integration names from the integrations-page settings to show a strip.
-    const names = [1, 2, 3, 4, 5, 6]
-        .flatMap((i) => (s(`intcat_${i}_items`) || '').split('\n'))
-        .map((n) => n.trim())
-        .filter(Boolean)
-        .slice(0, 12);
-
-    return (
-        <section className="py-14 sm:py-20 bg-neutral-50 dark:bg-neutral-900/30 border-y border-neutral-200 dark:border-neutral-800">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-white tracking-tight">
-                    {s('integrations_strip_title')}
+        <section className="py-20 sm:py-28 bg-gradient-to-r from-brand-600 via-rose-600 to-brand-700 text-white text-center relative overflow-hidden">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+                    Your Knowledge is Valuable. Start Selling It Automatically.
                 </h2>
-                {s('integrations_strip_subtitle') && (
-                    <p className="mt-3 text-base text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">{s('integrations_strip_subtitle')}</p>
-                )}
+                <p className="mt-4 text-base sm:text-lg text-rose-100 max-w-2xl mx-auto leading-relaxed">
+                    Join thousands of creators who turned their knowledge, courses, and digital assets into a 24/7 revenue engine. Setup takes less than 15 minutes.
+                </p>
 
-                {names.length > 0 && (
-                    <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-                        {names.map((name, idx) => (
-                            <span
-                                key={idx}
-                                className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                            >
-                                <BrandMark name={name} tileClassName="h-6 w-6 rounded-md" glyphClassName="h-4 w-4" monogramClassName="text-[0.65rem]" />
-                                {name}
-                            </span>
-                        ))}
-                    </div>
-                )}
-
-                <div className="mt-10">
-                    <Link href="/integrations" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 dark:text-brand-500 hover:underline">
-                        {t('welcome.view_all_integrations', { defaultValue: 'View all integrations' })}
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                    {canRegister && (
+                        <Link
+                            href="/register"
+                            className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-brand-600 hover:bg-neutral-100 font-bold text-base shadow-xl transition-all flex items-center justify-center gap-2 group"
+                        >
+                            Launch Your Digital Business Free
+                            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                    )}
+                    <Link
+                        href="/contact"
+                        className="w-full sm:w-auto px-7 py-4 rounded-full bg-brand-700/60 hover:bg-brand-700 text-white font-semibold text-base border border-white/20 transition-all flex items-center justify-center gap-2"
+                    >
+                        Schedule a 1-on-1 Tour
                     </Link>
                 </div>
-            </div>
-        </section>
-    );
-}
 
-// ─── Security Section ─────────────────────────────────────────────────────────
-
-function SecuritySection({ landing }) {
-    const s = (key, def = '') => landing[`landing.${key}`] ?? def;
-    if (s('security_enabled') !== '1') return null;
-
-    const items = [1, 2, 3, 4].map((i) => ({
-        icon: s(`security_${i}_icon`, 'shield-check'),
-        title: s(`security_${i}_title`),
-        desc: s(`security_${i}_desc`),
-    })).filter((it) => it.title);
-
-    if (!items.length) return null;
-
-    return (
-        <section className="py-16 sm:py-24">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <Badge text={s('security_badge')} />
-                    <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">
-                        {s('security_title')}
-                    </h2>
-                    {s('security_subtitle') && (
-                        <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">{s('security_subtitle')}</p>
-                    )}
-                </div>
-
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    {items.map((item, idx) => (
-                        <div key={idx} className="text-center p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
-                            <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl" style={{ background: 'rgb(var(--brand-400) / 0.12)' }}>
-                                <FeatureIcon name={item.icon} className="h-6 w-6" style={{ color: 'rgb(var(--brand-500))' }} />
-                            </div>
-                            <h3 className="text-base font-semibold text-neutral-900 dark:text-white mb-1">{item.title}</h3>
-                            <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">{item.desc}</p>
-                        </div>
-                    ))}
+                <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs text-rose-100 font-medium">
+                    <span>✓ No credit card required</span>
+                    <span>•</span>
+                    <span>✓ 0% platform transaction fees on Pro</span>
+                    <span>•</span>
+                    <span>✓ Keep 100% ownership of your customers</span>
                 </div>
             </div>
         </section>
     );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Main Welcome Page Component ──────────────────────────────────────────────
 
 export default function Welcome({ auth, canLogin, canRegister, landing = {}, plans = [] }) {
     const { appName } = useBranding();
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
 
-    const metaTitle = s('seo_title') || s('hero_title') || appName;
-    const metaDesc  = s('seo_description') || s('hero_subtitle') || '';
+    const metaTitle = 'BotifyAI — The AI-Powered Creator Commerce Platform | Sell Courses & Digital Products';
+    const metaDesc =
+        'Create, sell, and automate your digital business. Host video courses, sell ebooks and templates, and deploy 24/7 AI sales agents on WhatsApp & Instagram with 0% platform fees.';
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-
-    // ── JSON-LD structured data ────────────────────────────────────────────────
-    const faqs = [1, 2, 3, 4, 5, 6, 7, 8]
-        .map((i) => ({ q: s(`faq_${i}_q`), a: s(`faq_${i}_a`) }))
-        .filter((f) => f.q && f.a);
 
     const jsonLd = [
         {
             '@context': 'https://schema.org',
             '@type': 'Organization',
-            name: appName,
+            name: appName || 'BotifyAI',
             url: origin || undefined,
             logo: origin ? `${origin}/favicon.ico` : undefined,
             description: metaDesc,
@@ -1326,7 +1154,7 @@ export default function Welcome({ auth, canLogin, canRegister, landing = {}, pla
         {
             '@context': 'https://schema.org',
             '@type': 'SoftwareApplication',
-            name: appName,
+            name: 'BotifyAI Creator Commerce Platform',
             applicationCategory: 'BusinessApplication',
             operatingSystem: 'Web',
             description: metaDesc,
@@ -1335,43 +1163,51 @@ export default function Welcome({ auth, canLogin, canRegister, landing = {}, pla
         },
     ];
 
-    if (faqs.length) {
-        jsonLd.push({
-            '@context': 'https://schema.org',
-            '@type': 'FAQPage',
-            mainEntity: faqs.map((f) => ({
-                '@type': 'Question',
-                name: f.q,
-                acceptedAnswer: { '@type': 'Answer', text: f.a },
-            })),
-        });
-    }
-
     return (
         <LandingLayout>
             <SeoHead
                 title={metaTitle}
                 description={metaDesc}
-                keywords={s('seo_keywords')}
+                keywords="creator commerce, sell digital products, course hosting platform, AI sales agent, WhatsApp ecommerce, sell ebooks online, Selar alternative, Gumroad alternative, Kajabi alternative, digital product vault"
                 image={s('seo_og_image') || undefined}
                 jsonLd={jsonLd}
             />
 
-            <HeroSection landing={landing} canLogin={canLogin} canRegister={canRegister} auth={auth} />
-            <MetricsSection landing={landing} />
-            <TrustedBySection landing={landing} />
-            <ChannelsSection landing={landing} />
-            <ProblemSolutionSection landing={landing} />
-            <EnginePillarsSection />
-            <FeaturesSection landing={landing} />
-            <HowItWorksSection landing={landing} canRegister={canRegister} />
-            <IntegrationsStripSection landing={landing} />
-            <WhySection landing={landing} />
-            <SecuritySection landing={landing} />
+            {/* 1. Hero Section (Clean Light Canvas with Dual Storefront & Chat Preview) */}
+            <HeroCreatorSection landing={landing} canRegister={canRegister} auth={auth} />
+
+            {/* 2. Social Proof & Trust Metrics Band */}
+            <SocialProofBand landing={landing} />
+
+            {/* 3. STEP 01: CREATE — Turn Knowledge into Digital Assets */}
+            <CreateVaultSection />
+
+            {/* 4. STEP 02: SELL — Branded Storefront & Global Frictionless Checkout */}
+            <StorefrontCheckoutSection />
+
+            {/* 5. STEP 03: GROW WITH AI — The Engine Other Platforms Lack */}
+            <GrowWithAiSection />
+
+            {/* 6. THE AI ADVANTAGE — 4-Step Behind-the-Scenes Conversation Flow */}
+            <AiAdvantageWorkflow />
+
+            {/* 7. WHO IS IT FOR? — 6 Creator Segments */}
+            <AudienceSegmentsSection />
+
+            {/* 8. COMPARISON SHOWDOWN — BotifyAI vs Gumroad vs Selar vs Kajabi */}
+            <ComparisonTableSection />
+
+            {/* 9. PRICING — Simple, Transparent, 0% Platform Cut on Pro */}
             <PricingSection plans={plans} />
+
+            {/* 10. TESTIMONIALS — Real Creator Wins */}
             <TestimonialsSection landing={landing} />
+
+            {/* 11. FAQS — Comprehensive Answers */}
             <FaqSection landing={landing} />
-            <CtaSection landing={landing} canRegister={canRegister} />
+
+            {/* 12. FINAL CTA & RISK REVERSAL */}
+            <FinalCtaSection canRegister={canRegister} />
         </LandingLayout>
     );
 }
