@@ -127,7 +127,7 @@ export default function About({ canRegister, landing = {} }) {
                         )}
                         <div className="relative mt-10 flex flex-wrap items-center justify-center gap-4">
                             {canRegister && (
-                                <Link href={route('register')} className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:opacity-90" style={{ background: 'rgb(var(--brand-500))' }}>
+                                <Link href="/register" className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:opacity-90" style={{ background: 'rgb(var(--brand-500))' }}>
                                     {t('welcome.get_started_free', { defaultValue: 'Get Started Free' })}
                                 </Link>
                             )}

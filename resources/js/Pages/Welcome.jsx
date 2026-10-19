@@ -65,7 +65,7 @@ function HeroCreatorSection({ landing, canRegister, auth }) {
                 <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                     {auth?.user ? (
                         <Link
-                            href={route('client.dashboard')}
+                            href={typeof route === 'function' && typeof route().has === 'function' && route().has('client.dashboard') ? route('client.dashboard') : '/app'}
                             className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold text-base shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2"
                         >
                             Go to Dashboard
@@ -934,7 +934,7 @@ function PricingSection({ plans }) {
                                 </div>
 
                                 <Link
-                                    href={route('register')}
+                                    href="/register"
                                     className={`block text-center rounded-2xl py-3.5 text-sm font-bold transition-all ${
                                         plan.is_featured
                                             ? 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-500/30'

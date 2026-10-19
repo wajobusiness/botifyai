@@ -157,7 +157,7 @@ export default function Faq({ landing = {}, canRegister }) {
                         <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">{t('faq.ready_to_try')}</h2>
                         <p className="mt-2 text-neutral-500 dark:text-neutral-400 text-sm">{t('faq.ready_to_try_desc')}</p>
                         <Link
-                            href={route('register')}
+                            href="/register"
                             className="mt-6 inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:opacity-90"
                             style={{ background: 'rgb(var(--brand-500))' }}
                         >

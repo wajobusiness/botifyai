@@ -25,12 +25,12 @@ function Trigger({ children }) {
     );
 }
 
-function Content({ align = 'right', width = '48', children }) {
+function Content({ align = 'right', width = '48', contentClasses = '', className = '', children }) {
     const { open, setOpen } = useContext(DropdownContext);
     const alignClass = align === 'left'
         ? 'left-0 rtl:right-0 rtl:left-auto'
         : 'right-0 rtl:left-0 rtl:right-auto';
-    const widthClass = width === '48' ? 'w-48' : width === '56' ? 'w-56' : 'w-64';
+    const widthClass = width === '48' ? 'w-48' : width === '56' ? 'w-56' : width === '64' ? 'w-64' : width;
 
     return (
         <Transition
@@ -44,7 +44,7 @@ function Content({ align = 'right', width = '48', children }) {
             leaveTo="opacity-0 scale-95"
         >
             <div
-                className={`absolute z-50 mt-2 ${alignClass} ${widthClass} rounded-soft-lg border border-soft border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 py-1 shadow-soft-lg dark:shadow-none`}
+                className={`absolute z-50 mt-2 ${alignClass} ${widthClass} rounded-soft-lg border border-soft border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 py-1 shadow-soft-lg dark:shadow-none ${contentClasses} ${className}`}
                 onClick={() => setOpen(false)}
             >
                 {children}
@@ -69,6 +69,14 @@ function Item({ as = 'button', className = '', children, ...props }) {
     );
 }
 
+function DropdownLink({ className = '', children, ...props }) {
+    return (
+        <Link className={className} {...props}>
+            {children}
+        </Link>
+    );
+}
+
 function Divider() {
     return <div className="my-1 border-t border-soft border-gray-200 dark:border-neutral-700" />;
 }
@@ -76,4 +84,5 @@ function Divider() {
 Dropdown.Trigger = Trigger;
 Dropdown.Content = Content;
 Dropdown.Item = Item;
+Dropdown.Link = DropdownLink;
 Dropdown.Divider = Divider;

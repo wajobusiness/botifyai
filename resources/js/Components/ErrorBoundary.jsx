@@ -25,6 +25,13 @@ export default class ErrorBoundary extends Component {
         // Surface it for debugging / error-tracking without killing the app.
         // eslint-disable-next-line no-console
         console.error('[ErrorBoundary] Uncaught render error:', error, info?.componentStack);
+        if (typeof window !== 'undefined') {
+            window.__LAST_REACT_ERROR__ = {
+                message: error?.message,
+                stack: error?.stack,
+                componentStack: info?.componentStack,
+            };
+        }
     }
 
     componentDidMount() {
@@ -58,6 +65,15 @@ export default class ErrorBoundary extends Component {
                     <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
                         This page hit an unexpected error. Reloading usually fixes it. If it keeps happening, please contact support.
                     </p>
+
+                    {this.state.error?.message && (
+                        <div className="mt-4 p-3 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-left border border-neutral-200 dark:border-neutral-700">
+                            <p className="text-xs font-mono text-rose-600 dark:text-rose-400 break-words">
+                                {this.state.error.message}
+                            </p>
+                        </div>
+                    )}
+
                     <div className="mt-6 flex items-center justify-center gap-3">
                         <button
                             type="button"

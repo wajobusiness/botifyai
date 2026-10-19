@@ -88,13 +88,13 @@ export default function LandingLayout({ children }) {
     const signinLabel = landing['landing.signin_label'] || 'Sign In';
     const signinHref = landing['landing.signin_link_type'] === 'static' && landing['landing.signin_link_url']
         ? landing['landing.signin_link_url']
-        : route('login');
+        : '/login';
     const signinIsExternal = landing['landing.signin_link_type'] === 'static' && landing['landing.signin_link_url'];
 
     const getStartedLabel = landing['landing.getstarted_label'] || 'Get Started Free';
     const getStartedHref = landing['landing.getstarted_link_type'] === 'static' && landing['landing.getstarted_link_url']
         ? landing['landing.getstarted_link_url']
-        : route('register');
+        : '/register';
     const getStartedIsExternal = landing['landing.getstarted_link_type'] === 'static' && landing['landing.getstarted_link_url'];
 
     const handleThemeToggle = () => {
@@ -111,7 +111,7 @@ export default function LandingLayout({ children }) {
             <header className="sticky top-0 z-50 border-b border-white/10" style={{ background: 'rgb(var(--brand-950))' }}>
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
                     {/* Logo */}
-                    <Link href={route('home')} className="flex items-center group flex-shrink-0">
+                    <Link href="/" className="flex items-center group flex-shrink-0">
                         {brandMark('h-9 w-auto max-w-[180px] object-contain transition-opacity group-hover:opacity-80')}
                     </Link>
 
@@ -132,14 +132,14 @@ export default function LandingLayout({ children }) {
                             </Dropdown.Trigger>
                             <Dropdown.Content align="left" width="64" contentClasses="py-2 bg-neutral-900 border border-white/10 shadow-xl rounded-xl">
                                 {CREATOR_LINKS.map((item) => (
-                                    <Dropdown.Link
+                                    <Link
                                         key={item.href}
                                         href={item.href}
                                         className="block px-4 py-2.5 hover:bg-white/10 transition"
                                     >
                                         <div className="text-sm font-semibold text-white">{item.label}</div>
                                         <div className="text-xs text-neutral-400">{item.desc}</div>
-                                    </Dropdown.Link>
+                                    </Link>
                                 ))}
                             </Dropdown.Content>
                         </Dropdown>
@@ -159,14 +159,14 @@ export default function LandingLayout({ children }) {
                             </Dropdown.Trigger>
                             <Dropdown.Content align="left" width="64" contentClasses="py-2 bg-neutral-900 border border-white/10 shadow-xl rounded-xl">
                                 {COMMERCE_LINKS.map((item) => (
-                                    <Dropdown.Link
+                                    <Link
                                         key={item.href}
                                         href={item.href}
                                         className="block px-4 py-2.5 hover:bg-white/10 transition"
                                     >
                                         <div className="text-sm font-semibold text-white">{item.label}</div>
                                         <div className="text-xs text-neutral-400">{item.desc}</div>
-                                    </Dropdown.Link>
+                                    </Link>
                                 ))}
                             </Dropdown.Content>
                         </Dropdown>
@@ -200,14 +200,14 @@ export default function LandingLayout({ children }) {
                             </Dropdown.Trigger>
                             <Dropdown.Content align="left" width="64" contentClasses="py-2 bg-neutral-900 border border-white/10 shadow-xl rounded-xl">
                                 {RESOURCE_LINKS.map((item) => (
-                                    <Dropdown.Link
+                                    <Link
                                         key={item.href}
                                         href={item.href}
                                         className="block px-4 py-2.5 hover:bg-white/10 transition"
                                     >
                                         <div className="text-sm font-semibold text-white">{item.label}</div>
                                         <div className="text-xs text-neutral-400">{item.desc}</div>
-                                    </Dropdown.Link>
+                                    </Link>
                                 ))}
                             </Dropdown.Content>
                         </Dropdown>
@@ -293,13 +293,13 @@ export default function LandingLayout({ children }) {
                             {auth?.user ? (
                                 <>
                                     <Link
-                                        href={route('client.dashboard')}
+                                        href={typeof route === 'function' && typeof route().has === 'function' && route().has('client.dashboard') ? route('client.dashboard') : '/app'}
                                         className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:text-white hover:bg-white/10 transition duration-150"
                                     >
                                         {t('nav.dashboard')}
                                     </Link>
                                     <Link
-                                        href={route('logout')}
+                                        href="/logout"
                                         method="post"
                                         as="button"
                                         className="rounded-soft bg-brand-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-700 shadow-sm transition-all duration-150"
@@ -409,10 +409,10 @@ export default function LandingLayout({ children }) {
                         <div className="pt-3 border-t border-white/10 space-y-2">
                             {auth?.user ? (
                                 <>
-                                    <Link href={route('client.dashboard')} onClick={() => setMobileOpen(false)} className="block rounded-soft px-3 py-2.5 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition">
+                                    <Link href={typeof route === 'function' && typeof route().has === 'function' && route().has('client.dashboard') ? route('client.dashboard') : '/app'} onClick={() => setMobileOpen(false)} className="block rounded-soft px-3 py-2.5 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition">
                                         {t('nav.dashboard')}
                                     </Link>
-                                    <Link href={route('logout')} method="post" as="button" className="block w-full text-left rounded-soft px-3 py-2.5 text-sm font-medium text-neutral-300 hover:bg-neutral-800 transition">
+                                    <Link href="/logout" method="post" as="button" className="block w-full text-left rounded-soft px-3 py-2.5 text-sm font-medium text-neutral-300 hover:bg-neutral-800 transition">
                                         {t('nav.sign_out')}
                                     </Link>
                                 </>
@@ -468,7 +468,7 @@ export default function LandingLayout({ children }) {
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
                         {/* Brand */}
                         <div className="col-span-2">
-                            <Link href={route('home')} className="flex items-center mb-4">
+                            <Link href="/" className="flex items-center mb-4">
                                 {brandMark('h-9 w-auto max-w-[180px] object-contain')}
                             </Link>
                             <p className="text-sm text-neutral-400 leading-relaxed max-w-sm mb-4">

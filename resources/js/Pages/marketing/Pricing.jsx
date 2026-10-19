@@ -189,7 +189,7 @@ export default function Pricing({ landing = {}, plans = [], canRegister }) {
                                         )}
                                         {canRegister && (
                                             <Link
-                                                href={route('register')}
+                                                href="/register"
                                                 className={`block text-center rounded-xl py-3 text-sm font-bold transition-all duration-200 ${
                                                     plan.is_featured ? 'text-white hover:opacity-90' : 'border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:border-brand-500/50 hover:text-brand-600 dark:hover:text-brand-500'
                                                 }`}
@@ -282,7 +282,7 @@ export default function Pricing({ landing = {}, plans = [], canRegister }) {
                         <p className="mt-3 text-neutral-500 dark:text-neutral-400">{t('pricing.ready_to_start_desc')}</p>
                         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                             <Link
-                                href={route('register')}
+                                href="/register"
                                 className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:opacity-90"
                                 style={{ background: 'rgb(var(--brand-500))' }}
                             >
