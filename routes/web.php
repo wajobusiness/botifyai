@@ -40,6 +40,10 @@ Route::get('/blog/tag/{slug}', [\App\Modules\Blog\Http\Controllers\PublicBlogCon
 Route::get('/blog/author/{slug}', [\App\Modules\Blog\Http\Controllers\PublicBlogController::class, 'author'])->name('blog.author');
 Route::get('/blog/{slug}', [\App\Modules\Blog\Http\Controllers\PublicBlogController::class, 'show'])->name('blog.show');
 
+Route::get('/creators', [LandingController::class, 'creators'])->name('public.creators');
+Route::get('/sell-digital-products', [LandingController::class, 'digitalProducts'])->name('public.digital-products');
+Route::get('/courses', [LandingController::class, 'courses'])->name('public.courses');
+Route::get('/ai-sales-agent', [LandingController::class, 'aiSalesAgent'])->name('public.ai-sales-agent');
 Route::get('/affiliates', [LandingController::class, 'affiliates'])->name('public.affiliates');
 Route::get('/academy', fn () => redirect()->route('client.academy.index'))->name('public.academy');
 Route::get('/pricing', [LandingController::class, 'pricing'])->name('pricing');

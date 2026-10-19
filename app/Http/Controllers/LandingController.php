@@ -206,4 +206,53 @@ class LandingController extends Controller
             'landing'     => LandingPageController::getPublicSettings(),
         ]);
     }
+
+    public function creators(Request $request): Response|RedirectResponse
+    {
+        if ($redirect = $this->landingDisabledRedirect()) {
+            return $redirect;
+        }
+
+        return Inertia::render('marketing/Creators', [
+            'canRegister' => Route::has('register'),
+            'landing'     => LandingPageController::getPublicSettings(),
+            'plans'       => $this->plans($request),
+        ]);
+    }
+
+    public function digitalProducts(): Response|RedirectResponse
+    {
+        if ($redirect = $this->landingDisabledRedirect()) {
+            return $redirect;
+        }
+
+        return Inertia::render('marketing/DigitalProducts', [
+            'canRegister' => Route::has('register'),
+            'landing'     => LandingPageController::getPublicSettings(),
+        ]);
+    }
+
+    public function courses(): Response|RedirectResponse
+    {
+        if ($redirect = $this->landingDisabledRedirect()) {
+            return $redirect;
+        }
+
+        return Inertia::render('marketing/Courses', [
+            'canRegister' => Route::has('register'),
+            'landing'     => LandingPageController::getPublicSettings(),
+        ]);
+    }
+
+    public function aiSalesAgent(): Response|RedirectResponse
+    {
+        if ($redirect = $this->landingDisabledRedirect()) {
+            return $redirect;
+        }
+
+        return Inertia::render('marketing/AiSalesAgent', [
+            'canRegister' => Route::has('register'),
+            'landing'     => LandingPageController::getPublicSettings(),
+        ]);
+    }
 }

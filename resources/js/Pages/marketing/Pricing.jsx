@@ -56,7 +56,7 @@ export default function Pricing({ landing = {}, plans = [], canRegister }) {
     const pricingSchema = {
         '@context': 'https://schema.org',
         '@type': 'Product',
-        name: 'BotifyAI Messaging Platform',
+        name: 'BotifyAI Creator Commerce Platform',
         description: t('pricing.choose_plan_anytime'),
         offers: plans.map((p) => ({
             '@type': 'Offer',

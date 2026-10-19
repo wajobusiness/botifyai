@@ -5,6 +5,12 @@ import SeoHead from '@/Components/SeoHead';
 import { BrandMark } from '@/Components/BrandIcons';
 import { useTranslation } from 'react-i18next';
 import { useBranding } from '@/hooks/useBranding';
+import {
+    Sparkles, ArrowRight, ShoppingBag, BookOpen, Bot,
+    Zap, Users, CheckCircle2, ShieldCheck, Download,
+    Layers, Video, Star, MessageSquare, Globe, TrendingUp,
+    Store, Smartphone, CreditCard, Clock, ChevronRight
+} from 'lucide-react';
 
 // ─── Icon map ─────────────────────────────────────────────────────────────────
 
@@ -163,6 +169,196 @@ function Badge({ text }) {
     );
 }
 
+// ─── Live Conversational Commerce Simulator ──────────────────────────────────
+
+function SimulatorWidget() {
+    const [scenario, setScenario] = useState(0);
+    const scenarios = [
+        {
+            tab: 'Course & Video Access',
+            icon: BookOpen,
+            customerMsg: 'Hi! Does the AI Creator Masterclass include the tokenized PDF vault and access to video lessons on mobile?',
+            aiReply: 'Yes, absolutely! You get lifetime access to all 12 video modules on Botify Academy, plus the complete prompt vault and swipe files.',
+            hasPill: true,
+            pillTitle: 'AI Creator Masterclass + Vault',
+            pillPrice: '$49',
+            deliveryNote: 'Instant tokenized download & WhatsApp delivery in 5s',
+        },
+        {
+            tab: 'Payments & Local Currencies',
+            icon: CreditCard,
+            customerMsg: 'Can I pay with local bank transfer or mobile money? I don’t have a USD card.',
+            aiReply: 'Yes! We support local bank transfer, mobile money, and credit cards across 60+ countries with automatic currency conversion.',
+            hasPill: true,
+            pillTitle: 'Instant Mobile Checkout',
+            pillPrice: 'Local Currency Supported',
+            deliveryNote: 'Secure checkout via Paystack, Stripe & PayPal',
+        },
+        {
+            tab: '24/7 AI Sales Reps',
+            icon: Bot,
+            customerMsg: 'I’m an author with 3 ebooks. Can BotifyAI sell them directly to my Instagram followers when I’m asleep?',
+            aiReply: '100%! Your custom AI sales agent greets your followers in Instagram DMs, answers specific questions about your books, collects payment, and sends download tokens 24/7.',
+            hasPill: true,
+            pillTitle: 'Author Starter Bundle (3 Ebooks)',
+            pillPrice: '$29',
+            deliveryNote: 'Autonomous in-chat checkout & token delivery',
+        },
+    ];
+
+    const current = scenarios[scenario];
+
+    return (
+        <div className="mt-14 max-w-5xl mx-auto rounded-3xl border border-white/15 bg-neutral-900/90 shadow-2xl backdrop-blur-xl p-4 sm:p-6 text-left">
+            {/* Simulator Tab Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4 mb-5">
+                <div className="flex items-center gap-2">
+                    <span className="flex h-3 w-3 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-xs font-semibold text-white uppercase tracking-wider">Live Conversational Commerce Simulator</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-neutral-800/80 p-1 rounded-xl">
+                    {scenarios.map((sc, i) => {
+                        const Icon = sc.icon;
+                        return (
+                            <button
+                                key={i}
+                                onClick={() => setScenario(i)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                                    scenario === i
+                                        ? 'bg-brand-500 text-white shadow-sm font-semibold'
+                                        : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                                }`}
+                            >
+                                <Icon className="h-3.5 w-3.5" />
+                                <span>{sc.tab}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Split Screen Simulator */}
+            <div className="grid md:grid-cols-2 gap-5 items-stretch">
+                {/* Left Side: Creator Product Card */}
+                <div className="rounded-2xl border border-white/10 bg-neutral-950/80 p-5 flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/20 text-brand-400 text-xs font-semibold px-2.5 py-0.5 border border-brand-500/30">
+                                <Sparkles className="h-3 w-3" />
+                                Verified Creator Storefront
+                            </span>
+                            <span className="text-xs text-neutral-400">/store/marcus-vance</span>
+                        </div>
+                        <h4 className="text-base sm:text-lg font-bold text-white mb-1.5">
+                            Full-Stack AI Creator Masterclass & Template Vault
+                        </h4>
+                        <p className="text-xs text-neutral-400 leading-relaxed mb-4">
+                            Complete video course, downloadable prompt library, and tokenized automation blueprints for digital creators.
+                        </p>
+
+                        <div className="space-y-2 mb-4">
+                            <div className="flex items-center gap-2 text-xs text-neutral-300">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                                <span>12 HD Video Modules (Botify Academy)</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-neutral-300">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                                <span>Encrypted Single-Use Download Tokens</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-neutral-300">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                                <span>Affiliate Enabled: 30% Commission Paid Instantly</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+                        <div>
+                            <span className="text-2xl font-bold text-white">$49</span>
+                            <span className="text-xs text-neutral-500 line-through ml-2">$120</span>
+                            <div className="text-[10px] text-neutral-400">One-time payment • Lifetime access</div>
+                        </div>
+                        <Link
+                            href="/creators"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-semibold text-white shadow hover:opacity-90 transition"
+                        >
+                            <ShoppingBag className="h-3.5 w-3.5" />
+                            Explore Demo Store
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Right Side: Simulated WhatsApp / Social DM Conversation */}
+                <div className="rounded-2xl border border-white/10 bg-[#0B141A] p-4 flex flex-col justify-between">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+                        <div className="flex items-center gap-2.5">
+                            <div className="h-7 w-7 rounded-full bg-[#25D366] text-white flex items-center justify-center font-bold text-xs">
+                                WA
+                            </div>
+                            <div>
+                                <div className="text-xs font-semibold text-white flex items-center gap-1.5">
+                                    <span>BotifyAI Autonomous Sales Agent</span>
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
+                                </div>
+                                <div className="text-[10px] text-neutral-400">Replying in real time via WhatsApp API</div>
+                            </div>
+                        </div>
+                        <span className="text-[10px] text-emerald-400 font-medium bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-800/40">
+                            24/7 Active
+                        </span>
+                    </div>
+
+                    {/* Chat Bubble Flow */}
+                    <div className="space-y-3 flex-1 flex flex-col justify-center">
+                        {/* Customer message */}
+                        <div className="flex justify-end">
+                            <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[#005C4B] text-white text-xs p-3 shadow">
+                                <p>{current.customerMsg}</p>
+                                <span className="text-[9px] text-white/60 block text-right mt-1">11:42 PM ✓✓</span>
+                            </div>
+                        </div>
+
+                        {/* AI agent response */}
+                        <div className="flex justify-start">
+                            <div className="max-w-[90%] rounded-2xl rounded-tl-sm bg-[#202C33] text-neutral-200 text-xs p-3 shadow border border-white/5 space-y-2">
+                                <p className="leading-relaxed">{current.aiReply}</p>
+
+                                {current.hasPill && (
+                                    <div className="mt-2 rounded-xl border border-brand-500/30 bg-brand-950/50 p-2.5">
+                                        <div className="flex items-center justify-between font-semibold text-white">
+                                            <span>{current.pillTitle}</span>
+                                            <span className="text-brand-400">{current.pillPrice}</span>
+                                        </div>
+                                        <div className="text-[10px] text-neutral-400 mt-1 flex items-center gap-1">
+                                            <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                                            {current.deliveryNote}
+                                        </div>
+                                        <div className="mt-2 flex items-center justify-between gap-2">
+                                            <span className="inline-block w-full text-center rounded-lg bg-[#25D366] text-neutral-950 py-1.5 text-xs font-bold shadow-sm">
+                                                Complete Order in WhatsApp →
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                                <span className="text-[9px] text-neutral-400 block text-right">11:42 PM</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-white/10 text-center">
+                        <span className="text-[11px] text-neutral-400">
+                            💡 Click the tabs above to test different automated sales flows
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 
 function HeroSection({ landing, canLogin, canRegister, auth }) {
@@ -224,11 +420,12 @@ function HeroSection({ landing, canLogin, canRegister, auth }) {
                                     style={{ background: 'rgb(var(--brand-500))' }}
                                 >
                                     {s('hero_cta_primary')}
+                                    <ArrowRight className="h-4 w-4" />
                                 </Link>
                             )}
                             {s('hero_cta_secondary') && (
                                 <Link
-                                    href={route('pricing')}
+                                    href="/creators"
                                     className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm px-7 py-3.5 text-base font-semibold text-white hover:bg-white/15 transition-all duration-200"
                                 >
                                     {s('hero_cta_secondary')}
@@ -258,6 +455,117 @@ function HeroSection({ landing, canLogin, canRegister, auth }) {
                         </div>
                     );
                 })()}
+
+                {/* Interactive Split-Screen Simulator */}
+                <SimulatorWidget />
+            </div>
+        </section>
+    );
+}
+
+// ─── Engine Pillars Section (The 4 Core Pillars) ──────────────────────────────
+
+function EnginePillarsSection() {
+    const pillars = [
+        {
+            icon: Download,
+            tag: 'DIGITAL VAULT',
+            title: 'Sell Anything Digital with Tokenized Delivery',
+            desc: 'Host ebooks, design templates, software licenses, audiobooks, and presets. Every buyer receives an encrypted, single-use download token via WhatsApp and email that prevents unauthorized link sharing.',
+            link: '/sell-digital-products',
+            cta: 'Explore Digital Vaults →',
+            color: 'from-brand-500/15 to-transparent',
+            borderColor: 'border-brand-500/30',
+            badgeBg: 'bg-brand-500/10 text-brand-500 dark:text-brand-400',
+        },
+        {
+            icon: Video,
+            tag: 'BOTIFY ACADEMY',
+            title: 'Host Video Courses Without Student Caps',
+            desc: 'Build distraction-free video curriculums with modules, lessons, downloadable resources, and progress tracking. Deliver credentials automatically without paying $150+/mo in platform tax.',
+            link: '/courses',
+            cta: 'Explore Course Engine →',
+            color: 'from-blue-500/15 to-transparent',
+            borderColor: 'border-blue-500/30',
+            badgeBg: 'bg-blue-500/10 text-blue-500 dark:text-blue-400',
+        },
+        {
+            icon: Bot,
+            tag: '24/7 AI SALES AGENT',
+            title: 'Autonomous In-Chat Sales Specialists',
+            desc: 'RAG-powered conversational agents trained strictly on your syllabus, files, and FAQs. They answer prospect questions on WhatsApp & Instagram, handle price objections, and close sales 24/7 in 60+ languages.',
+            link: '/ai-sales-agent',
+            cta: 'Explore AI Agents →',
+            color: 'from-purple-500/15 to-transparent',
+            borderColor: 'border-purple-500/30',
+            badgeBg: 'bg-purple-500/10 text-purple-500 dark:text-purple-400',
+        },
+        {
+            icon: Users,
+            tag: 'AFFILIATE NETWORK',
+            title: 'Mobilize an Army of 24/7 Promoters',
+            desc: 'Scale your reach organically. Configure custom commission splits (e.g. 20%, 30%, 50%), generate tracked referral links, and let BotifyAI calculate and distribute affiliate earnings automatically.',
+            link: '/affiliates',
+            cta: 'Explore Affiliate Program →',
+            color: 'from-emerald-500/15 to-transparent',
+            borderColor: 'border-emerald-500/30',
+            badgeBg: 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400',
+        },
+    ];
+
+    return (
+        <section className="py-20 sm:py-28 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/15 text-brand-600 dark:text-brand-400 text-xs font-bold px-3 py-1 border border-brand-500/30">
+                        <Sparkles className="h-3 w-3" />
+                        The 4 Creator Commerce Engines
+                    </span>
+                    <h2 className="mt-4 text-3xl sm:text-4xl font-bold tracking-tight text-neutral-900 dark:text-white">
+                        Everything You Need to Create, Sell, Automate & Grow
+                    </h2>
+                    <p className="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                        Say goodbye to duct-taping Gumroad, Teachable, ManyChat, and Zapier together. BotifyAI unifies the complete creator monetization lifecycle in one native stack.
+                    </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                    {pillars.map((pillar, i) => {
+                        const Icon = pillar.icon;
+                        return (
+                            <div
+                                key={i}
+                                className={`rounded-3xl border ${pillar.borderColor} bg-neutral-50 dark:bg-neutral-900/60 p-8 flex flex-col justify-between hover:shadow-xl transition-all duration-300 relative overflow-hidden group`}
+                            >
+                                <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl ${pillar.color} rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500`} />
+                                <div>
+                                    <div className="flex items-center justify-between mb-5">
+                                        <div className="h-12 w-12 rounded-2xl bg-white dark:bg-neutral-800 flex items-center justify-center shadow-sm border border-neutral-200 dark:border-neutral-700">
+                                            <Icon className="h-6 w-6 text-neutral-900 dark:text-white" />
+                                        </div>
+                                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${pillar.badgeBg} uppercase tracking-wider`}>
+                                            {pillar.tag}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">
+                                        {pillar.title}
+                                    </h3>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed mb-6">
+                                        {pillar.desc}
+                                    </p>
+                                </div>
+                                <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                                    <Link
+                                        href={pillar.link}
+                                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:gap-2.5 transition-all"
+                                    >
+                                        {pillar.cta}
+                                    </Link>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </section>
     );
@@ -1054,6 +1362,7 @@ export default function Welcome({ auth, canLogin, canRegister, landing = {}, pla
             <TrustedBySection landing={landing} />
             <ChannelsSection landing={landing} />
             <ProblemSolutionSection landing={landing} />
+            <EnginePillarsSection />
             <FeaturesSection landing={landing} />
             <HowItWorksSection landing={landing} canRegister={canRegister} />
             <IntegrationsStripSection landing={landing} />

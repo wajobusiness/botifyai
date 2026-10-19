@@ -42,17 +42,27 @@ function XIcon({ className }) {
 export default function LandingLayout({ children }) {
     const { t } = useTranslation();
 
-    const NAV_LINKS = [
-        { label: t('nav.features', { defaultValue: 'Features' }),     href: '/#features' },
-        { label: t('nav.use_cases', { defaultValue: 'Use Cases' }),    href: '/use-cases' },
-        { label: t('nav.integrations', { defaultValue: 'Integrations' }), href: '/integrations' },
-        { label: t('nav.academy', { defaultValue: 'Academy' }), href: '/academy' },
-        { label: t('nav.blog', { defaultValue: 'Blog' }), href: '/blog' },
-        { label: t('nav.affiliates', { defaultValue: 'Affiliates' }), href: '/affiliates' },
-        { label: t('nav.pricing', { defaultValue: 'Pricing' }),      href: '/pricing' },
-        { label: t('nav.faq', { defaultValue: 'FAQ' }),          href: '/faq' },
-        { label: t('nav.contact', { defaultValue: 'Contact' }),      href: '/contact' },
+    const CREATOR_LINKS = [
+        { label: 'For Creators', desc: 'Monetize your audience & knowledge', href: '/creators' },
+        { label: 'Sell Digital Products', desc: 'Ebooks, templates & file vaults', href: '/sell-digital-products' },
+        { label: 'Online Courses', desc: 'Video curriculum & Academy', href: '/courses' },
+        { label: 'Affiliate Network', desc: 'Recruit partners & track sales', href: '/affiliates' },
     ];
+
+    const COMMERCE_LINKS = [
+        { label: '24/7 AI Sales Agent', desc: 'Autonomous sales on WhatsApp & IG', href: '/ai-sales-agent' },
+        { label: 'WhatsApp Commerce', desc: 'In-chat checkout & broadcast', href: '/#channels' },
+        { label: 'Visual Automation', desc: 'No-code funnels & workflows', href: '/#features' },
+    ];
+
+    const RESOURCE_LINKS = [
+        { label: 'Platform Architecture', desc: 'Engineering & system design', href: '/architecture' },
+        { label: 'Integrations', desc: 'Connect to 100+ platforms', href: '/integrations' },
+        { label: 'Botify Academy', desc: 'Tutorials & creator masterclasses', href: '/academy' },
+        { label: 'Blog', desc: 'Growth strategies & guides', href: '/blog' },
+        { label: 'FAQ', desc: 'Answers to common questions', href: '/faq' },
+    ];
+
     const page = usePage();
     const auth = page.props.auth;
     const { theme, setTheme } = useTheme();
@@ -66,8 +76,6 @@ export default function LandingLayout({ children }) {
         router.put(route('currency.update'), { currency: code }, { preserveScroll: true });
     };
     const { appName, logoUrl } = useBranding();
-    // No uploaded logo → fall back to the brand name as a wordmark rather than a
-    // vendor logo file, which a white-label install has no way to replace.
     const brandMark = (className) =>
         logoUrl ? (
             <img src={logoUrl} alt={appName} className={className} />
@@ -83,7 +91,7 @@ export default function LandingLayout({ children }) {
         : route('login');
     const signinIsExternal = landing['landing.signin_link_type'] === 'static' && landing['landing.signin_link_url'];
 
-    const getStartedLabel = landing['landing.getstarted_label'] || 'Get Started';
+    const getStartedLabel = landing['landing.getstarted_label'] || 'Get Started Free';
     const getStartedHref = landing['landing.getstarted_link_type'] === 'static' && landing['landing.getstarted_link_url']
         ? landing['landing.getstarted_link_url']
         : route('register');
@@ -108,16 +116,101 @@ export default function LandingLayout({ children }) {
                     </Link>
 
                     {/* Desktop nav links */}
-                    <nav className="hidden md:flex items-center gap-1 flex-1">
-                        {NAV_LINKS.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:text-white hover:bg-white/10 transition duration-150 font-medium"
-                            >
-                                {link.label}
-                            </Link>
-                        ))}
+                    <nav className="hidden lg:flex items-center gap-1.5 flex-1">
+                        {/* Creator Economy Dropdown */}
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <button
+                                    type="button"
+                                    className="inline-flex items-center gap-1 rounded-soft px-3 py-1.5 text-sm text-white/80 hover:text-white hover:bg-white/10 transition duration-150 font-medium"
+                                >
+                                    <span>Creator Economy</span>
+                                    <svg className="h-4 w-4 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                            </Dropdown.Trigger>
+                            <Dropdown.Content align="left" width="64" contentClasses="py-2 bg-neutral-900 border border-white/10 shadow-xl rounded-xl">
+                                {CREATOR_LINKS.map((item) => (
+                                    <Dropdown.Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className="block px-4 py-2.5 hover:bg-white/10 transition"
+                                    >
+                                        <div className="text-sm font-semibold text-white">{item.label}</div>
+                                        <div className="text-xs text-neutral-400">{item.desc}</div>
+                                    </Dropdown.Link>
+                                ))}
+                            </Dropdown.Content>
+                        </Dropdown>
+
+                        {/* AI Commerce Dropdown */}
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <button
+                                    type="button"
+                                    className="inline-flex items-center gap-1 rounded-soft px-3 py-1.5 text-sm text-white/80 hover:text-white hover:bg-white/10 transition duration-150 font-medium"
+                                >
+                                    <span>AI Commerce</span>
+                                    <svg className="h-4 w-4 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                            </Dropdown.Trigger>
+                            <Dropdown.Content align="left" width="64" contentClasses="py-2 bg-neutral-900 border border-white/10 shadow-xl rounded-xl">
+                                {COMMERCE_LINKS.map((item) => (
+                                    <Dropdown.Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className="block px-4 py-2.5 hover:bg-white/10 transition"
+                                    >
+                                        <div className="text-sm font-semibold text-white">{item.label}</div>
+                                        <div className="text-xs text-neutral-400">{item.desc}</div>
+                                    </Dropdown.Link>
+                                ))}
+                            </Dropdown.Content>
+                        </Dropdown>
+
+                        {/* Direct Links */}
+                        <Link
+                            href="/use-cases"
+                            className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:text-white hover:bg-white/10 transition duration-150 font-medium"
+                        >
+                            Use Cases
+                        </Link>
+                        <Link
+                            href="/pricing"
+                            className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:text-white hover:bg-white/10 transition duration-150 font-medium"
+                        >
+                            Pricing
+                        </Link>
+
+                        {/* Resources Dropdown */}
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <button
+                                    type="button"
+                                    className="inline-flex items-center gap-1 rounded-soft px-3 py-1.5 text-sm text-white/80 hover:text-white hover:bg-white/10 transition duration-150 font-medium"
+                                >
+                                    <span>Resources</span>
+                                    <svg className="h-4 w-4 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                            </Dropdown.Trigger>
+                            <Dropdown.Content align="left" width="64" contentClasses="py-2 bg-neutral-900 border border-white/10 shadow-xl rounded-xl">
+                                {RESOURCE_LINKS.map((item) => (
+                                    <Dropdown.Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className="block px-4 py-2.5 hover:bg-white/10 transition"
+                                    >
+                                        <div className="text-sm font-semibold text-white">{item.label}</div>
+                                        <div className="text-xs text-neutral-400">{item.desc}</div>
+                                    </Dropdown.Link>
+                                ))}
+                            </Dropdown.Content>
+                        </Dropdown>
                     </nav>
 
                     {/* Right side */}
@@ -264,35 +357,73 @@ export default function LandingLayout({ children }) {
 
                 {/* Mobile menu */}
                 {mobileOpen && (
-                    <div className="sm:hidden border-t border-white/10 bg-brand-950/95 backdrop-blur-md px-4 py-4 space-y-1">
-                        {NAV_LINKS.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                onClick={() => setMobileOpen(false)}
-                                className="block rounded-soft px-3 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition"
-                            >
-                                {link.label}
-                            </Link>
-                        ))}
-                        <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 space-y-1">
+                    <div className="lg:hidden border-t border-white/10 bg-brand-950/95 backdrop-blur-md px-4 py-4 space-y-4 max-h-[85vh] overflow-y-auto">
+                        <div>
+                            <div className="text-xs font-semibold text-brand-400 uppercase tracking-wider px-3 mb-1">Creator Economy</div>
+                            <div className="space-y-0.5">
+                                {CREATOR_LINKS.map((link) => (
+                                    <Link
+                                        key={link.href}
+                                        href={link.href}
+                                        onClick={() => setMobileOpen(false)}
+                                        className="block rounded-soft px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition"
+                                    >
+                                        <div>{link.label}</div>
+                                        <div className="text-xs text-neutral-400">{link.desc}</div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div className="text-xs font-semibold text-blue-400 uppercase tracking-wider px-3 mb-1">AI & Commerce</div>
+                            <div className="space-y-0.5">
+                                {COMMERCE_LINKS.map((link) => (
+                                    <Link
+                                        key={link.href}
+                                        href={link.href}
+                                        onClick={() => setMobileOpen(false)}
+                                        className="block rounded-soft px-3 py-2 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition"
+                                    >
+                                        <div>{link.label}</div>
+                                        <div className="text-xs text-neutral-400">{link.desc}</div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-1">Platform & Resources</div>
+                            <div className="grid grid-cols-2 gap-1 px-1">
+                                <Link href="/use-cases" onClick={() => setMobileOpen(false)} className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:bg-white/10">Use Cases</Link>
+                                <Link href="/pricing" onClick={() => setMobileOpen(false)} className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:bg-white/10">Pricing</Link>
+                                <Link href="/architecture" onClick={() => setMobileOpen(false)} className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:bg-white/10">Architecture</Link>
+                                <Link href="/integrations" onClick={() => setMobileOpen(false)} className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:bg-white/10">Integrations</Link>
+                                <Link href="/academy" onClick={() => setMobileOpen(false)} className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:bg-white/10">Academy</Link>
+                                <Link href="/blog" onClick={() => setMobileOpen(false)} className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:bg-white/10">Blog</Link>
+                                <Link href="/faq" onClick={() => setMobileOpen(false)} className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:bg-white/10">FAQ</Link>
+                                <Link href="/contact" onClick={() => setMobileOpen(false)} className="rounded-soft px-3 py-1.5 text-sm text-white/80 hover:bg-white/10">Contact</Link>
+                            </div>
+                        </div>
+
+                        <div className="pt-3 border-t border-white/10 space-y-2">
                             {auth?.user ? (
                                 <>
-                                    <Link href={route('client.dashboard')} onClick={() => setMobileOpen(false)} className="block rounded-soft px-3 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition">
+                                    <Link href={route('client.dashboard')} onClick={() => setMobileOpen(false)} className="block rounded-soft px-3 py-2.5 text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition">
                                         {t('nav.dashboard')}
                                     </Link>
-                                    <Link href={route('logout')} method="post" as="button" className="block w-full text-left rounded-soft px-3 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition">
+                                    <Link href={route('logout')} method="post" as="button" className="block w-full text-left rounded-soft px-3 py-2.5 text-sm font-medium text-neutral-300 hover:bg-neutral-800 transition">
                                         {t('nav.sign_out')}
                                     </Link>
                                 </>
                             ) : (
                                 <>
                                     {signinIsExternal ? (
-                                        <a href={signinHref} onClick={() => setMobileOpen(false)} className="block rounded-soft px-3 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition">
+                                        <a href={signinHref} onClick={() => setMobileOpen(false)} className="block rounded-soft px-3 py-2 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition">
                                             {signinLabel}
                                         </a>
                                     ) : (
-                                        <Link href={signinHref} onClick={() => setMobileOpen(false)} className="block rounded-soft px-3 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition">
+                                        <Link href={signinHref} onClick={() => setMobileOpen(false)} className="block rounded-soft px-3 py-2 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition">
                                             {signinLabel}
                                         </Link>
                                     )}
@@ -308,7 +439,7 @@ export default function LandingLayout({ children }) {
                                 </>
                             )}
                             {currencies.length > 1 && (
-                                <div className="pt-3 border-t border-white/10 flex items-center justify-between text-sm px-2 text-white/80">
+                                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-sm px-2 text-white/80">
                                     <span className="flex items-center gap-1.5"><Coins className="h-4 w-4" /> {t('topbar.currency', 'Currency')}</span>
                                     <select
                                         value={displayCurrency}
@@ -334,15 +465,19 @@ export default function LandingLayout({ children }) {
             {/* ── Footer ── */}
             <footer style={{ background: 'rgb(var(--brand-950))', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-12">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
                         {/* Brand */}
-                        <div className="col-span-2 sm:col-span-1">
+                        <div className="col-span-2">
                             <Link href={route('home')} className="flex items-center mb-4">
                                 {brandMark('h-9 w-auto max-w-[180px] object-contain')}
                             </Link>
-                            <p className="text-sm text-neutral-400 leading-relaxed max-w-xs">
-                                {t('landing.footer_tagline')}
+                            <p className="text-sm text-neutral-400 leading-relaxed max-w-sm mb-4">
+                                The AI-powered platform where creators, educators, and businesses create, sell, market, and automate their digital products and courses.
                             </p>
+                            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-300">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                                Official Meta WhatsApp & Instagram API Partner
+                            </div>
                             {/* Social icons */}
                             <div className="flex items-center gap-3 mt-5">
                                 {[
@@ -359,16 +494,16 @@ export default function LandingLayout({ children }) {
                             </div>
                         </div>
 
-                        {/* Company */}
+                        {/* Creator Commerce */}
                         <div>
-                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4">{t('landing_page_admin.footer_company', { defaultValue: 'Company' })}</h4>
+                            <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-4">Creator Commerce</h4>
                             <ul className="space-y-2.5">
                                 {[
-                                    { label: t('landing_page_admin.footer_about', { defaultValue: 'About' }), href: '/about' },
-                                    { label: t('nav.architecture', { defaultValue: 'Platform Architecture' }), href: '/architecture' },
-                                    { label: t('nav.integrations', { defaultValue: 'Integrations' }), href: '/integrations' },
-                                    { label: t('nav.use_cases', { defaultValue: 'Use Cases' }), href: '/use-cases' },
-                                    { label: t('nav.contact'), href: '/contact' },
+                                    { label: 'For Creators', href: '/creators' },
+                                    { label: 'Sell Digital Products', href: '/sell-digital-products' },
+                                    { label: 'Online Courses', href: '/courses' },
+                                    { label: 'Affiliate Network', href: '/affiliates' },
+                                    { label: 'Creator Pricing', href: '/pricing' },
                                 ].map((l) => (
                                     <li key={l.href}>
                                         <Link href={l.href} className="text-sm text-neutral-400 hover:text-white transition">{l.label}</Link>
@@ -377,15 +512,36 @@ export default function LandingLayout({ children }) {
                             </ul>
                         </div>
 
-                        {/* Legal */}
+                        {/* AI & Automation */}
                         <div>
-                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4">{t('landing_page_admin.footer_legal', { defaultValue: 'Legal' })}</h4>
+                            <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-4">AI & Automation</h4>
                             <ul className="space-y-2.5">
                                 {[
-                                    { label: t('landing_page_admin.footer_privacy', { defaultValue: 'Privacy Policy' }), href: '/p/privacy' },
-                                    { label: t('landing_page_admin.footer_terms', { defaultValue: 'Terms of Service' }), href: '/p/terms' },
-                                    { label: t('landing_page_admin.footer_cookies', { defaultValue: 'Cookie Policy' }), href: '/p/cookies' },
-                                    { label: t('landing_page_admin.footer_gdpr', { defaultValue: 'GDPR' }), href: '/p/gdpr' },
+                                    { label: '24/7 AI Sales Agent', href: '/ai-sales-agent' },
+                                    { label: 'WhatsApp Commerce', href: '/#channels' },
+                                    { label: 'Visual Automations', href: '/#features' },
+                                    { label: 'Platform Architecture', href: '/architecture' },
+                                    { label: 'Integrations', href: '/integrations' },
+                                ].map((l) => (
+                                    <li key={l.href}>
+                                        <Link href={l.href} className="text-sm text-neutral-400 hover:text-white transition">{l.label}</Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Resources & Legal */}
+                        <div>
+                            <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-4">Resources & Legal</h4>
+                            <ul className="space-y-2.5">
+                                {[
+                                    { label: 'Botify Academy', href: '/academy' },
+                                    { label: 'Blog', href: '/blog' },
+                                    { label: 'Use Cases', href: '/use-cases' },
+                                    { label: 'About Us', href: '/about' },
+                                    { label: 'Contact Team', href: '/contact' },
+                                    { label: 'Privacy Policy', href: '/p/privacy' },
+                                    { label: 'Terms of Service', href: '/p/terms' },
                                 ].map((l) => (
                                     <li key={l.href}>
                                         <Link href={l.href} className="text-sm text-neutral-400 hover:text-white transition">{l.label}</Link>
@@ -397,29 +553,9 @@ export default function LandingLayout({ children }) {
                                         onClick={() => window.dispatchEvent(new Event('open-cookie-settings'))}
                                         className="text-sm text-neutral-400 hover:text-white transition text-left"
                                     >
-                                        {t('cookie_consent.footer_manage', 'Cookie Settings')}
+                                        Cookie Settings
                                     </button>
                                 </li>
-                            </ul>
-                        </div>
-
-                        {/* Product */}
-                        <div>
-                            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4">{t('landing_page_admin.footer_product', { defaultValue: 'Product' })}</h4>
-                            <ul className="space-y-2.5">
-                                {[
-                                    { label: t('nav.features', { defaultValue: 'Features' }), href: '/#features' },
-                                    { label: t('nav.integrations', { defaultValue: 'Integrations' }), href: '/integrations' },
-                                    { label: t('nav.academy', { defaultValue: 'Botify Academy' }), href: '/academy' },
-                                    { label: t('nav.blog', { defaultValue: 'Botify Blog' }), href: '/blog' },
-                                    { label: t('nav.affiliates', { defaultValue: 'Affiliate Network' }), href: '/affiliates' },
-                                    { label: t('nav.pricing', { defaultValue: 'Pricing' }), href: '/pricing' },
-                                    { label: t('nav.faq', { defaultValue: 'FAQ' }), href: '/faq' },
-                                ].map((l) => (
-                                    <li key={l.href}>
-                                        <Link href={l.href} className="text-sm text-neutral-400 hover:text-white transition">{l.label}</Link>
-                                    </li>
-                                ))}
                             </ul>
                         </div>
                     </div>
