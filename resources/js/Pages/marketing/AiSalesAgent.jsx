@@ -97,12 +97,37 @@ export default function AiSalesAgentLanding({ canRegister = true, landing = {} }
         }
     ];
 
+    const jsonLd = [
+        {
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'BotifyAI Autonomous AI Sales Agent',
+            applicationCategory: 'BusinessApplication',
+            operatingSystem: 'Web, WhatsApp, Instagram',
+            description: 'Turn your social channels into a 24/7 revenue engine. Deploy grounded RAG AI sales agents that handle objections and drop checkout links directly inside WhatsApp & Instagram.',
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: FAQS.map((faq) => ({
+                '@type': 'Question',
+                name: faq.q,
+                acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: faq.a,
+                },
+            })),
+        },
+    ];
+
     return (
         <LandingLayout>
             <SeoHead
                 title="Autonomous 24/7 AI Sales Agent for WhatsApp & Instagram | BotifyAI"
                 description="Turn your social channels into a 24/7 revenue engine. Deploy grounded RAG AI sales agents that handle objections and drop checkout links directly inside WhatsApp & Instagram."
                 keywords="AI sales agent, WhatsApp AI bot, Instagram DM automation, conversational commerce, automated sales rep, ManyChat alternative, RAG chatbot for sales"
+                jsonLd={jsonLd}
             />
 
             {/* HERO */}

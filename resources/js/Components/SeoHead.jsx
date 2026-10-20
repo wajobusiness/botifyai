@@ -16,7 +16,7 @@ import { useBranding } from '@/hooks/useBranding';
  *  - jsonLd       object|array  one or more JSON-LD graphs (optional)
  */
 export default function SeoHead({ title, description, keywords, image, canonical, jsonLd }) {
-    const { appName, faviconUrl } = useBranding();
+    const { appName, faviconUrl, logoUrl } = useBranding();
     const fullTitle = title || appName;
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const rawUrl =
@@ -24,10 +24,10 @@ export default function SeoHead({ title, description, keywords, image, canonical
         (typeof window !== 'undefined' ? window.location.href.split(/[?#]/)[0] : undefined);
     const url = rawUrl && rawUrl.length > 8 && rawUrl.endsWith('/') ? rawUrl.replace(/\/+$/, '') : rawUrl;
 
-    // Fall back to the brand icon when a page doesn't supply its own og:image.
+    // Fall back to the brand logo or icon when a page doesn't supply its own og:image.
     // A page-provided `image` is assumed wide (2:1), so it gets a large card;
     // the square brand fallback uses the standard summary card.
-    const ogImage = image || faviconUrl || `${origin}/whatsmine-icon-512.png`;
+    const ogImage = image || logoUrl || faviconUrl || (origin ? `${origin}/apple-touch-icon.png` : undefined);
     const twitterCard = image ? 'summary_large_image' : 'summary';
 
     const graphs = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];

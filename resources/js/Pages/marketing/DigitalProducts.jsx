@@ -98,12 +98,34 @@ export default function DigitalProductsLanding({ canRegister = true, landing = {
         }
     ];
 
+    const jsonLd = [
+        {
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: 'Sell Digital Products with Tokenized Anti-Piracy Vaults | BotifyAI',
+            description: 'The secure digital product checkout engine. Sell ebooks, templates, presets, software, and audio with instant encrypted WhatsApp fulfillment and 0% platform fees.',
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: FAQS.map((faq) => ({
+                '@type': 'Question',
+                name: faq.q,
+                acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: faq.a,
+                },
+            })),
+        },
+    ];
+
     return (
         <LandingLayout>
             <SeoHead
                 title="Sell Digital Products with Tokenized Anti-Piracy Vaults | BotifyAI"
                 description="The secure digital product checkout engine. Sell ebooks, templates, presets, software, and audio with instant encrypted WhatsApp fulfillment and 0% platform fees."
                 keywords="sell digital products, digital downloads, secure ebook sales, sell notion templates, anti-piracy downloads, sell presets, WhatsApp checkout, Gumroad alternative"
+                jsonLd={jsonLd}
             />
 
             {/* HERO */}

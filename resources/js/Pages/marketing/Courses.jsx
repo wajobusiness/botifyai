@@ -95,12 +95,39 @@ export default function CoursesLanding({ canRegister = true, landing = {} }) {
         }
     ];
 
+    const jsonLd = [
+        {
+            '@context': 'https://schema.org',
+            '@type': 'Course',
+            name: 'Botify Academy Course Platform',
+            description: 'The creator-first course platform. Host video curriculums, track student progress, and automate enrollment onboarding via WhatsApp with zero student seat fees.',
+            provider: {
+                '@type': 'Organization',
+                name: 'BotifyAI',
+                sameAs: 'https://botifyai.cloud',
+            },
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: FAQS.map((faq) => ({
+                '@type': 'Question',
+                name: faq.q,
+                acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: faq.a,
+                },
+            })),
+        },
+    ];
+
     return (
         <LandingLayout>
             <SeoHead
                 title="Launch Video Courses Without Student Caps | Botify Academy"
                 description="The creator-first course platform. Host video curriculums, track student progress, and automate enrollment onboarding via WhatsApp with zero student seat fees."
                 keywords="online course platform, host video courses, Kajabi alternative, Teachable alternative, course creation software, WhatsApp student onboarding, student progress tracking"
+                jsonLd={jsonLd}
             />
 
             {/* HERO */}

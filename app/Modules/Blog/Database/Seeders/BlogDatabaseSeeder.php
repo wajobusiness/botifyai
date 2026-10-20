@@ -6,6 +6,8 @@ use App\Models\AdminUser;
 use App\Modules\Blog\Database\Seeders\Data\BlogArticlesBatch1;
 use App\Modules\Blog\Database\Seeders\Data\BlogArticlesBatch2;
 use App\Modules\Blog\Database\Seeders\Data\BlogArticlesBatch3;
+use App\Modules\Blog\Database\Seeders\Data\MasterAuthorityBatch1;
+use App\Modules\Blog\Database\Seeders\Data\MasterAuthorityBatch2;
 use App\Modules\Blog\Models\BlogAuthor;
 use App\Modules\Blog\Models\BlogCategory;
 use App\Modules\Blog\Models\BlogPost;
@@ -108,8 +110,10 @@ class BlogDatabaseSeeder extends Seeder
             );
         }
 
-        // 4. Combine all 3 batches of high-converting SEO masterclasses (36 total)
+        // 4. Combine master authority pillar articles with existing catalog
         $articles = array_merge(
+            MasterAuthorityBatch1::getArticles($author->id),
+            MasterAuthorityBatch2::getArticles($author->id),
             BlogArticlesBatch1::getArticles($author->id),
             BlogArticlesBatch2::getArticles($author->id),
             BlogArticlesBatch3::getArticles($author->id)

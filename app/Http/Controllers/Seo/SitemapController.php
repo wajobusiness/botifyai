@@ -66,9 +66,15 @@ class SitemapController extends Controller
 
             if ($landingEnabled) {
                 $entries[] = ['loc' => url('/'), 'priority' => '1.0', 'changefreq' => 'daily', 'lastmod' => $now];
+                $entries[] = ['loc' => url('/creators'), 'priority' => '0.9', 'changefreq' => 'weekly', 'lastmod' => $now];
+                $entries[] = ['loc' => url('/sell-digital-products'), 'priority' => '0.9', 'changefreq' => 'weekly', 'lastmod' => $now];
+                $entries[] = ['loc' => url('/courses'), 'priority' => '0.9', 'changefreq' => 'weekly', 'lastmod' => $now];
+                $entries[] = ['loc' => url('/ai-sales-agent'), 'priority' => '0.9', 'changefreq' => 'weekly', 'lastmod' => $now];
                 $entries[] = ['loc' => url('/pricing'), 'priority' => '0.9', 'changefreq' => 'weekly', 'lastmod' => $now];
+                $entries[] = ['loc' => url('/affiliates'), 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $now];
                 $entries[] = ['loc' => url('/use-cases'), 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $now];
                 $entries[] = ['loc' => url('/integrations'), 'priority' => '0.8', 'changefreq' => 'weekly', 'lastmod' => $now];
+                $entries[] = ['loc' => url('/architecture'), 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => $now];
                 $entries[] = ['loc' => url('/faq'), 'priority' => '0.7', 'changefreq' => 'monthly', 'lastmod' => $now];
                 $entries[] = ['loc' => url('/about'), 'priority' => '0.6', 'changefreq' => 'monthly', 'lastmod' => $now];
                 $entries[] = ['loc' => url('/contact'), 'priority' => '0.5', 'changefreq' => 'monthly', 'lastmod' => $now];
