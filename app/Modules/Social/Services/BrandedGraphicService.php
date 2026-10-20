@@ -687,11 +687,16 @@ class BrandedGraphicService
             $divW = (int) ($cardBoxW * 0.4);
             $divX2 = $contentX + $divW;
             $starX = $divX2 + 18;
+            $starY = $divY + 4;
 
             // Author Box
             $authorBoxY = $divY + ($isLandscape ? 18 : 28);
             $authorBoxH = $isLandscape ? 50 : 64;
             $authorBoxW = min($cardBoxW, $isLandscape ? 400 : 500);
+            $authorIconCx = $contentX + 28;
+            $authorIconCy = $authorBoxY + (int) ($authorBoxH / 2);
+            $authorMonogramY = $authorIconCy + 5;
+            $authorTextX = $contentX + 54;
             $authorNameY = $authorBoxY + ($isLandscape ? 24 : 30);
             $authorTitleY = $authorBoxY + ($isLandscape ? 40 : 50);
             $authorNameSize = $isLandscape ? 14 : 17;
@@ -708,14 +713,14 @@ class BrandedGraphicService
 
   <!-- Divider & Star Glyph -->
   <line x1="{$contentX}" y1="{$divY}" x2="{$divX2}" y2="{$divY}" stroke="url(#accentGlow)" stroke-width="2"/>
-  <text x="{$starX}" y="{$divY + 4}" fill="{$accentHex}" font-size="14" text-anchor="middle">✦</text>
+  <text x="{$starX}" y="{$starY}" fill="{$accentHex}" font-size="14" text-anchor="middle">✦</text>
 
   <!-- Author Attribution Capsule -->
   <rect x="{$contentX}" y="{$authorBoxY}" width="{$authorBoxW}" height="{$authorBoxH}" rx="16" fill="rgba(255,255,255,0.035)" stroke="rgba(255,255,255,0.08)"/>
-  <circle cx="{$contentX + 28}" cy="{$authorBoxY + (int)($authorBoxH / 2)}" r="14" fill="url(#accentGlow)"/>
-  <text x="{$contentX + 28}" y="{$authorBoxY + (int)($authorBoxH / 2) + 5}" fill="#ffffff" font-family="'{$headingFont}', sans-serif" font-size="12" font-weight="900" text-anchor="middle">{$monogram}</text>
-  <text x="{$contentX + 54}" y="{$authorNameY}" fill="{$textPrimary}" class="font-heading" font-size="{$authorNameSize}" font-weight="700">{$authorName}</text>
-  <text x="{$contentX + 54}" y="{$authorTitleY}" fill="{$textMuted}" class="font-body" font-size="{$authorTitleSize}" font-weight="500">{$authorTitle}</text>
+  <circle cx="{$authorIconCx}" cy="{$authorIconCy}" r="14" fill="url(#accentGlow)"/>
+  <text x="{$authorIconCx}" y="{$authorMonogramY}" fill="#ffffff" font-family="'{$headingFont}', sans-serif" font-size="12" font-weight="900" text-anchor="middle">{$monogram}</text>
+  <text x="{$authorTextX}" y="{$authorNameY}" fill="{$textPrimary}" class="font-heading" font-size="{$authorNameSize}" font-weight="700">{$authorName}</text>
+  <text x="{$authorTextX}" y="{$authorTitleY}" fill="{$textMuted}" class="font-body" font-size="{$authorTitleSize}" font-weight="500">{$authorTitle}</text>
 SVG;
         } elseif ($format === 'data') {
             $takeawayText = (string) ($slide['takeaway'] ?? $rawBody);
@@ -747,9 +752,11 @@ SVG;
             $takeawayBoxY = $afterHeadY + ($isLandscape ? 14 : 24);
             $takeawayBoxH = $isLandscape ? 56 : ($isStory ? 100 : 78);
             $takeawayBadgeY = $takeawayBoxY + ($isLandscape ? 20 : 26);
+            $takeawayBadgeX = $contentX + 18;
             $takeawayTextY = $takeawayBoxY + ($isLandscape ? 38 : 54);
             $takeawayFontSize = $isLandscape ? 12 : 15;
             $takeawayWrap = $isLandscape ? 62 : 40;
+            $trendChipRx = (int) ($trendChipH / 2);
             [$takeawayLines] = $this->renderTspans($takeawayText, $takeawayWrap, 2, $contentX + 18, $takeawayTextY, (int) ($takeawayFontSize * 1.3));
 
             $contentSvg = <<<SVG
@@ -758,7 +765,7 @@ SVG;
   <text x="{$statNumX}" y="{$statNumY}" font-family="'{$headingFont}', sans-serif" font-size="{$statNumSize}" font-weight="900" fill="url(#accentGlow)">{$stat}</text>
 
   <!-- Trend Pill -->
-  <rect x="{$trendChipX}" y="{$trendChipY}" width="{$trendChipW}" height="{$trendChipH}" rx="{$trendChipH / 2}" fill="#10b981" fill-opacity="0.18" stroke="#10b981" stroke-opacity="0.4" stroke-width="1.2"/>
+  <rect x="{$trendChipX}" y="{$trendChipY}" width="{$trendChipW}" height="{$trendChipH}" rx="{$trendChipRx}" fill="#10b981" fill-opacity="0.18" stroke="#10b981" stroke-opacity="0.4" stroke-width="1.2"/>
   <text x="{$trendTextX}" y="{$trendTextY}" fill="#34d399" class="font-heading" font-size="{$trendFontSize}" font-weight="800" text-anchor="middle">▲ {$trend}</text>
 
   <!-- Headline -->
@@ -768,7 +775,7 @@ SVG;
 
   <!-- Analytical Takeaway Box -->
   <rect x="{$contentX}" y="{$takeawayBoxY}" width="{$cardBoxW}" height="{$takeawayBoxH}" rx="16" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.08)"/>
-  <text x="{$contentX + 18}" y="{$takeawayBadgeY}" fill="{$accentHex}" class="font-heading" font-size="11" font-weight="800" letter-spacing="1">VERIFIED BENCHMARK ↗</text>
+  <text x="{$takeawayBadgeX}" y="{$takeawayBadgeY}" fill="{$accentHex}" class="font-heading" font-size="11" font-weight="800" letter-spacing="1">VERIFIED BENCHMARK ↗</text>
   <text class="font-body" font-size="{$takeawayFontSize}" fill="{$textMuted}">
     {$takeawayLines}
   </text>
@@ -777,6 +784,9 @@ SVG;
             $promoBadgeY = $contentStartY;
             $promoBadgeW = 210;
             $promoBadgeH = 28;
+            $promoBadgeRx = (int) ($promoBadgeH / 2);
+            $promoTextX = $contentX + (int) ($promoBadgeW / 2);
+            $promoTextY = $promoBadgeY + 19;
 
             $headSize = $isLandscape ? 28 : ($isStory ? 48 : 38);
             $headLineStep = (int) ($headSize * 1.28);
@@ -801,6 +811,12 @@ SVG;
                 $curRowY = $stackStartY + ($idx * ($rowH + $rowGap));
                 $iconCy = $curRowY + (int) ($rowH / 2);
                 $iconCx = $contentX + 22;
+                $chk1x = $iconCx - 4;
+                $chk1y = $iconCy;
+                $chk2x = $iconCx - 1;
+                $chk2y = $iconCy + 3;
+                $chk3x = $iconCx + 4;
+                $chk3y = $iconCy - 3;
                 $textX = $contentX + 44;
                 $textY = $curRowY + (int) ($rowH / 2) + 5;
                 $rowFontSize = $isLandscape ? 12 : 15;
@@ -809,15 +825,15 @@ SVG;
                 $bulletSvg .= <<<SVG
   <rect x="{$contentX}" y="{$curRowY}" width="{$cardBoxW}" height="{$rowH}" rx="14" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.07)"/>
   <circle cx="{$iconCx}" cy="{$iconCy}" r="10" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-opacity="0.5"/>
-  <path d="M {$iconCx - 4} {$iconCy} L {$iconCx - 1} {$iconCy + 3} L {$iconCx + 4} {$iconCy - 3}" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round"/>
+  <path d="M {$chk1x} {$chk1y} L {$chk2x} {$chk2y} L {$chk3x} {$chk3y}" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round"/>
   <text x="{$textX}" y="{$textY}" fill="{$textPrimary}" class="font-body" font-size="{$rowFontSize}" font-weight="500">{$safePt}</text>
 SVG;
             }
 
             $contentSvg = <<<SVG
   <!-- Urgency Tag -->
-  <rect x="{$contentX}" y="{$promoBadgeY}" width="{$promoBadgeW}" height="{$promoBadgeH}" rx="{$promoBadgeH / 2}" fill="url(#accentGlow)"/>
-  <text x="{$contentX + (int)($promoBadgeW / 2)}" y="{$promoBadgeY + 19}" fill="#ffffff" class="font-heading" font-size="11" font-weight="800" letter-spacing="1" text-anchor="middle">✦ SPECIAL LAUNCH ACCESS</text>
+  <rect x="{$contentX}" y="{$promoBadgeY}" width="{$promoBadgeW}" height="{$promoBadgeH}" rx="{$promoBadgeRx}" fill="url(#accentGlow)"/>
+  <text x="{$promoTextX}" y="{$promoTextY}" fill="#ffffff" class="font-heading" font-size="11" font-weight="800" letter-spacing="1" text-anchor="middle">✦ SPECIAL LAUNCH ACCESS</text>
 
   <!-- Headline -->
   <text class="font-heading" font-size="{$headSize}" font-weight="800" fill="{$textPrimary}">
@@ -831,6 +847,11 @@ SVG;
             $badgeY = $contentStartY;
             $badgeW = 190;
             $badgeH = 30;
+            $annBadgeRx = (int) ($badgeH / 2);
+            $annDotCx = $contentX + 16;
+            $annDotCy = $badgeY + (int) ($badgeH / 2);
+            $annTextX = $contentX + 28;
+            $annTextY = $annDotCy + 4;
 
             $headSize = $isLandscape ? 28 : ($isStory ? 48 : 38);
             $headLineStep = (int) ($headSize * 1.28);
@@ -847,9 +868,9 @@ SVG;
 
             $contentSvg = <<<SVG
   <!-- Announcement Beacon Badge -->
-  <rect x="{$contentX}" y="{$badgeY}" width="{$badgeW}" height="{$badgeH}" rx="{$badgeH / 2}" fill="{$primaryHex}" fill-opacity="0.18" stroke="{$primaryHex}" stroke-opacity="0.4"/>
-  <circle cx="{$contentX + 16}" cy="{$badgeY + (int)($badgeH / 2)}" r="4" fill="#10b981"/>
-  <text x="{$contentX + 28}" y="{$badgeY + (int)($badgeH / 2) + 4}" fill="{$accentHex}" class="font-heading" font-size="11" font-weight="800" letter-spacing="1">OFFICIAL UPDATE</text>
+  <rect x="{$contentX}" y="{$badgeY}" width="{$badgeW}" height="{$badgeH}" rx="{$annBadgeRx}" fill="{$primaryHex}" fill-opacity="0.18" stroke="{$primaryHex}" stroke-opacity="0.4"/>
+  <circle cx="{$annDotCx}" cy="{$annDotCy}" r="4" fill="#10b981"/>
+  <text x="{$annTextX}" y="{$annTextY}" fill="{$accentHex}" class="font-heading" font-size="11" font-weight="800" letter-spacing="1">OFFICIAL UPDATE</text>
 
   <!-- Headline -->
   <text class="font-heading" font-size="{$headSize}" font-weight="800" fill="{$textPrimary}">
@@ -884,6 +905,9 @@ SVG;
             $swipeW = 200;
             $swipeH = 34;
             $swipeY = $bodyBoxY + $bodyBoxH + ($isLandscape ? 14 : 24);
+            $swipeRx = (int) ($swipeH / 2);
+            $swipeTextX = $contentX + (int) ($swipeW / 2);
+            $swipeTextY = $swipeY + 22;
 
             $contentSvg = <<<SVG
   <!-- Progress Bar across Card -->
@@ -902,8 +926,8 @@ SVG;
   </text>
 
   <!-- Swipe Indicator Pill -->
-  <rect x="{$contentX}" y="{$swipeY}" width="{$swipeW}" height="{$swipeH}" rx="{$swipeH / 2}" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)"/>
-  <text x="{$contentX + (int)($swipeW / 2)}" y="{$swipeY + 22}" fill="{$textPrimary}" class="font-heading" font-size="12" font-weight="700" text-anchor="middle">SWIPE TO EXPLORE ➔</text>
+  <rect x="{$contentX}" y="{$swipeY}" width="{$swipeW}" height="{$swipeH}" rx="{$swipeRx}" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)"/>
+  <text x="{$swipeTextX}" y="{$swipeTextY}" fill="{$textPrimary}" class="font-heading" font-size="12" font-weight="700" text-anchor="middle">SWIPE TO EXPLORE ➔</text>
 SVG;
         } else {
             // TIP / ACTIONABLE FRAMEWORK
@@ -936,6 +960,7 @@ SVG;
                 $iconCx = $contentX + 24;
                 $iconR = $isLandscape ? 12 : 16;
                 $numY = $iconCy + ($isLandscape ? 4 : 5);
+                $numFontSize = (int) ($iconR * 0.75);
 
                 $textX = $contentX + 50;
                 $titleY = $curStepY + ($isLandscape ? 20 : 28);
@@ -948,7 +973,7 @@ SVG;
                 $stepSvg .= <<<SVG
   <rect x="{$contentX}" y="{$curStepY}" width="{$cardBoxW}" height="{$stepBoxH}" rx="14" fill="rgba(255,255,255,0.035)" stroke="rgba(255,255,255,0.08)"/>
   <circle cx="{$iconCx}" cy="{$iconCy}" r="{$iconR}" fill="url(#accentGlow)"/>
-  <text x="{$iconCx}" y="{$numY}" fill="#ffffff" class="font-heading" font-size="{$iconR * 0.75}" font-weight="900" text-anchor="middle">{$stepNum}</text>
+  <text x="{$iconCx}" y="{$numY}" fill="#ffffff" class="font-heading" font-size="{$numFontSize}" font-weight="900" text-anchor="middle">{$stepNum}</text>
   <text x="{$textX}" y="{$titleY}" fill="{$textPrimary}" class="font-heading" font-size="{$titleSize}" font-weight="700">{$ptTitle}</text>
   <text x="{$textX}" y="{$descY}" fill="{$textMuted}" class="font-body" font-size="{$descSize}" font-weight="400">{$ptBody}</text>
 SVG;
@@ -964,6 +989,8 @@ SVG;
   {$stepSvg}
 SVG;
         }
+
+        $innerAvatarR = $avatarR - 2;
 
         return <<<SVG
 <svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}" preserveAspectRatio="xMidYMid meet">
@@ -1030,7 +1057,7 @@ SVG;
   <!-- Top Brand Lockup (Avatar Monogram + Brand Name + Verified Badge + Handle) -->
   <g>
     <circle cx="{$avatarCx}" cy="{$avatarCy}" r="{$avatarR}" fill="none" stroke="url(#accentGlow)" stroke-width="2.5"/>
-    <circle cx="{$avatarCx}" cy="{$avatarCy}" r="{$avatarR - 2}" fill="{$secondaryHex}"/>
+    <circle cx="{$avatarCx}" cy="{$avatarCy}" r="{$innerAvatarR}" fill="{$secondaryHex}"/>
     {$avatarInnerSvg}
 
     <text x="{$brandNameX}" y="{$brandNameY}" fill="{$textPrimary}" class="font-heading" font-size="{$brandNameFontSize}" font-weight="800">{$safeBrand}</text>
