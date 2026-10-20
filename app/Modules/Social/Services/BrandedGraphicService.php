@@ -222,61 +222,84 @@ class BrandedGraphicService
     }
 
     /**
-     * @return list<array{badge: string, headline: string, body: string, footer: string, stat?: string}>
+     * @return list<array<string, mixed>>
      */
     private function buildSlideSpecs(string $format, array $payload, string $pillar, string $brandName, string $cta): array
     {
-        $headline = trim((string) ($payload['headline'] ?? $payload['topic'] ?? 'Key Industry Insight'));
+        $headline = trim((string) ($payload['headline'] ?? $payload['topic'] ?? 'Mastering Autonomous AI Brand Distribution'));
         $subheadline = trim((string) ($payload['subheadline'] ?? $payload['hook'] ?? $payload['angle'] ?? ''));
 
         if ($format === 'quote') {
             $quote = trim((string) ($payload['quote_text'] ?? $subheadline ?: $headline));
+            $author = trim((string) ($payload['quote_author'] ?? $brandName));
+            $title = trim((string) ($payload['quote_title'] ?? 'Founder & Strategist'));
 
             return [[
                 'badge' => 'INSPIRATION · '.$pillar,
-                'headline' => '“'.trim($quote, '“”"').'”',
-                'body' => '— '.$brandName,
+                'quote' => trim($quote, '“”"'),
+                'headline' => trim($quote, '“”"'),
+                'author' => $author,
+                'author_title' => $title,
+                'body' => '— '.$author.' · '.$title,
                 'footer' => $cta,
             ]];
         }
 
         if ($format === 'data') {
             $stat = trim((string) ($payload['stat_metric'] ?? '87%'));
+            $trend = trim((string) ($payload['stat_trend'] ?? '+4.8X YoY'));
 
             return [[
                 'badge' => 'METRICS & RESEARCH · '.$pillar,
                 'stat' => $stat,
+                'trend' => $trend,
                 'headline' => $headline,
-                'body' => $subheadline ?: 'Organizations that automate creative workflows see significantly higher audience engagement.',
+                'takeaway' => $subheadline ?: 'Organizations leveraging automated publishing see 4.8x higher organic engagement.',
+                'body' => $subheadline ?: 'Organizations leveraging automated publishing see 4.8x higher organic engagement.',
                 'footer' => $cta,
             ]];
         }
 
         if ($format === 'promo') {
             $offer = trim((string) ($payload['promo_headline'] ?? $headline));
-            $details = trim((string) ($payload['promo_body'] ?? $subheadline ?: 'Scale faster and unlock consistent growth with our proven systems.'));
+            $badge = trim((string) ($payload['promo_badge'] ?? 'FEATURED OFFER'));
+            $points = $payload['points'] ?? [
+                'Instant multi-channel publishing to IG, X, LinkedIn & FB',
+                '100% deterministic brand consistency & design kits',
+                'Eliminate creative bottlenecks with 10x faster output',
+            ];
 
             return [[
-                'badge' => 'FEATURED OFFER · '.$pillar,
+                'badge' => $badge.' · '.$pillar,
                 'headline' => $offer,
-                'body' => $details,
+                'points' => is_array($points) ? $points : array_filter(array_map('trim', explode("\n", (string) $points))),
+                'body' => $subheadline ?: 'Scale faster and unlock consistent organic growth with our proven AI systems.',
                 'footer' => $cta,
             ]];
         }
 
         if ($format === 'announcement') {
+            $tag = trim((string) ($payload['announcement_tag'] ?? 'OFFICIAL RELEASE'));
+
             return [[
-                'badge' => 'ANNOUNCEMENT · '.$pillar,
+                'badge' => $tag.' · '.$pillar,
                 'headline' => $headline,
-                'body' => $subheadline ?: 'Exciting updates are here. Swipe to explore the newest enhancements.',
+                'body' => $subheadline ?: 'Exciting updates are live. Experience the new era of autonomous brand publishing with BotifyAI.',
                 'footer' => $cta,
             ]];
         }
 
         if ($format === 'tip') {
+            $points = $payload['points'] ?? [
+                ['title' => 'Systemize Your Creative Pipeline', 'body' => 'Automate repetitive design production and focus 100% on high-leverage brand strategy.'],
+                ['title' => 'Enforce Visual Consistency', 'body' => 'Lock your typography, palette, and tone across every channel effortlessly.'],
+                ['title' => 'Compound Organic Distribution', 'body' => 'Publish daily at peak engagement windows to build compounding authority.'],
+            ];
+
             return [[
-                'badge' => 'ACTIONABLE TIP · '.$pillar,
+                'badge' => 'ACTIONABLE FRAMEWORK · '.$pillar,
                 'headline' => $headline,
+                'points' => $points,
                 'body' => $subheadline ?: 'Focus on consistent execution and high-leverage compound improvements.',
                 'footer' => $cta,
             ]];
@@ -330,6 +353,12 @@ class BrandedGraphicService
                 'body' => 'Maintain consistent brand voice across networks without manual repetitive effort.',
                 'footer' => $brandName,
             ];
+            $specs[] = [
+                'badge' => 'STEP 03',
+                'headline' => 'Analyze Growth & Double Down',
+                'body' => 'Study high-performing formats and turn winning posts into automated evergreen loops.',
+                'footer' => $brandName,
+            ];
         }
 
         // Outro CTA Slide
@@ -365,18 +394,24 @@ class BrandedGraphicService
         int $width,
         int $height
     ): string {
-        $badge = htmlspecialchars($slide['badge'] ?? '', ENT_XML1);
-        $headline = htmlspecialchars($slide['headline'] ?? '', ENT_XML1);
-        $body = htmlspecialchars($slide['body'] ?? '', ENT_XML1);
-        $stat = htmlspecialchars($slide['stat'] ?? '', ENT_XML1);
-        $footerCta = htmlspecialchars($slide['footer'] ?? '', ENT_XML1);
+        $badge = htmlspecialchars($slide['badge'] ?? 'GROWTH INSIGHT', ENT_XML1);
+        $rawHeadline = (string) ($slide['headline'] ?? 'Key Strategic Takeaway');
+        $rawBody = (string) ($slide['body'] ?? '');
+        $stat = htmlspecialchars((string) ($slide['stat'] ?? '87%'), ENT_XML1);
+        $trend = htmlspecialchars((string) ($slide['trend'] ?? '+4.8X YoY'), ENT_XML1);
+        $footerCta = htmlspecialchars($slide['footer'] ?? 'Save for later', ENT_XML1);
         $safeBrand = htmlspecialchars($brandName, ENT_XML1);
         $safeHandle = htmlspecialchars($handle, ENT_XML1);
-        $safeWebsite = htmlspecialchars($website, ENT_XML1);
+        $safeWebsite = htmlspecialchars($website ?: 'botify.ai', ENT_XML1);
 
         // Auto text contrast
         $textPrimary = $this->contrastColor($surfaceHex);
-        $textMuted = $textPrimary === '#ffffff' ? '#94a3b8' : '#64748b';
+        $isLightCard = ($textPrimary !== '#ffffff');
+        $textMuted = $isLightCard ? '#64748b' : '#94a3b8';
+
+        $surfaceGradEnd = $isLightCard
+            ? $this->adjustBrightness($surfaceHex, -0.04)
+            : $this->adjustBrightness($surfaceHex, -0.16);
 
         // Detect form factor
         $isLandscape = ($width > $height);              // 16:9 (1200x675)
@@ -384,241 +419,234 @@ class BrandedGraphicService
         $isPortrait = ($height > $width && ! $isStory); // 4:5 (1080x1350)
         $isSquare = (! $isLandscape && ! $isStory && ! $isPortrait); // 1:1 (1080x1080)
 
+        // Monogram initial
+        $monogram = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $brandName) ?: 'B', 0, 1));
+
         // Proportional geometry settings per aspect ratio
         if ($isLandscape) {
-            $cardPadding = 36;
+            $cardPadding = 32;
             $contentX = 64;
-            $cardRx = 20;
+            $cardRx = 22;
 
-            $pillX = 64;
-            $pillY = 56;
-            $pillW = 320;
-            $pillH = 34;
-            $pillRx = 17;
-            $pillTextX = 80;
-            $pillTextY = 78;
-            $pillFontSize = 13;
+            $avatarCx = 68;
+            $avatarCy = 64;
+            $avatarR = 20;
+            $avatarFontSize = 14;
 
-            $counterX = $width - 64;
-            $counterY = 78;
-            $counterFontSize = 15;
+            $brandNameX = 98;
+            $brandNameY = 60;
+            $brandNameFontSize = 16;
+            $verifiedR = 6;
+            $verifiedX = $brandNameX + (int) (strlen($brandName) * 9.2) + 12;
+            $verifiedY = 56;
+            $handleY = 74;
+            $handleFontSize = 12;
 
-            $logoX = $width - 220;
-            $logoY = 52;
-            $logoW = 120;
-            $logoH = 38;
+            $badgeW = min(320, max(180, (int) (strlen($badge) * 8.5) + 32));
+            $badgeH = 30;
+            $badgeRx = 15;
+            $badgeX = $width - $cardPadding - $badgeW - 16;
+            $badgeY = 50;
+            $badgeTextX = $badgeX + 24;
+            $badgeTextY = $badgeY + 20;
+            $badgeDotX = $badgeX + 13;
+            $badgeDotY = $badgeY + 15;
+            $badgeFontSize = 11;
 
-            $wmX = $watermarkPosition === 'bottom-left' ? 64 : ($width - 150);
-            $wmY = str_contains($watermarkPosition, 'top') ? 56 : ($height - 130);
-            $wmW = 75;
-            $wmH = 75;
+            $contentStartY = 120;
+            $contentAvailH = $height - 120 - 75;
 
-            $headlineWrap = 42;
-            $bodyWrap = 58;
-            $maxHeadlineLines = 3;
-            $maxBodyLines = 3;
-            $fontSize = 36;
-            $lineStep = 44;
-            $headlineStartY = ($format === 'data' ? 180 : 138);
-            $bodyFontSize = 18;
-            $bodyLineStep = 26;
-
-            $footerY = $height - 58;
-            $footerSepY = $footerY - 24;
+            $footerY = $height - 52;
+            $footerSepY = $footerY - 22;
             $footerSepX1 = 64;
             $footerSepX2 = $width - 64;
             $footerBrandY = $footerY;
-            $footerHandleY = $footerY + 20;
-            $footerBrandFontSize = 18;
-            $footerHandleFontSize = 13;
+            $footerFontSize = 13;
 
-            $ctaW = 240;
-            $ctaH = 36;
-            $ctaRx = 18;
+            $ctaW = 220;
+            $ctaH = 34;
+            $ctaRx = 17;
             $ctaX = $width - 64 - $ctaW;
             $ctaY = $footerY - 14;
             $ctaTextX = $ctaX + (int) ($ctaW / 2);
-            $ctaTextY = $ctaY + 23;
-            $ctaFontSize = 13;
+            $ctaTextY = $ctaY + 22;
+            $ctaFontSize = 12;
         } elseif ($isStory) {
-            $cardPadding = 56;
-            $contentX = 100;
-            $cardRx = 32;
+            $cardPadding = 48;
+            $contentX = 96;
+            $cardRx = 36;
 
-            $pillX = 100;
-            $pillY = 220;
-            $pillW = 420;
-            $pillH = 52;
-            $pillRx = 26;
-            $pillTextX = 126;
-            $pillTextY = 253;
-            $pillFontSize = 18;
+            $avatarCx = 96;
+            $avatarCy = 220;
+            $avatarR = 30;
+            $avatarFontSize = 20;
 
-            $counterX = $width - 100;
-            $counterY = 253;
-            $counterFontSize = 20;
+            $brandNameX = 140;
+            $brandNameY = 214;
+            $brandNameFontSize = 24;
+            $verifiedR = 8;
+            $verifiedX = $brandNameX + (int) (strlen($brandName) * 13.8) + 14;
+            $verifiedY = 207;
+            $handleY = 238;
+            $handleFontSize = 16;
 
-            $logoX = $width - 270;
-            $logoY = 215;
-            $logoW = 150;
-            $logoH = 54;
+            $badgeW = min(380, max(220, (int) (strlen($badge) * 11) + 40));
+            $badgeH = 46;
+            $badgeRx = 23;
+            $badgeX = $width - $cardPadding - $badgeW - 20;
+            $badgeY = 197;
+            $badgeTextX = $badgeX + 32;
+            $badgeTextY = $badgeY + 28;
+            $badgeDotX = $badgeX + 18;
+            $badgeDotY = $badgeY + 23;
+            $badgeFontSize = 14;
 
-            $wmX = $watermarkPosition === 'bottom-left' ? 100 : ($width - 240);
-            $wmY = str_contains($watermarkPosition, 'top') ? 220 : ($height - 320);
-            $wmW = 130;
-            $wmH = 130;
+            $contentStartY = 330;
+            $contentAvailH = $height - 330 - 240;
 
-            $headlineWrap = 24;
-            $bodyWrap = 36;
-            $maxHeadlineLines = 5;
-            $maxBodyLines = 5;
-            $fontSize = 58;
-            $lineStep = 76;
-            $headlineStartY = ($format === 'data' ? 560 : 440);
-            $bodyFontSize = 32;
-            $bodyLineStep = 48;
-
-            $footerY = $height - 240;
-            $footerSepY = $footerY - 40;
-            $footerSepX1 = 100;
-            $footerSepX2 = $width - 100;
+            $footerY = $height - 210;
+            $footerSepY = $footerY - 36;
+            $footerSepX1 = 96;
+            $footerSepX2 = $width - 96;
             $footerBrandY = $footerY;
-            $footerHandleY = $footerY + 36;
-            $footerBrandFontSize = 28;
-            $footerHandleFontSize = 20;
+            $footerFontSize = 18;
 
-            $ctaW = 340;
-            $ctaH = 62;
-            $ctaRx = 31;
-            $ctaX = $width - 100 - $ctaW;
+            $ctaW = 320;
+            $ctaH = 58;
+            $ctaRx = 29;
+            $ctaX = $width - 96 - $ctaW;
             $ctaY = $footerY - 16;
             $ctaTextX = $ctaX + (int) ($ctaW / 2);
-            $ctaTextY = $ctaY + 39;
-            $ctaFontSize = 18;
+            $ctaTextY = $ctaY + 36;
+            $ctaFontSize = 17;
         } elseif ($isPortrait) {
-            $cardPadding = 56;
-            $contentX = 90;
-            $cardRx = 28;
+            $cardPadding = 48;
+            $contentX = 88;
+            $cardRx = 30;
 
-            $pillX = 90;
-            $pillY = 96;
-            $pillW = 380;
-            $pillH = 46;
-            $pillRx = 23;
-            $pillTextX = 114;
-            $pillTextY = 125;
-            $pillFontSize = 16;
+            $avatarCx = 88;
+            $avatarCy = 95;
+            $avatarR = 26;
+            $avatarFontSize = 17;
 
-            $counterX = $width - 90;
-            $counterY = 125;
-            $counterFontSize = 18;
+            $brandNameX = 126;
+            $brandNameY = 90;
+            $brandNameFontSize = 21;
+            $verifiedR = 7;
+            $verifiedX = $brandNameX + (int) (strlen($brandName) * 12.2) + 14;
+            $verifiedY = 84;
+            $handleY = 112;
+            $handleFontSize = 14;
 
-            $logoX = $width - 250;
-            $logoY = 90;
-            $logoW = 140;
-            $logoH = 48;
+            $badgeW = min(360, max(200, (int) (strlen($badge) * 10) + 36));
+            $badgeH = 40;
+            $badgeRx = 20;
+            $badgeX = $width - $cardPadding - $badgeW - 16;
+            $badgeY = 75;
+            $badgeTextX = $badgeX + 28;
+            $badgeTextY = $badgeY + 25;
+            $badgeDotX = $badgeX + 16;
+            $badgeDotY = $badgeY + 20;
+            $badgeFontSize = 13;
 
-            $wmX = $watermarkPosition === 'bottom-left' ? 90 : ($width - 200);
-            $wmY = str_contains($watermarkPosition, 'top') ? 96 : ($height - 200);
-            $wmW = 100;
-            $wmH = 100;
+            $contentStartY = 185;
+            $contentAvailH = $height - 185 - 130;
 
-            $headlineWrap = 26;
-            $bodyWrap = 38;
-            $maxHeadlineLines = 4;
-            $maxBodyLines = 4;
-            $fontSize = 50;
-            $lineStep = 64;
-            $headlineStartY = ($format === 'data' ? 430 : 330);
-            $bodyFontSize = 26;
-            $bodyLineStep = 38;
-
-            $footerY = $height - 120;
-            $footerSepY = $footerY - 32;
-            $footerSepX1 = 90;
-            $footerSepX2 = $width - 90;
+            $footerY = $height - 105;
+            $footerSepY = $footerY - 28;
+            $footerSepX1 = 88;
+            $footerSepX2 = $width - 88;
             $footerBrandY = $footerY;
-            $footerHandleY = $footerY + 28;
-            $footerBrandFontSize = 24;
-            $footerHandleFontSize = 17;
-
-            $ctaW = 300;
-            $ctaH = 52;
-            $ctaRx = 26;
-            $ctaX = $width - 90 - $ctaW;
-            $ctaY = $footerY - 14;
-            $ctaTextX = $ctaX + (int) ($ctaW / 2);
-            $ctaTextY = $ctaY + 33;
-            $ctaFontSize = 16;
-        } else {
-            // Square 1:1
-            $cardPadding = 56;
-            $contentX = 90;
-            $cardRx = 28;
-
-            $pillX = 90;
-            $pillY = 90;
-            $pillW = 380;
-            $pillH = 44;
-            $pillRx = 22;
-            $pillTextX = 114;
-            $pillTextY = 118;
-            $pillFontSize = 16;
-
-            $counterX = $width - 90;
-            $counterY = 118;
-            $counterFontSize = 18;
-
-            $logoX = $width - 240;
-            $logoY = 85;
-            $logoW = 140;
-            $logoH = 46;
-
-            $wmX = $watermarkPosition === 'bottom-left' ? 90 : ($width - 190);
-            $wmY = str_contains($watermarkPosition, 'top') ? 90 : ($height - 180);
-            $wmW = 100;
-            $wmH = 100;
-
-            $headlineWrap = 26;
-            $bodyWrap = 38;
-            $maxHeadlineLines = 4;
-            $maxBodyLines = 4;
-            $fontSize = 48;
-            $lineStep = 62;
-            $headlineStartY = ($format === 'data' ? 370 : 280);
-            $bodyFontSize = 24;
-            $bodyLineStep = 36;
-
-            $footerY = $height - 110;
-            $footerSepY = $footerY - 30;
-            $footerSepX1 = 90;
-            $footerSepX2 = $width - 90;
-            $footerBrandY = $footerY;
-            $footerHandleY = $footerY + 26;
-            $footerBrandFontSize = 22;
-            $footerHandleFontSize = 16;
+            $footerFontSize = 16;
 
             $ctaW = 280;
-            $ctaH = 48;
-            $ctaRx = 24;
-            $ctaX = $width - 90 - $ctaW;
+            $ctaH = 50;
+            $ctaRx = 25;
+            $ctaX = $width - 88 - $ctaW;
             $ctaY = $footerY - 14;
             $ctaTextX = $ctaX + (int) ($ctaW / 2);
-            $ctaTextY = $ctaY + 30;
+            $ctaTextY = $ctaY + 31;
             $ctaFontSize = 15;
+        } else {
+            // Square 1:1
+            $cardPadding = 48;
+            $contentX = 88;
+            $cardRx = 28;
+
+            $avatarCx = 88;
+            $avatarCy = 92;
+            $avatarR = 25;
+            $avatarFontSize = 16;
+
+            $brandNameX = 124;
+            $brandNameY = 87;
+            $brandNameFontSize = 20;
+            $verifiedR = 7;
+            $verifiedX = $brandNameX + (int) (strlen($brandName) * 11.8) + 14;
+            $verifiedY = 81;
+            $handleY = 108;
+            $handleFontSize = 14;
+
+            $badgeW = min(350, max(190, (int) (strlen($badge) * 9.8) + 34));
+            $badgeH = 38;
+            $badgeRx = 19;
+            $badgeX = $width - $cardPadding - $badgeW - 16;
+            $badgeY = 73;
+            $badgeTextX = $badgeX + 26;
+            $badgeTextY = $badgeY + 24;
+            $badgeDotX = $badgeX + 15;
+            $badgeDotY = $badgeY + 19;
+            $badgeFontSize = 13;
+
+            $contentStartY = 175;
+            $contentAvailH = $height - 175 - 120;
+
+            $footerY = $height - 100;
+            $footerSepY = $footerY - 26;
+            $footerSepX1 = 88;
+            $footerSepX2 = $width - 88;
+            $footerBrandY = $footerY;
+            $footerFontSize = 15;
+
+            $ctaW = 270;
+            $ctaH = 46;
+            $ctaRx = 23;
+            $ctaX = $width - 88 - $ctaW;
+            $ctaY = $footerY - 14;
+            $ctaTextX = $ctaX + (int) ($ctaW / 2);
+            $ctaTextY = $ctaY + 29;
+            $ctaFontSize = 14;
         }
 
         $cardW = $width - ($cardPadding * 2);
         $cardH = $height - ($cardPadding * 2);
 
-        // Slide counter indicator
-        $counter = $totalSlides > 1 ? "{$slideNumber} / {$totalSlides}" : '';
+        // Dot grid quadrant
+        $dotGridW = (int) ($width * 0.35);
+        $dotGridH = (int) ($height * 0.28);
+        $dotGridX = $width - $dotGridW - 20;
+        $dotGridY = 20;
 
-        // Logo element
-        $logoSvg = '';
+        // Verified Checkmark Path
+        $v1x = $verifiedX - (int) ($verifiedR * 0.45);
+        $v1y = $verifiedY;
+        $v2x = $verifiedX - (int) ($verifiedR * 0.1);
+        $v2y = $verifiedY + (int) ($verifiedR * 0.4);
+        $v3x = $verifiedX + (int) ($verifiedR * 0.5);
+        $v3y = $verifiedY - (int) ($verifiedR * 0.35);
+        $verifiedCheckSvg = "M {$v1x} {$v1y} L {$v2x} {$v2y} L {$v3x} {$v3y}";
+
+        // Avatar SVG: Custom logo image or crisp monogram circle
+        $avatarInnerSvg = '';
         if ($logoUrl !== '') {
             $safeLogo = htmlspecialchars($logoUrl, ENT_XML1);
-            $logoSvg = "<image href=\"{$safeLogo}\" x=\"{$logoX}\" y=\"{$logoY}\" width=\"{$logoW}\" height=\"{$logoH}\" preserveAspectRatio=\"xMidYMid meet\"/>";
+            $imgSize = $avatarR * 2 - 4;
+            $imgX = $avatarCx - $avatarR + 2;
+            $imgY = $avatarCy - $avatarR + 2;
+            $avatarInnerSvg = "<image href=\"{$safeLogo}\" x=\"{$imgX}\" y=\"{$imgY}\" width=\"{$imgSize}\" height=\"{$imgSize}\" preserveAspectRatio=\"xMidYMid meet\"/>";
+        } else {
+            $monogramTextY = $avatarCy + (int) ($avatarFontSize * 0.36);
+            $avatarInnerSvg = "<text x=\"{$avatarCx}\" y=\"{$monogramTextY}\" fill=\"#ffffff\" font-family=\"'{$headingFont}', sans-serif\" font-size=\"{$avatarFontSize}\" font-weight=\"900\" text-anchor=\"middle\">{$monogram}</text>";
         }
 
         // Watermark element
@@ -626,132 +654,449 @@ class BrandedGraphicService
         if ($watermarkUrl !== '') {
             $safeWm = htmlspecialchars($watermarkUrl, ENT_XML1);
             $wmOp = round($watermarkOpacity / 100, 2);
+            $wmW = $isLandscape ? 70 : ($isStory ? 120 : 90);
+            $wmH = $wmW;
+            $wmX = $watermarkPosition === 'bottom-left' ? $contentX : ($width - $cardPadding - $wmW - 20);
+            $wmY = str_contains($watermarkPosition, 'top') ? $contentStartY : ($footerSepY - $wmH - 15);
             $watermarkSvg = "<image href=\"{$safeWm}\" x=\"{$wmX}\" y=\"{$wmY}\" width=\"{$wmW}\" height=\"{$wmH}\" opacity=\"{$wmOp}\" preserveAspectRatio=\"xMidYMid meet\"/>";
         }
 
-        // Format-specific elements
-        $statBadgeSvg = '';
-        if ($format === 'data' && $stat !== '') {
-            if ($isLandscape) {
-                $statBadgeW = 200; $statBadgeH = 68; $statBadgeY = 100; $statTextY = 148; $statFontSize = 46;
-            } elseif ($isStory) {
-                $statBadgeW = 340; $statBadgeH = 120; $statBadgeY = 380; $statTextY = 465; $statFontSize = 76;
-            } else {
-                $statBadgeW = 260; $statBadgeH = 92; $statBadgeY = 220; $statTextY = 285; $statFontSize = 58;
-            }
-            $statTextX = $contentX + (int) ($statBadgeW / 2);
-            $statBadgeSvg = <<<SVG
-<rect x="{$contentX}" y="{$statBadgeY}" width="{$statBadgeW}" height="{$statBadgeH}" rx="16" fill="{$primaryHex}"/>
-<text x="{$statTextX}" y="{$statTextY}" fill="#ffffff" font-family="'{$headingFont}', sans-serif" font-size="{$statFontSize}" font-weight="900" text-anchor="middle">{$stat}</text>
-SVG;
-        }
+        // =========================================================================
+        // ARCHETYPE CONTENT GENERATION
+        // =========================================================================
+        $contentSvg = '';
+        $cardBoxW = $cardW - (($contentX - $cardPadding) * 2);
 
-        $quoteIconSvg = '';
         if ($format === 'quote') {
-            $quoteY = $isLandscape ? 128 : ($isStory ? 410 : 270);
-            $quoteSize = $isLandscape ? 70 : ($isStory ? 140 : 105);
-            $quoteIconSvg = <<<SVG
-<text x="{$contentX}" y="{$quoteY}" fill="{$accentHex}" font-family="Georgia, serif" font-size="{$quoteSize}" font-weight="bold" opacity="0.4">“</text>
+            $quoteText = (string) ($slide['quote'] ?? $rawHeadline);
+            $authorName = htmlspecialchars((string) ($slide['author'] ?? $brandName), ENT_XML1);
+            $authorTitle = htmlspecialchars((string) ($slide['author_title'] ?? 'Founder & Strategist'), ENT_XML1);
+
+            $quoteSize = $isLandscape ? 28 : ($isStory ? 48 : 38);
+            $quoteLineStep = (int) ($quoteSize * 1.32);
+            $quoteWrap = $isLandscape ? 38 : ($isStory ? 24 : 26);
+            $maxQuoteLines = $isLandscape ? 3 : 5;
+
+            $quoteGlyphSize = $isLandscape ? 70 : ($isStory ? 140 : 100);
+            $quoteGlyphY = $contentStartY + ($isLandscape ? 20 : 45);
+
+            [$quoteLines, $nextY, $lineCount] = $this->renderTspans($quoteText, $quoteWrap, $maxQuoteLines, $contentX, $quoteGlyphY + ($isLandscape ? 30 : 50), $quoteLineStep);
+
+            // Divider with center star
+            $divY = $nextY + ($isLandscape ? 15 : 24);
+            $divW = (int) ($cardBoxW * 0.4);
+            $divX2 = $contentX + $divW;
+            $starX = $divX2 + 18;
+
+            // Author Box
+            $authorBoxY = $divY + ($isLandscape ? 18 : 28);
+            $authorBoxH = $isLandscape ? 50 : 64;
+            $authorBoxW = min($cardBoxW, $isLandscape ? 400 : 500);
+            $authorNameY = $authorBoxY + ($isLandscape ? 24 : 30);
+            $authorTitleY = $authorBoxY + ($isLandscape ? 40 : 50);
+            $authorNameSize = $isLandscape ? 14 : 17;
+            $authorTitleSize = $isLandscape ? 11 : 13;
+
+            $contentSvg = <<<SVG
+  <!-- Quotation Mark Glyph -->
+  <text x="{$contentX}" y="{$quoteGlyphY}" font-family="Georgia, serif" font-size="{$quoteGlyphSize}" font-weight="900" fill="url(#accentGlow)" opacity="0.32">“</text>
+
+  <!-- Quote Typography -->
+  <text class="font-heading" font-size="{$quoteSize}" font-style="italic" font-weight="600" fill="{$textPrimary}">
+    {$quoteLines}
+  </text>
+
+  <!-- Divider & Star Glyph -->
+  <line x1="{$contentX}" y1="{$divY}" x2="{$divX2}" y2="{$divY}" stroke="url(#accentGlow)" stroke-width="2"/>
+  <text x="{$starX}" y="{$divY + 4}" fill="{$accentHex}" font-size="14" text-anchor="middle">✦</text>
+
+  <!-- Author Attribution Capsule -->
+  <rect x="{$contentX}" y="{$authorBoxY}" width="{$authorBoxW}" height="{$authorBoxH}" rx="16" fill="rgba(255,255,255,0.035)" stroke="rgba(255,255,255,0.08)"/>
+  <circle cx="{$contentX + 28}" cy="{$authorBoxY + (int)($authorBoxH / 2)}" r="14" fill="url(#accentGlow)"/>
+  <text x="{$contentX + 28}" y="{$authorBoxY + (int)($authorBoxH / 2) + 5}" fill="#ffffff" font-family="'{$headingFont}', sans-serif" font-size="12" font-weight="900" text-anchor="middle">{$monogram}</text>
+  <text x="{$contentX + 54}" y="{$authorNameY}" fill="{$textPrimary}" class="font-heading" font-size="{$authorNameSize}" font-weight="700">{$authorName}</text>
+  <text x="{$contentX + 54}" y="{$authorTitleY}" fill="{$textMuted}" class="font-body" font-size="{$authorTitleSize}" font-weight="500">{$authorTitle}</text>
 SVG;
-        }
+        } elseif ($format === 'data') {
+            $takeawayText = (string) ($slide['takeaway'] ?? $rawBody);
 
-        // Wrapped headline lines
-        $headlineLines = explode("\n", wordwrap($headline, $headlineWrap, "\n", true));
-        $bodyLines = explode("\n", wordwrap($body, $bodyWrap, "\n", true));
+            $statBoxH = $isLandscape ? 72 : ($isStory ? 130 : 96);
+            $statBoxW = $isLandscape ? 280 : ($isStory ? 440 : 340);
+            $statBoxY = $contentStartY;
 
-        $headlineSvg = '';
-        $curHeadlineY = $headlineStartY;
-        $renderedHeadlineLines = array_slice($headlineLines, 0, $maxHeadlineLines);
-        foreach ($renderedHeadlineLines as $line) {
-            $headlineSvg .= "<tspan x=\"{$contentX}\" y=\"{$curHeadlineY}\">{$line}</tspan>";
-            $curHeadlineY += $lineStep;
-        }
+            $statNumSize = $isLandscape ? 48 : ($isStory ? 84 : 64);
+            $statNumX = $contentX + 24;
+            $statNumY = $statBoxY + ($isLandscape ? 52 : ($isStory ? 90 : 70));
 
-        $accentDividerY = $curHeadlineY + ($isLandscape ? 8 : 14);
-        $accentDividerW = (int) ($width * 0.12);
+            $trendChipW = $isLandscape ? 105 : 130;
+            $trendChipH = $isLandscape ? 26 : 32;
+            $trendChipX = $contentX + $statBoxW - $trendChipW - 16;
+            $trendChipY = $statBoxY + (int) (($statBoxH - $trendChipH) / 2);
+            $trendTextX = $trendChipX + (int) ($trendChipW / 2);
+            $trendTextY = $trendChipY + ($isLandscape ? 17 : 21);
+            $trendFontSize = $isLandscape ? 11 : 13;
 
-        $bodySvg = '';
-        $curBodyY = $accentDividerY + ($isLandscape ? 24 : 36);
-        $renderedBodyLines = array_slice($bodyLines, 0, $maxBodyLines);
-        foreach ($renderedBodyLines as $line) {
-            $bodySvg .= "<tspan x=\"{$contentX}\" y=\"{$curBodyY}\">{$line}</tspan>";
-            $curBodyY += $bodyLineStep;
+            // Headline below stat
+            $headlineY = $statBoxY + $statBoxH + ($isLandscape ? 24 : 36);
+            $headSize = $isLandscape ? 26 : ($isStory ? 46 : 36);
+            $headLineStep = (int) ($headSize * 1.28);
+            $headWrap = $isLandscape ? 44 : ($isStory ? 25 : 28);
+            [$headLines, $afterHeadY] = $this->renderTspans($rawHeadline, $headWrap, $isLandscape ? 2 : 3, $contentX, $headlineY, $headLineStep);
+
+            // Takeaway capsule
+            $takeawayBoxY = $afterHeadY + ($isLandscape ? 14 : 24);
+            $takeawayBoxH = $isLandscape ? 56 : ($isStory ? 100 : 78);
+            $takeawayBadgeY = $takeawayBoxY + ($isLandscape ? 20 : 26);
+            $takeawayTextY = $takeawayBoxY + ($isLandscape ? 38 : 54);
+            $takeawayFontSize = $isLandscape ? 12 : 15;
+            $takeawayWrap = $isLandscape ? 62 : 40;
+            [$takeawayLines] = $this->renderTspans($takeawayText, $takeawayWrap, 2, $contentX + 18, $takeawayTextY, (int) ($takeawayFontSize * 1.3));
+
+            $contentSvg = <<<SVG
+  <!-- Hero Stat Box -->
+  <rect x="{$contentX}" y="{$statBoxY}" width="{$statBoxW}" height="{$statBoxH}" rx="18" fill="rgba(255,255,255,0.035)" stroke="{$accentHex}" stroke-opacity="0.35" stroke-width="1.5"/>
+  <text x="{$statNumX}" y="{$statNumY}" font-family="'{$headingFont}', sans-serif" font-size="{$statNumSize}" font-weight="900" fill="url(#accentGlow)">{$stat}</text>
+
+  <!-- Trend Pill -->
+  <rect x="{$trendChipX}" y="{$trendChipY}" width="{$trendChipW}" height="{$trendChipH}" rx="{$trendChipH / 2}" fill="#10b981" fill-opacity="0.18" stroke="#10b981" stroke-opacity="0.4" stroke-width="1.2"/>
+  <text x="{$trendTextX}" y="{$trendTextY}" fill="#34d399" class="font-heading" font-size="{$trendFontSize}" font-weight="800" text-anchor="middle">▲ {$trend}</text>
+
+  <!-- Headline -->
+  <text class="font-heading" font-size="{$headSize}" font-weight="800" fill="{$textPrimary}">
+    {$headLines}
+  </text>
+
+  <!-- Analytical Takeaway Box -->
+  <rect x="{$contentX}" y="{$takeawayBoxY}" width="{$cardBoxW}" height="{$takeawayBoxH}" rx="16" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.08)"/>
+  <text x="{$contentX + 18}" y="{$takeawayBadgeY}" fill="{$accentHex}" class="font-heading" font-size="11" font-weight="800" letter-spacing="1">VERIFIED BENCHMARK ↗</text>
+  <text class="font-body" font-size="{$takeawayFontSize}" fill="{$textMuted}">
+    {$takeawayLines}
+  </text>
+SVG;
+        } elseif ($format === 'promo') {
+            $promoBadgeY = $contentStartY;
+            $promoBadgeW = 210;
+            $promoBadgeH = 28;
+
+            $headSize = $isLandscape ? 28 : ($isStory ? 48 : 38);
+            $headLineStep = (int) ($headSize * 1.28);
+            $headWrap = $isLandscape ? 40 : ($isStory ? 24 : 26);
+            $headStartY = $promoBadgeY + $promoBadgeH + ($isLandscape ? 24 : 32);
+
+            [$headLines, $afterHeadY] = $this->renderTspans($rawHeadline, $headWrap, 2, $contentX, $headStartY, $headLineStep);
+
+            // Value Stack Rows
+            $points = $slide['points'] ?? [
+                'Instant multi-channel publishing to IG, X, LinkedIn & FB',
+                '100% deterministic brand consistency & design kits',
+                'Eliminate creative bottlenecks with 10x faster output',
+            ];
+
+            $stackStartY = $afterHeadY + ($isLandscape ? 16 : 26);
+            $rowH = $isLandscape ? 38 : ($isStory ? 66 : 52);
+            $rowGap = $isLandscape ? 8 : 12;
+            $bulletSvg = '';
+
+            foreach (array_slice($points, 0, $isLandscape ? 2 : 3) as $idx => $pt) {
+                $curRowY = $stackStartY + ($idx * ($rowH + $rowGap));
+                $iconCy = $curRowY + (int) ($rowH / 2);
+                $iconCx = $contentX + 22;
+                $textX = $contentX + 44;
+                $textY = $curRowY + (int) ($rowH / 2) + 5;
+                $rowFontSize = $isLandscape ? 12 : 15;
+                $safePt = htmlspecialchars(is_array($pt) ? ($pt['title'] ?? '') : (string) $pt, ENT_XML1);
+
+                $bulletSvg .= <<<SVG
+  <rect x="{$contentX}" y="{$curRowY}" width="{$cardBoxW}" height="{$rowH}" rx="14" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.07)"/>
+  <circle cx="{$iconCx}" cy="{$iconCy}" r="10" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-opacity="0.5"/>
+  <path d="M {$iconCx - 4} {$iconCy} L {$iconCx - 1} {$iconCy + 3} L {$iconCx + 4} {$iconCy - 3}" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round"/>
+  <text x="{$textX}" y="{$textY}" fill="{$textPrimary}" class="font-body" font-size="{$rowFontSize}" font-weight="500">{$safePt}</text>
+SVG;
+            }
+
+            $contentSvg = <<<SVG
+  <!-- Urgency Tag -->
+  <rect x="{$contentX}" y="{$promoBadgeY}" width="{$promoBadgeW}" height="{$promoBadgeH}" rx="{$promoBadgeH / 2}" fill="url(#accentGlow)"/>
+  <text x="{$contentX + (int)($promoBadgeW / 2)}" y="{$promoBadgeY + 19}" fill="#ffffff" class="font-heading" font-size="11" font-weight="800" letter-spacing="1" text-anchor="middle">✦ SPECIAL LAUNCH ACCESS</text>
+
+  <!-- Headline -->
+  <text class="font-heading" font-size="{$headSize}" font-weight="800" fill="{$textPrimary}">
+    {$headLines}
+  </text>
+
+  <!-- Value Stack Checklist -->
+  {$bulletSvg}
+SVG;
+        } elseif ($format === 'announcement') {
+            $badgeY = $contentStartY;
+            $badgeW = 190;
+            $badgeH = 30;
+
+            $headSize = $isLandscape ? 28 : ($isStory ? 48 : 38);
+            $headLineStep = (int) ($headSize * 1.28);
+            $headWrap = $isLandscape ? 40 : ($isStory ? 24 : 26);
+            $headStartY = $badgeY + $badgeH + ($isLandscape ? 24 : 32);
+
+            [$headLines, $afterHeadY] = $this->renderTspans($rawHeadline, $headWrap, 2, $contentX, $headStartY, $headLineStep);
+
+            $boxY = $afterHeadY + ($isLandscape ? 16 : 28);
+            $boxH = $isLandscape ? 70 : ($isStory ? 140 : 100);
+            $bodySize = $isLandscape ? 13 : 16;
+            $bodyWrap = $isLandscape ? 60 : 38;
+            [$bodyLines] = $this->renderTspans($rawBody, $bodyWrap, $isLandscape ? 2 : 4, $contentX + 22, $boxY + ($isLandscape ? 28 : 38), (int) ($bodySize * 1.38));
+
+            $contentSvg = <<<SVG
+  <!-- Announcement Beacon Badge -->
+  <rect x="{$contentX}" y="{$badgeY}" width="{$badgeW}" height="{$badgeH}" rx="{$badgeH / 2}" fill="{$primaryHex}" fill-opacity="0.18" stroke="{$primaryHex}" stroke-opacity="0.4"/>
+  <circle cx="{$contentX + 16}" cy="{$badgeY + (int)($badgeH / 2)}" r="4" fill="#10b981"/>
+  <text x="{$contentX + 28}" y="{$badgeY + (int)($badgeH / 2) + 4}" fill="{$accentHex}" class="font-heading" font-size="11" font-weight="800" letter-spacing="1">OFFICIAL UPDATE</text>
+
+  <!-- Headline -->
+  <text class="font-heading" font-size="{$headSize}" font-weight="800" fill="{$textPrimary}">
+    {$headLines}
+  </text>
+
+  <!-- Feature Highlights Box -->
+  <rect x="{$contentX}" y="{$boxY}" width="{$cardBoxW}" height="{$boxH}" rx="18" fill="rgba(255,255,255,0.035)" stroke="rgba(255,255,255,0.08)"/>
+  <text class="font-body" font-size="{$bodySize}" fill="{$textMuted}">
+    {$bodyLines}
+  </text>
+SVG;
+        } elseif ($format === 'carousel') {
+            $progressTrackW = $cardBoxW;
+            $progressH = 4;
+            $progressY = $contentStartY;
+            $progressFilledW = (int) ($progressTrackW * ($slideNumber / max(1, $totalSlides)));
+
+            $headSize = $isLandscape ? 28 : ($isStory ? 48 : 38);
+            $headLineStep = (int) ($headSize * 1.28);
+            $headWrap = $isLandscape ? 40 : ($isStory ? 24 : 26);
+            $headStartY = $progressY + 36;
+
+            [$headLines, $afterHeadY] = $this->renderTspans($rawHeadline, $headWrap, 2, $contentX, $headStartY, $headLineStep);
+
+            $bodyBoxY = $afterHeadY + ($isLandscape ? 16 : 28);
+            $bodyBoxH = $isLandscape ? 70 : ($isStory ? 130 : 96);
+            $bodySize = $isLandscape ? 13 : 16;
+            $bodyWrap = $isLandscape ? 60 : 38;
+            [$bodyLines] = $this->renderTspans($rawBody, $bodyWrap, $isLandscape ? 2 : 4, $contentX + 22, $bodyBoxY + ($isLandscape ? 28 : 36), (int) ($bodySize * 1.38));
+
+            $swipeW = 200;
+            $swipeH = 34;
+            $swipeY = $bodyBoxY + $bodyBoxH + ($isLandscape ? 14 : 24);
+
+            $contentSvg = <<<SVG
+  <!-- Progress Bar across Card -->
+  <rect x="{$contentX}" y="{$progressY}" width="{$progressTrackW}" height="{$progressH}" rx="2" fill="rgba(255,255,255,0.1)"/>
+  <rect x="{$contentX}" y="{$progressY}" width="{$progressFilledW}" height="{$progressH}" rx="2" fill="url(#accentGlow)"/>
+
+  <!-- Headline -->
+  <text class="font-heading" font-size="{$headSize}" font-weight="800" fill="{$textPrimary}">
+    {$headLines}
+  </text>
+
+  <!-- Takeaway Card -->
+  <rect x="{$contentX}" y="{$bodyBoxY}" width="{$cardBoxW}" height="{$bodyBoxH}" rx="18" fill="rgba(255,255,255,0.035)" stroke="rgba(255,255,255,0.08)"/>
+  <text class="font-body" font-size="{$bodySize}" fill="{$textMuted}">
+    {$bodyLines}
+  </text>
+
+  <!-- Swipe Indicator Pill -->
+  <rect x="{$contentX}" y="{$swipeY}" width="{$swipeW}" height="{$swipeH}" rx="{$swipeH / 2}" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)"/>
+  <text x="{$contentX + (int)($swipeW / 2)}" y="{$swipeY + 22}" fill="{$textPrimary}" class="font-heading" font-size="12" font-weight="700" text-anchor="middle">SWIPE TO EXPLORE ➔</text>
+SVG;
+        } else {
+            // TIP / ACTIONABLE FRAMEWORK
+            $headSize = $isLandscape ? 28 : ($isStory ? 46 : 36);
+            $headLineStep = (int) ($headSize * 1.28);
+            $headWrap = $isLandscape ? 40 : ($isStory ? 24 : 26);
+            $headStartY = $contentStartY;
+
+            [$headLines, $afterHeadY] = $this->renderTspans($rawHeadline, $headWrap, 2, $contentX, $headStartY, $headLineStep);
+
+            // 3 Framework Steps
+            $points = $slide['points'] ?? [
+                ['title' => 'Systemize Your Creative Pipeline', 'body' => 'Automate design production to focus 100% on high-leverage brand strategy.'],
+                ['title' => 'Enforce Visual Consistency', 'body' => 'Lock your typography, palette, and tone across every channel effortlessly.'],
+                ['title' => 'Compound Organic Distribution', 'body' => 'Publish daily at peak engagement windows to build compounding authority.'],
+            ];
+
+            $stepCount = $isLandscape ? 2 : min(3, count($points));
+            $stepBoxH = $isLandscape ? 48 : ($isStory ? 90 : 70);
+            $stepGap = $isLandscape ? 10 : 14;
+            $stepStartY = $afterHeadY + ($isLandscape ? 16 : 24);
+
+            $stepSvg = '';
+            foreach (array_slice($points, 0, $stepCount) as $idx => $pt) {
+                $curStepY = $stepStartY + ($idx * ($stepBoxH + $stepGap));
+                $ptTitle = htmlspecialchars(is_array($pt) ? ($pt['title'] ?? 'Point #'.($idx + 1)) : (string) $pt, ENT_XML1);
+                $ptBody = htmlspecialchars(is_array($pt) ? ($pt['body'] ?? '') : '', ENT_XML1);
+
+                $iconCy = $curStepY + (int) ($stepBoxH / 2);
+                $iconCx = $contentX + 24;
+                $iconR = $isLandscape ? 12 : 16;
+                $numY = $iconCy + ($isLandscape ? 4 : 5);
+
+                $textX = $contentX + 50;
+                $titleY = $curStepY + ($isLandscape ? 20 : 28);
+                $descY = $curStepY + ($isLandscape ? 36 : 52);
+                $titleSize = $isLandscape ? 13 : 16;
+                $descSize = $isLandscape ? 11 : 13;
+
+                $stepNum = sprintf('%02d', $idx + 1);
+
+                $stepSvg .= <<<SVG
+  <rect x="{$contentX}" y="{$curStepY}" width="{$cardBoxW}" height="{$stepBoxH}" rx="14" fill="rgba(255,255,255,0.035)" stroke="rgba(255,255,255,0.08)"/>
+  <circle cx="{$iconCx}" cy="{$iconCy}" r="{$iconR}" fill="url(#accentGlow)"/>
+  <text x="{$iconCx}" y="{$numY}" fill="#ffffff" class="font-heading" font-size="{$iconR * 0.75}" font-weight="900" text-anchor="middle">{$stepNum}</text>
+  <text x="{$textX}" y="{$titleY}" fill="{$textPrimary}" class="font-heading" font-size="{$titleSize}" font-weight="700">{$ptTitle}</text>
+  <text x="{$textX}" y="{$descY}" fill="{$textMuted}" class="font-body" font-size="{$descSize}" font-weight="400">{$ptBody}</text>
+SVG;
+            }
+
+            $contentSvg = <<<SVG
+  <!-- Main Hook Headline -->
+  <text class="font-heading" font-size="{$headSize}" font-weight="800" fill="{$textPrimary}">
+    {$headLines}
+  </text>
+
+  <!-- Framework Step Cards -->
+  {$stepSvg}
+SVG;
         }
 
         return <<<SVG
 <svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}" preserveAspectRatio="xMidYMid meet">
   <defs>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family={$headingFont}:wght@700;800;900&amp;family={$bodyFont}:wght@400;500;600&amp;display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Montserrat:wght@600;700;800;900&amp;family=Outfit:wght@600;700;800;900&amp;family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&amp;family=Poppins:wght@600;700;800;900&amp;family=Space+Grotesk:wght@600;700&amp;display=swap');
       .font-heading { font-family: '{$headingFont}', -apple-system, BlinkMacSystemFont, sans-serif; }
       .font-body { font-family: '{$bodyFont}', -apple-system, BlinkMacSystemFont, sans-serif; }
     </style>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="{$bgHex}"/>
-      <stop offset="100%" stop-color="{$secondaryHex}"/>
+    <radialGradient id="meshSpot1" cx="85%" cy="12%" r="65%">
+      <stop offset="0%" stop-color="{$primaryHex}" stop-opacity="0.28"/>
+      <stop offset="60%" stop-color="{$primaryHex}" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="{$primaryHex}" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="meshSpot2" cx="15%" cy="88%" r="60%">
+      <stop offset="0%" stop-color="{$accentHex}" stop-opacity="0.22"/>
+      <stop offset="60%" stop-color="{$accentHex}" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="{$accentHex}" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cardSurfaceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{$surfaceHex}" stop-opacity="0.96"/>
+      <stop offset="100%" stop-color="{$surfaceGradEnd}" stop-opacity="0.98"/>
+    </linearGradient>
+    <linearGradient id="cardBorderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="{$primaryHex}" stop-opacity="0.5"/>
+      <stop offset="45%" stop-color="rgba(255,255,255,0.15)"/>
+      <stop offset="100%" stop-color="{$accentHex}" stop-opacity="0.35"/>
     </linearGradient>
     <linearGradient id="accentGlow" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="{$primaryHex}"/>
       <stop offset="100%" stop-color="{$accentHex}"/>
     </linearGradient>
-    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="110%">
-      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.35"/>
+    <linearGradient id="dividerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="{$primaryHex}" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="{$accentHex}" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.05)"/>
+    </linearGradient>
+    <pattern id="dotPattern" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.2" fill="{$primaryHex}" fill-opacity="0.14"/>
+    </pattern>
+    <filter id="cardElevation" x="-8%" y="-8%" width="116%" height="116%">
+      <feDropShadow dx="0" dy="24" stdDeviation="32" flood-color="#000000" flood-opacity="0.45"/>
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="{$primaryHex}" flood-opacity="0.10"/>
     </filter>
   </defs>
 
-  <!-- Canvas Background -->
-  <rect width="{$width}" height="{$height}" fill="url(#bgGrad)"/>
+  <!-- Canvas Outer Fill -->
+  <rect width="{$width}" height="{$height}" fill="{$bgHex}"/>
+
+  <!-- Ambient Mesh Spotlights -->
+  <rect width="{$width}" height="{$height}" fill="url(#meshSpot1)"/>
+  <rect width="{$width}" height="{$height}" fill="url(#meshSpot2)"/>
+
+  <!-- Geometric Dot Grid in corner quadrant -->
+  <rect x="{$dotGridX}" y="{$dotGridY}" width="{$dotGridW}" height="{$dotGridH}" fill="url(#dotPattern)" opacity="0.8"/>
 
   <!-- Top Accent Bar -->
-  <rect width="{$width}" height="10" fill="url(#accentGlow)"/>
+  <rect width="{$width}" height="6" fill="url(#accentGlow)"/>
 
-  <!-- Inner Surface Card -->
-  <rect x="{$cardPadding}" y="{$cardPadding}" width="{$cardW}" height="{$cardH}" rx="{$cardRx}" fill="{$surfaceHex}" filter="url(#cardShadow)"/>
-  <rect x="{$cardPadding}" y="{$cardPadding}" width="{$cardW}" height="{$cardH}" rx="{$cardRx}" fill="none" stroke="{$primaryHex}" stroke-width="1.5" stroke-opacity="0.25"/>
+  <!-- Main Floating Glass Card -->
+  <rect x="{$cardPadding}" y="{$cardPadding}" width="{$cardW}" height="{$cardH}" rx="{$cardRx}" fill="url(#cardSurfaceGrad)" filter="url(#cardElevation)"/>
+  <rect x="{$cardPadding}" y="{$cardPadding}" width="{$cardW}" height="{$cardH}" rx="{$cardRx}" fill="none" stroke="url(#cardBorderGrad)" stroke-width="1.5"/>
 
-  <!-- Header Eyebrow Pill -->
-  <rect x="{$pillX}" y="{$pillY}" width="{$pillW}" height="{$pillH}" rx="{$pillRx}" fill="{$primaryHex}"/>
-  <text x="{$pillTextX}" y="{$pillTextY}" fill="#ffffff" class="font-heading" font-size="{$pillFontSize}" font-weight="800" letter-spacing="1">{$badge}</text>
+  <!-- Top Brand Lockup (Avatar Monogram + Brand Name + Verified Badge + Handle) -->
+  <g>
+    <circle cx="{$avatarCx}" cy="{$avatarCy}" r="{$avatarR}" fill="none" stroke="url(#accentGlow)" stroke-width="2.5"/>
+    <circle cx="{$avatarCx}" cy="{$avatarCy}" r="{$avatarR - 2}" fill="{$secondaryHex}"/>
+    {$avatarInnerSvg}
 
-  <!-- Slide Counter -->
-  <text x="{$counterX}" y="{$counterY}" fill="{$textMuted}" class="font-body" font-size="{$counterFontSize}" font-weight="600" text-anchor="end">{$counter}</text>
+    <text x="{$brandNameX}" y="{$brandNameY}" fill="{$textPrimary}" class="font-heading" font-size="{$brandNameFontSize}" font-weight="800">{$safeBrand}</text>
+    <circle cx="{$verifiedX}" cy="{$verifiedY}" r="{$verifiedR}" fill="#0284c7"/>
+    <path d="{$verifiedCheckSvg}" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Logo Slot -->
-  {$logoSvg}
+    <text x="{$brandNameX}" y="{$handleY}" fill="{$textMuted}" class="font-body" font-size="{$handleFontSize}" font-weight="500">{$safeHandle}</text>
+  </g>
+
+  <!-- Category Pillar Badge (Top Right) -->
+  <g>
+    <rect x="{$badgeX}" y="{$badgeY}" width="{$badgeW}" height="{$badgeH}" rx="{$badgeRx}" fill="{$primaryHex}" fill-opacity="0.14" stroke="{$primaryHex}" stroke-opacity="0.38" stroke-width="1.2"/>
+    <circle cx="{$badgeDotX}" cy="{$badgeDotY}" r="3.5" fill="{$accentHex}"/>
+    <text x="{$badgeTextX}" y="{$badgeTextY}" fill="{$accentHex}" class="font-heading" font-size="{$badgeFontSize}" font-weight="800" letter-spacing="1.5">{$badge}</text>
+  </g>
 
   <!-- Watermark -->
   {$watermarkSvg}
 
-  <!-- Quote Accent -->
-  {$quoteIconSvg}
+  <!-- Archetype Core Content Region -->
+  {$contentSvg}
 
-  <!-- Data Stat Badge -->
-  {$statBadgeSvg}
+  <!-- Footer Signature & Divider -->
+  <line x1="{$footerSepX1}" y1="{$footerSepY}" x2="{$footerSepX2}" y2="{$footerSepY}" stroke="url(#dividerGrad)" stroke-width="1.2"/>
 
-  <!-- Headline Text -->
-  <text class="font-heading" font-size="{$fontSize}" font-weight="800" fill="{$textPrimary}">
-    {$headlineSvg}
+  <!-- Footer Brand / Website Pill -->
+  <text x="{$contentX}" y="{$footerBrandY}" fill="{$textMuted}" class="font-body" font-size="{$footerFontSize}" font-weight="600">
+    <tspan fill="{$primaryHex}">✦</tspan> {$safeWebsite} <tspan fill="{$textMuted}" opacity="0.4">·</tspan> {$safeHandle}
   </text>
 
-  <!-- Accent Divider -->
-  <rect x="{$contentX}" y="{$accentDividerY}" width="{$accentDividerW}" height="4" rx="2" fill="url(#accentGlow)"/>
-
-  <!-- Body Content -->
-  <text class="font-body" font-size="{$bodyFontSize}" font-weight="400" fill="{$textMuted}" letter-spacing="0.2">
-    {$bodySvg}
-  </text>
-
-  <!-- Footer Brand Signature Bar -->
-  <line x1="{$footerSepX1}" y1="{$footerSepY}" x2="{$footerSepX2}" y2="{$footerSepY}" stroke="{$textMuted}" stroke-opacity="0.2" stroke-width="1"/>
-
-  <text x="{$contentX}" y="{$footerBrandY}" fill="{$primaryHex}" class="font-heading" font-size="{$footerBrandFontSize}" font-weight="800">{$safeBrand}</text>
-  <text x="{$contentX}" y="{$footerHandleY}" fill="{$textMuted}" class="font-body" font-size="{$footerHandleFontSize}" font-weight="500">{$safeHandle} <tspan fill="{$textMuted}" opacity="0.5">·</tspan> {$safeWebsite}</text>
-
-  <!-- Call to Action Pill Button -->
+  <!-- Footer Action Button -->
   <rect x="{$ctaX}" y="{$ctaY}" width="{$ctaW}" height="{$ctaH}" rx="{$ctaRx}" fill="url(#accentGlow)"/>
-  <text x="{$ctaTextX}" y="{$ctaTextY}" fill="#ffffff" class="font-heading" font-size="{$ctaFontSize}" font-weight="700" text-anchor="middle">{$footerCta}</text>
+  <text x="{$ctaTextX}" y="{$ctaTextY}" fill="#ffffff" class="font-heading" font-size="{$ctaFontSize}" font-weight="700" text-anchor="middle">{$footerCta} ↗</text>
 </svg>
 SVG;
+    }
+
+    /**
+     * Helper to wrap text into SVG tspan lines and track the cursor Y.
+     *
+     * @return array{0: string, 1: int, 2: int}
+     */
+    private function renderTspans(string $text, int $maxChars, int $maxLines, int $x, int $startY, int $lineStep): array
+    {
+        $escaped = htmlspecialchars($text, ENT_XML1);
+        $lines = explode("\n", wordwrap($escaped, $maxChars, "\n", true));
+        $lines = array_slice($lines, 0, $maxLines);
+
+        $svg = '';
+        $curY = $startY;
+        foreach ($lines as $line) {
+            $svg .= "<tspan x=\"{$x}\" y=\"{$curY}\">{$line}</tspan>";
+            $curY += $lineStep;
+        }
+
+        return [$svg, $curY, count($lines)];
+    }
+
+    private function adjustBrightness(string $hex, float $percent): string
+    {
+        $rgb = $this->hexToRgb($hex);
+        $r = max(0, min(255, (int) ($rgb[0] * (1 + $percent))));
+        $g = max(0, min(255, (int) ($rgb[1] * (1 + $percent))));
+        $b = max(0, min(255, (int) ($rgb[2] * (1 + $percent))));
+
+        return sprintf('#%02x%02x%02x', $r, $g, $b);
     }
 
     private function storeSlideMedia(

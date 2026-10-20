@@ -12,35 +12,42 @@ const PRESET_THEMES = [
     {
         id: 'modern_minimalist',
         name: 'Modern Minimalist',
-        colors: { primary: '#6366f1', secondary: '#0f172a', accent: '#38bdf8', bg: '#0b0f19', surface: '#1e293b' },
+        colors: { primary: '#6366f1', secondary: '#0f172a', accent: '#38bdf8', bg: '#090d16', surface: '#131b2e' },
         heading: 'Poppins',
+        body: 'Inter',
+    },
+    {
+        id: 'executive_dark',
+        name: 'Executive Titanium',
+        colors: { primary: '#f8fafc', secondary: '#09090b', accent: '#38bdf8', bg: '#030712', surface: '#0f172a' },
+        heading: 'Montserrat',
         body: 'Inter',
     },
     {
         id: 'tech_neon',
         name: 'Cyber & Tech Glow',
-        colors: { primary: '#10b981', secondary: '#064e3b', accent: '#34d399', bg: '#022c22', surface: '#065f46' },
+        colors: { primary: '#10b981', secondary: '#064e3b', accent: '#34d399', bg: '#021a14', surface: '#072b22' },
         heading: 'Space Grotesk',
         body: 'Inter',
     },
     {
         id: 'editorial_luxury',
         name: 'Editorial Luxury',
-        colors: { primary: '#d97706', secondary: '#18181b', accent: '#fbbf24', bg: '#09090b', surface: '#27272a' },
+        colors: { primary: '#d97706', secondary: '#18181b', accent: '#fbbf24', bg: '#09090b', surface: '#1c1917' },
         heading: 'Playfair Display',
         body: 'Inter',
     },
     {
         id: 'vibrant_electric',
         name: 'Vibrant Electric',
-        colors: { primary: '#ec4899', secondary: '#312e81', accent: '#a855f7', bg: '#1e1b4b', surface: '#312e81' },
+        colors: { primary: '#ec4899', secondary: '#312e81', accent: '#a855f7', bg: '#130924', surface: '#231245' },
         heading: 'Montserrat',
         body: 'Poppins',
     },
     {
         id: 'clean_light',
         name: 'Clean Light Slate',
-        colors: { primary: '#2563eb', secondary: '#1e293b', accent: '#60a5fa', bg: '#f1f5f9', surface: '#ffffff' },
+        colors: { primary: '#2563eb', secondary: '#0f172a', accent: '#0284c7', bg: '#f8fafc', surface: '#ffffff' },
         heading: 'Outfit',
         body: 'Inter',
     },
@@ -123,8 +130,39 @@ export default function BrandKit({ brand_profile, archetypes = [], aspect_ratios
                             ? 'The secret to compounding scale is not working harder, but building systems that execute while you sleep.'
                             : (selectedArchetype === 'data'
                                 ? 'Automated social distribution drives 4.8x higher consistent organic reach over manual posting.'
-                                : 'Mastering Autonomous AI Social Distribution for Growing Brands'),
-                        subheadline: 'Eliminate creative bottlenecks, enforce brand consistency across every channel, and publish high-converting content effortlessly.',
+                                : (selectedArchetype === 'promo'
+                                    ? 'Scale Your Brand on Autopilot with Autonomous AI Studio'
+                                    : (selectedArchetype === 'announcement'
+                                        ? 'Introducing the BotifyAI Autonomous Creative Studio v2.0'
+                                        : (selectedArchetype === 'carousel'
+                                            ? 'The 5-Step Blueprint to 10x Your Organic Creator Reach'
+                                            : 'The 3 Rules of Compounding Organic Audience Growth')))),
+                        subheadline: selectedArchetype === 'data'
+                            ? 'Organizations adopting automated publishing workflows see 4.8x higher organic engagement.'
+                            : (selectedArchetype === 'promo'
+                                ? 'Eliminate creative bottlenecks, enforce brand consistency across every channel, and publish high-converting content effortlessly.'
+                                : (selectedArchetype === 'announcement'
+                                    ? 'Exciting updates are live. Experience the new era of autonomous brand publishing with BotifyAI.'
+                                    : 'Focus on consistent execution and high-leverage compound improvements.')),
+                        stat_metric: '87%',
+                        stat_trend: '+4.8X YoY',
+                        quote_text: 'The secret to compounding scale is not working harder, but building systems that execute while you sleep.',
+                        quote_author: data.brand_name || 'BotifyAI',
+                        quote_title: 'Founder & Head of Strategy',
+                        promo_headline: 'Scale Your Brand on Autopilot with Autonomous AI Studio',
+                        promo_badge: 'LIMITED ACCESS',
+                        announcement_tag: 'PRODUCT RELEASE',
+                        points: selectedArchetype === 'tip'
+                            ? [
+                                { title: 'Systemize Your Creative Pipeline', body: 'Automate repetitive design production and focus 100% on high-leverage brand strategy.' },
+                                { title: 'Enforce Visual Consistency', body: 'Lock your typography, palette, and tone across every channel effortlessly.' },
+                                { title: 'Compound Organic Distribution', body: 'Publish daily at peak engagement windows to build compounding authority.' },
+                            ]
+                            : [
+                                'Instant multi-channel publishing to IG, X, LinkedIn & FB',
+                                '100% deterministic brand consistency & design kits',
+                                'Eliminate creative bottlenecks with 10x faster output',
+                            ],
                         cta_text: data.cta_templates[0] || 'Save for later ↗',
                     },
                 }),
@@ -146,7 +184,7 @@ export default function BrandKit({ brand_profile, archetypes = [], aspect_ratios
 
     useEffect(() => {
         fetchPreview();
-    }, [selectedArchetype, selectedRatio, data.primary_color, data.secondary_color, data.surface_color, data.heading_font, data.logo_url, data.watermark_opacity]);
+    }, [selectedArchetype, selectedRatio, data.brand_name, data.primary_color, data.secondary_color, data.accent_color, data.bg_color, data.surface_color, data.heading_font, data.body_font, data.logo_url, data.watermark_opacity]);
 
     const handleApplyPreset = (preset) => {
         setData(prev => ({
