@@ -48,6 +48,13 @@ class SocialPublisher
      */
     public function publish(SocialPost $post, bool $finalAttempt = true): void
     {
+        // Re-read latest status to abort immediately if another worker already completed this post
+        $post->refresh();
+        if ($post->status === 'published') {
+            Log::info("SocialPublisher: post {$post->id} is already marked published; skipping duplicate execution.");
+            return;
+        }
+
         $post->update(['status' => 'publishing']);
 
         // Scope accounts to the post's own workspace to prevent cross-workspace publishing.
@@ -64,8 +71,11 @@ class SocialPublisher
                 ['status' => 'pending']
             );
 
-            // On job retry, skip accounts already successfully published.
-            if ($link->status === 'published') {
+            // Fresh reload to catch any concurrent worker that just published to this account
+            $link->refresh();
+
+            // On job retry or concurrent attempt, skip accounts already successfully published.
+            if ($link->status === 'published' || ! empty($link->platform_post_id)) {
                 $results[$account->id] = ['status' => 'published', 'post_id' => $link->platform_post_id];
                 continue;
             }

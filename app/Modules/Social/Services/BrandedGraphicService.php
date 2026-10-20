@@ -378,12 +378,236 @@ class BrandedGraphicService
         $textPrimary = $this->contrastColor($surfaceHex);
         $textMuted = $textPrimary === '#ffffff' ? '#94a3b8' : '#64748b';
 
-        // Wrapped headline lines
-        $headlineLines = explode("\n", wordwrap($headline, 28, "\n", true));
-        $bodyLines = explode("\n", wordwrap($body, 42, "\n", true));
+        // Detect form factor
+        $isLandscape = ($width > $height);              // 16:9 (1200x675)
+        $isStory = ($height >= 1800);                   // 9:16 (1080x1920)
+        $isPortrait = ($height > $width && ! $isStory); // 4:5 (1080x1350)
+        $isSquare = (! $isLandscape && ! $isStory && ! $isPortrait); // 1:1 (1080x1080)
 
-        // Dimension bounding adjustments
-        $cardPadding = 64;
+        // Proportional geometry settings per aspect ratio
+        if ($isLandscape) {
+            $cardPadding = 36;
+            $contentX = 64;
+            $cardRx = 20;
+
+            $pillX = 64;
+            $pillY = 56;
+            $pillW = 320;
+            $pillH = 34;
+            $pillRx = 17;
+            $pillTextX = 80;
+            $pillTextY = 78;
+            $pillFontSize = 13;
+
+            $counterX = $width - 64;
+            $counterY = 78;
+            $counterFontSize = 15;
+
+            $logoX = $width - 220;
+            $logoY = 52;
+            $logoW = 120;
+            $logoH = 38;
+
+            $wmX = $watermarkPosition === 'bottom-left' ? 64 : ($width - 150);
+            $wmY = str_contains($watermarkPosition, 'top') ? 56 : ($height - 130);
+            $wmW = 75;
+            $wmH = 75;
+
+            $headlineWrap = 42;
+            $bodyWrap = 58;
+            $maxHeadlineLines = 3;
+            $maxBodyLines = 3;
+            $fontSize = 36;
+            $lineStep = 44;
+            $headlineStartY = ($format === 'data' ? 180 : 138);
+            $bodyFontSize = 18;
+            $bodyLineStep = 26;
+
+            $footerY = $height - 58;
+            $footerSepY = $footerY - 24;
+            $footerSepX1 = 64;
+            $footerSepX2 = $width - 64;
+            $footerBrandY = $footerY;
+            $footerHandleY = $footerY + 20;
+            $footerBrandFontSize = 18;
+            $footerHandleFontSize = 13;
+
+            $ctaW = 240;
+            $ctaH = 36;
+            $ctaRx = 18;
+            $ctaX = $width - 64 - $ctaW;
+            $ctaY = $footerY - 14;
+            $ctaTextX = $ctaX + (int) ($ctaW / 2);
+            $ctaTextY = $ctaY + 23;
+            $ctaFontSize = 13;
+        } elseif ($isStory) {
+            $cardPadding = 56;
+            $contentX = 100;
+            $cardRx = 32;
+
+            $pillX = 100;
+            $pillY = 220;
+            $pillW = 420;
+            $pillH = 52;
+            $pillRx = 26;
+            $pillTextX = 126;
+            $pillTextY = 253;
+            $pillFontSize = 18;
+
+            $counterX = $width - 100;
+            $counterY = 253;
+            $counterFontSize = 20;
+
+            $logoX = $width - 270;
+            $logoY = 215;
+            $logoW = 150;
+            $logoH = 54;
+
+            $wmX = $watermarkPosition === 'bottom-left' ? 100 : ($width - 240);
+            $wmY = str_contains($watermarkPosition, 'top') ? 220 : ($height - 320);
+            $wmW = 130;
+            $wmH = 130;
+
+            $headlineWrap = 24;
+            $bodyWrap = 36;
+            $maxHeadlineLines = 5;
+            $maxBodyLines = 5;
+            $fontSize = 58;
+            $lineStep = 76;
+            $headlineStartY = ($format === 'data' ? 560 : 440);
+            $bodyFontSize = 32;
+            $bodyLineStep = 48;
+
+            $footerY = $height - 240;
+            $footerSepY = $footerY - 40;
+            $footerSepX1 = 100;
+            $footerSepX2 = $width - 100;
+            $footerBrandY = $footerY;
+            $footerHandleY = $footerY + 36;
+            $footerBrandFontSize = 28;
+            $footerHandleFontSize = 20;
+
+            $ctaW = 340;
+            $ctaH = 62;
+            $ctaRx = 31;
+            $ctaX = $width - 100 - $ctaW;
+            $ctaY = $footerY - 16;
+            $ctaTextX = $ctaX + (int) ($ctaW / 2);
+            $ctaTextY = $ctaY + 39;
+            $ctaFontSize = 18;
+        } elseif ($isPortrait) {
+            $cardPadding = 56;
+            $contentX = 90;
+            $cardRx = 28;
+
+            $pillX = 90;
+            $pillY = 96;
+            $pillW = 380;
+            $pillH = 46;
+            $pillRx = 23;
+            $pillTextX = 114;
+            $pillTextY = 125;
+            $pillFontSize = 16;
+
+            $counterX = $width - 90;
+            $counterY = 125;
+            $counterFontSize = 18;
+
+            $logoX = $width - 250;
+            $logoY = 90;
+            $logoW = 140;
+            $logoH = 48;
+
+            $wmX = $watermarkPosition === 'bottom-left' ? 90 : ($width - 200);
+            $wmY = str_contains($watermarkPosition, 'top') ? 96 : ($height - 200);
+            $wmW = 100;
+            $wmH = 100;
+
+            $headlineWrap = 26;
+            $bodyWrap = 38;
+            $maxHeadlineLines = 4;
+            $maxBodyLines = 4;
+            $fontSize = 50;
+            $lineStep = 64;
+            $headlineStartY = ($format === 'data' ? 430 : 330);
+            $bodyFontSize = 26;
+            $bodyLineStep = 38;
+
+            $footerY = $height - 120;
+            $footerSepY = $footerY - 32;
+            $footerSepX1 = 90;
+            $footerSepX2 = $width - 90;
+            $footerBrandY = $footerY;
+            $footerHandleY = $footerY + 28;
+            $footerBrandFontSize = 24;
+            $footerHandleFontSize = 17;
+
+            $ctaW = 300;
+            $ctaH = 52;
+            $ctaRx = 26;
+            $ctaX = $width - 90 - $ctaW;
+            $ctaY = $footerY - 14;
+            $ctaTextX = $ctaX + (int) ($ctaW / 2);
+            $ctaTextY = $ctaY + 33;
+            $ctaFontSize = 16;
+        } else {
+            // Square 1:1
+            $cardPadding = 56;
+            $contentX = 90;
+            $cardRx = 28;
+
+            $pillX = 90;
+            $pillY = 90;
+            $pillW = 380;
+            $pillH = 44;
+            $pillRx = 22;
+            $pillTextX = 114;
+            $pillTextY = 118;
+            $pillFontSize = 16;
+
+            $counterX = $width - 90;
+            $counterY = 118;
+            $counterFontSize = 18;
+
+            $logoX = $width - 240;
+            $logoY = 85;
+            $logoW = 140;
+            $logoH = 46;
+
+            $wmX = $watermarkPosition === 'bottom-left' ? 90 : ($width - 190);
+            $wmY = str_contains($watermarkPosition, 'top') ? 90 : ($height - 180);
+            $wmW = 100;
+            $wmH = 100;
+
+            $headlineWrap = 26;
+            $bodyWrap = 38;
+            $maxHeadlineLines = 4;
+            $maxBodyLines = 4;
+            $fontSize = 48;
+            $lineStep = 62;
+            $headlineStartY = ($format === 'data' ? 370 : 280);
+            $bodyFontSize = 24;
+            $bodyLineStep = 36;
+
+            $footerY = $height - 110;
+            $footerSepY = $footerY - 30;
+            $footerSepX1 = 90;
+            $footerSepX2 = $width - 90;
+            $footerBrandY = $footerY;
+            $footerHandleY = $footerY + 26;
+            $footerBrandFontSize = 22;
+            $footerHandleFontSize = 16;
+
+            $ctaW = 280;
+            $ctaH = 48;
+            $ctaRx = 24;
+            $ctaX = $width - 90 - $ctaW;
+            $ctaY = $footerY - 14;
+            $ctaTextX = $ctaX + (int) ($ctaW / 2);
+            $ctaTextY = $ctaY + 30;
+            $ctaFontSize = 15;
+        }
+
         $cardW = $width - ($cardPadding * 2);
         $cardH = $height - ($cardPadding * 2);
 
@@ -394,7 +618,7 @@ class BrandedGraphicService
         $logoSvg = '';
         if ($logoUrl !== '') {
             $safeLogo = htmlspecialchars($logoUrl, ENT_XML1);
-            $logoSvg = "<image href=\"{$safeLogo}\" x=\"".($width - 240)."\" y=\"80\" width=\"140\" height=\"48\" preserveAspectRatio=\"xMidYMid meet\"/>";
+            $logoSvg = "<image href=\"{$safeLogo}\" x=\"{$logoX}\" y=\"{$logoY}\" width=\"{$logoW}\" height=\"{$logoH}\" preserveAspectRatio=\"xMidYMid meet\"/>";
         }
 
         // Watermark element
@@ -402,62 +626,60 @@ class BrandedGraphicService
         if ($watermarkUrl !== '') {
             $safeWm = htmlspecialchars($watermarkUrl, ENT_XML1);
             $wmOp = round($watermarkOpacity / 100, 2);
-            $wmX = $watermarkPosition === 'bottom-left' ? 90 : ($width - 190);
-            $wmY = str_contains($watermarkPosition, 'top') ? 90 : ($height - 180);
-            $watermarkSvg = "<image href=\"{$safeWm}\" x=\"{$wmX}\" y=\"{$wmY}\" width=\"100\" height=\"100\" opacity=\"{$wmOp}\" preserveAspectRatio=\"xMidYMid meet\"/>";
+            $watermarkSvg = "<image href=\"{$safeWm}\" x=\"{$wmX}\" y=\"{$wmY}\" width=\"{$wmW}\" height=\"{$wmH}\" opacity=\"{$wmOp}\" preserveAspectRatio=\"xMidYMid meet\"/>";
         }
 
-        // Format-specific layouts
-        $headlineSvg = '';
-        $headlineY = 320;
-        $fontSize = count($headlineLines) > 3 ? 42 : 50;
-        $lineStep = $fontSize * 1.28;
-        foreach (array_slice($headlineLines, 0, 5) as $line) {
-            $headlineSvg .= "<tspan x=\"100\" y=\"{$headlineY}\">{$line}</tspan>";
-            $headlineY += $lineStep;
-        }
-
-        $bodySvg = '';
-        $bodyY = $headlineY + 40;
-        $bodyFontSize = 26;
-        $bodyLineStep = 38;
-        foreach (array_slice($bodyLines, 0, 5) as $line) {
-            $bodySvg .= "<tspan x=\"100\" y=\"{$bodyY}\">{$line}</tspan>";
-            $bodyY += $bodyLineStep;
-        }
-
+        // Format-specific elements
         $statBadgeSvg = '';
         if ($format === 'data' && $stat !== '') {
+            if ($isLandscape) {
+                $statBadgeW = 200; $statBadgeH = 68; $statBadgeY = 100; $statTextY = 148; $statFontSize = 46;
+            } elseif ($isStory) {
+                $statBadgeW = 340; $statBadgeH = 120; $statBadgeY = 380; $statTextY = 465; $statFontSize = 76;
+            } else {
+                $statBadgeW = 260; $statBadgeH = 92; $statBadgeY = 220; $statTextY = 285; $statFontSize = 58;
+            }
+            $statTextX = $contentX + (int) ($statBadgeW / 2);
             $statBadgeSvg = <<<SVG
-<rect x="100" y="240" width="260" height="90" rx="16" fill="{$primaryHex}"/>
-<text x="230" y="302" fill="#ffffff" font-family="'{$headingFont}', sans-serif" font-size="56" font-weight="900" text-anchor="middle">{$stat}</text>
+<rect x="{$contentX}" y="{$statBadgeY}" width="{$statBadgeW}" height="{$statBadgeH}" rx="16" fill="{$primaryHex}"/>
+<text x="{$statTextX}" y="{$statTextY}" fill="#ffffff" font-family="'{$headingFont}', sans-serif" font-size="{$statFontSize}" font-weight="900" text-anchor="middle">{$stat}</text>
 SVG;
-            // Shift headline down for data archetype
-            $headlineSvg = '';
-            $headlineY = 400;
-            foreach (array_slice($headlineLines, 0, 4) as $line) {
-                $headlineSvg .= "<tspan x=\"100\" y=\"{$headlineY}\">{$line}</tspan>";
-                $headlineY += $lineStep;
-            }
-            $bodySvg = '';
-            $bodyY = $headlineY + 36;
-            foreach (array_slice($bodyLines, 0, 4) as $line) {
-                $bodySvg .= "<tspan x=\"100\" y=\"{$bodyY}\">{$line}</tspan>";
-                $bodyY += $bodyLineStep;
-            }
         }
 
         $quoteIconSvg = '';
         if ($format === 'quote') {
+            $quoteY = $isLandscape ? 128 : ($isStory ? 410 : 270);
+            $quoteSize = $isLandscape ? 70 : ($isStory ? 140 : 105);
             $quoteIconSvg = <<<SVG
-<text x="96" y="290" fill="{$accentHex}" font-family="Georgia, serif" font-size="110" font-weight="bold" opacity="0.4">“</text>
+<text x="{$contentX}" y="{$quoteY}" fill="{$accentHex}" font-family="Georgia, serif" font-size="{$quoteSize}" font-weight="bold" opacity="0.4">“</text>
 SVG;
         }
 
-        $footerY = $height - 110;
+        // Wrapped headline lines
+        $headlineLines = explode("\n", wordwrap($headline, $headlineWrap, "\n", true));
+        $bodyLines = explode("\n", wordwrap($body, $bodyWrap, "\n", true));
+
+        $headlineSvg = '';
+        $curHeadlineY = $headlineStartY;
+        $renderedHeadlineLines = array_slice($headlineLines, 0, $maxHeadlineLines);
+        foreach ($renderedHeadlineLines as $line) {
+            $headlineSvg .= "<tspan x=\"{$contentX}\" y=\"{$curHeadlineY}\">{$line}</tspan>";
+            $curHeadlineY += $lineStep;
+        }
+
+        $accentDividerY = $curHeadlineY + ($isLandscape ? 8 : 14);
+        $accentDividerW = (int) ($width * 0.12);
+
+        $bodySvg = '';
+        $curBodyY = $accentDividerY + ($isLandscape ? 24 : 36);
+        $renderedBodyLines = array_slice($bodyLines, 0, $maxBodyLines);
+        foreach ($renderedBodyLines as $line) {
+            $bodySvg .= "<tspan x=\"{$contentX}\" y=\"{$curBodyY}\">{$line}</tspan>";
+            $curBodyY += $bodyLineStep;
+        }
 
         return <<<SVG
-<svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}">
+<svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}" preserveAspectRatio="xMidYMid meet">
   <defs>
     <style>
       @import url('https://fonts.googleapis.com/css2?family={$headingFont}:wght@700;800;900&amp;family={$bodyFont}:wght@400;500;600&amp;display=swap');
@@ -484,15 +706,15 @@ SVG;
   <rect width="{$width}" height="10" fill="url(#accentGlow)"/>
 
   <!-- Inner Surface Card -->
-  <rect x="{$cardPadding}" y="{$cardPadding}" width="{$cardW}" height="{$cardH}" rx="28" fill="{$surfaceHex}" filter="url(#cardShadow)"/>
-  <rect x="{$cardPadding}" y="{$cardPadding}" width="{$cardW}" height="{$cardH}" rx="28" fill="none" stroke="{$primaryHex}" stroke-width="1.5" stroke-opacity="0.25"/>
+  <rect x="{$cardPadding}" y="{$cardPadding}" width="{$cardW}" height="{$cardH}" rx="{$cardRx}" fill="{$surfaceHex}" filter="url(#cardShadow)"/>
+  <rect x="{$cardPadding}" y="{$cardPadding}" width="{$cardW}" height="{$cardH}" rx="{$cardRx}" fill="none" stroke="{$primaryHex}" stroke-width="1.5" stroke-opacity="0.25"/>
 
   <!-- Header Eyebrow Pill -->
-  <rect x="100" y="100" width="380" height="42" rx="21" fill="{$primaryHex}"/>
-  <text x="124" y="127" fill="#ffffff" class="font-heading" font-size="16" font-weight="800" letter-spacing="1">{$badge}</text>
+  <rect x="{$pillX}" y="{$pillY}" width="{$pillW}" height="{$pillH}" rx="{$pillRx}" fill="{$primaryHex}"/>
+  <text x="{$pillTextX}" y="{$pillTextY}" fill="#ffffff" class="font-heading" font-size="{$pillFontSize}" font-weight="800" letter-spacing="1">{$badge}</text>
 
   <!-- Slide Counter -->
-  <text x="{$width} - 160" y="128" fill="{$textMuted}" class="font-body" font-size="18" font-weight="600" text-anchor="end">{$counter}</text>
+  <text x="{$counterX}" y="{$counterY}" fill="{$textMuted}" class="font-body" font-size="{$counterFontSize}" font-weight="600" text-anchor="end">{$counter}</text>
 
   <!-- Logo Slot -->
   {$logoSvg}
@@ -512,7 +734,7 @@ SVG;
   </text>
 
   <!-- Accent Divider -->
-  <rect x="100" y="{$headlineY} + 12" width="120" height="4" rx="2" fill="url(#accentGlow)"/>
+  <rect x="{$contentX}" y="{$accentDividerY}" width="{$accentDividerW}" height="4" rx="2" fill="url(#accentGlow)"/>
 
   <!-- Body Content -->
   <text class="font-body" font-size="{$bodyFontSize}" font-weight="400" fill="{$textMuted}" letter-spacing="0.2">
@@ -520,14 +742,14 @@ SVG;
   </text>
 
   <!-- Footer Brand Signature Bar -->
-  <line x1="100" y1="{$footerY} - 30" x2="{$width} - 100" y2="{$footerY} - 30" stroke="{$textMuted}" stroke-opacity="0.2" stroke-width="1"/>
+  <line x1="{$footerSepX1}" y1="{$footerSepY}" x2="{$footerSepX2}" y2="{$footerSepY}" stroke="{$textMuted}" stroke-opacity="0.2" stroke-width="1"/>
 
-  <text x="100" y="{$footerY}" fill="{$primaryHex}" class="font-heading" font-size="22" font-weight="800">{$safeBrand}</text>
-  <text x="100" y="{$footerY} + 26" fill="{$textMuted}" class="font-body" font-size="16" font-weight="500">{$safeHandle} <tspan fill="{$textMuted}" opacity="0.5">·</tspan> {$safeWebsite}</text>
+  <text x="{$contentX}" y="{$footerBrandY}" fill="{$primaryHex}" class="font-heading" font-size="{$footerBrandFontSize}" font-weight="800">{$safeBrand}</text>
+  <text x="{$contentX}" y="{$footerHandleY}" fill="{$textMuted}" class="font-body" font-size="{$footerHandleFontSize}" font-weight="500">{$safeHandle} <tspan fill="{$textMuted}" opacity="0.5">·</tspan> {$safeWebsite}</text>
 
   <!-- Call to Action Pill Button -->
-  <rect x="{$width} - 380" y="{$footerY} - 18" width="280" height="46" rx="23" fill="url(#accentGlow)"/>
-  <text x="{$width} - 240" y="{$footerY} + 11" fill="#ffffff" class="font-heading" font-size="15" font-weight="700" text-anchor="middle">{$footerCta}</text>
+  <rect x="{$ctaX}" y="{$ctaY}" width="{$ctaW}" height="{$ctaH}" rx="{$ctaRx}" fill="url(#accentGlow)"/>
+  <text x="{$ctaTextX}" y="{$ctaTextY}" fill="#ffffff" class="font-heading" font-size="{$ctaFontSize}" font-weight="700" text-anchor="middle">{$footerCta}</text>
 </svg>
 SVG;
     }
@@ -545,12 +767,33 @@ SVG;
         $diskName = $this->storageManager->diskName();
         $ext = 'svg';
         $mime = 'image/svg+xml';
+        $content = $svgContent;
+
+        // If Imagick is available, convert to high-resolution PNG so Meta (FB/IG) Graph API accepts it natively
+        if (class_exists(\Imagick::class)) {
+            try {
+                $im = new \Imagick();
+                $im->setBackgroundColor(new \ImagickPixel('transparent'));
+                $im->readImageBlob($svgContent);
+                $im->setImageFormat('png32');
+                $pngData = $im->getImageBlob();
+                $im->clear();
+                $im->destroy();
+                if ($pngData) {
+                    $ext = 'png';
+                    $mime = 'image/png';
+                    $content = $pngData;
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('BrandedGraphicService: Imagick PNG conversion skipped: '.$e->getMessage());
+            }
+        }
 
         $filename = "brand-{$format}-{$slideNumber}-".Str::random(8).".{$ext}";
         $rawPath = 'media/social-graphics/'.Str::uuid().'.'.$ext;
         $path = $this->storageManager->prefixedPath($rawPath);
 
-        Storage::disk($diskName)->put($path, $svgContent);
+        Storage::disk($diskName)->put($path, $content);
 
         // Associate with Workspace Owner user so it is visible in the client Media Library
         $workspace = Workspace::find($workspaceId);
@@ -565,7 +808,7 @@ SVG;
             'path' => $path,
             'filename' => $filename,
             'mime_type' => $mime,
-            'size_bytes' => strlen($svgContent),
+            'size_bytes' => strlen($content),
             'collection' => 'social',
             'meta' => [
                 'format' => $format,

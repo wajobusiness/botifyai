@@ -348,14 +348,20 @@ export default function BrandKit({ brand_profile, archetypes = [], aspect_ratios
                                             <button
                                                 key={ar.id}
                                                 type="button"
-                                                onClick={() => setSelectedRatio(ar.id)}
-                                                className={`py-2 px-3 rounded-lg text-xs font-medium border text-center transition ${
+                                                onClick={() => {
+                                                    setSelectedRatio(ar.id);
+                                                    if (!(data.aspect_ratios || []).includes(ar.id)) {
+                                                        setData('aspect_ratios', [...(data.aspect_ratios || []), ar.id]);
+                                                    }
+                                                }}
+                                                className={`py-2 px-3 rounded-lg text-xs font-medium border text-left transition flex flex-col ${
                                                     selectedRatio === ar.id
                                                         ? 'border-brand-600 bg-brand-600 text-white'
                                                         : 'border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800'
                                                 }`}
                                             >
-                                                {ar.name}
+                                                <span className="font-semibold">{ar.name}</span>
+                                                <span className={`text-[10px] mt-0.5 ${selectedRatio === ar.id ? 'text-white/80' : 'text-neutral-400'}`}>{ar.dimensions}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -415,7 +421,7 @@ export default function BrandKit({ brand_profile, archetypes = [], aspect_ratios
                                     </div>
                                 ) : previewSvg ? (
                                     <div
-                                        className="w-full max-w-[540px] rounded-2xl overflow-hidden shadow-lg transition-all"
+                                        className="w-full max-w-[540px] flex items-center justify-center rounded-2xl overflow-hidden shadow-lg transition-all [&_svg]:w-full [&_svg]:h-auto [&_svg]:max-h-[580px] [&_svg]:block [&_svg]:mx-auto"
                                         dangerouslySetInnerHTML={{ __html: previewSvg }}
                                     />
                                 ) : (
@@ -718,6 +724,56 @@ export default function BrandKit({ brand_profile, archetypes = [], aspect_ratios
                                     </div>
                                 );
                             })}
+                        </div>
+
+                        {/* Brand Aspect Ratios */}
+                        <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 space-y-3">
+                            <div>
+                                <h4 className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+                                    Brand Aspect Ratios & Canvas Dimensions
+                                </h4>
+                                <p className="text-[11px] text-neutral-500 mt-0.5">
+                                    Select which standard formats the Creative Engine generates for your social campaigns.
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                {aspect_ratios.map(ar => {
+                                    const active = (data.aspect_ratios || []).includes(ar.id);
+                                    return (
+                                        <div
+                                            key={ar.id}
+                                            onClick={() => {
+                                                const current = data.aspect_ratios || [];
+                                                const next = current.includes(ar.id)
+                                                    ? (current.length > 1 ? current.filter(id => id !== ar.id) : current)
+                                                    : [...current, ar.id];
+                                                setData('aspect_ratios', next);
+                                            }}
+                                            className={`p-3.5 rounded-xl border cursor-pointer transition flex flex-col justify-between ${
+                                                active
+                                                    ? 'border-brand-500 bg-brand-50/30 dark:bg-brand-950/20'
+                                                    : 'border-neutral-200 dark:border-neutral-800 opacity-60'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-bold text-neutral-900 dark:text-white">{ar.name}</span>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={active}
+                                                    onChange={() => {}}
+                                                    className="rounded text-brand-600 focus:ring-brand-500"
+                                                />
+                                            </div>
+                                            <div className="mt-2 text-[11px] font-mono text-brand-600 dark:text-brand-400 font-semibold">
+                                                {ar.dimensions}
+                                            </div>
+                                            <div className="mt-1 text-[10px] text-neutral-500">
+                                                {ar.best_for}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         {/* Content Pillars */}

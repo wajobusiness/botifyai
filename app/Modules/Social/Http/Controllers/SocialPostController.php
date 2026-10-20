@@ -268,8 +268,8 @@ class SocialPostController extends Controller
         ]));
 
         if (! $validated['scheduled_at']) {
-            PublishSocialPostJob::dispatch($post->id)->onQueue('social');
             $post->update(['status' => 'publishing']);
+            PublishSocialPostJob::dispatch($post->id)->onQueue('social');
         }
 
         if ($request->expectsJson()) {

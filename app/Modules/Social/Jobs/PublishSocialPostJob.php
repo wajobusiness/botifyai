@@ -6,6 +6,7 @@ use App\Modules\Social\Models\SocialPost;
 use App\Modules\Social\Services\SocialPublisher;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class PublishSocialPostJob implements ShouldQueue
@@ -28,14 +29,29 @@ class PublishSocialPostJob implements ShouldQueue
 
     public function handle(SocialPublisher $publisher): void
     {
-        $post = SocialPost::find($this->postId);
+        $lockKey = "social_post_publish_{$this->postId}";
+        $lock = Cache::lock($lockKey, 180);
 
-        // Post deleted, already fully published, or reverted to draft — nothing to do.
-        if (! $post || in_array($post->status, ['published', 'draft'], true)) {
+        // Atomic lock prevents duplicate concurrent execution (e.g. queue worker + opportunistic scheduler)
+        if (! $lock->get()) {
+            Log::info('PublishSocialPostJob skipped: post is already actively being published by another worker', [
+                'post_id' => $this->postId,
+            ]);
             return;
         }
 
-        $publisher->publish($post, finalAttempt: $this->attempts() >= $this->tries);
+        try {
+            $post = SocialPost::find($this->postId);
+
+            // Post deleted, already fully published, or reverted to draft — nothing to do.
+            if (! $post || in_array($post->status, ['published', 'draft'], true)) {
+                return;
+            }
+
+            $publisher->publish($post, finalAttempt: $this->attempts() >= $this->tries);
+        } finally {
+            $lock->release();
+        }
     }
 
     /**
