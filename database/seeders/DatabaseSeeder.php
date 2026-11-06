@@ -33,6 +33,9 @@ class DatabaseSeeder extends Seeder
             // Comprehensive demo content: one fully-populated client
             // (SpaGreen Wellness) across every module, plus light secondaries.
             DemoSeeder::class,
+
+            // Enterprise Client Evidence: FTF Digital Solutions Limited
+            FtfDigitalSolutionsSeeder::class,
         ]);
 
         if (file_exists(database_path('seeders/BotifyAcademySeeder.php'))) {
