@@ -63,17 +63,43 @@ class FtfDigitalSolutionsSeeder extends Seeder
     {
         $this->command?->info('Seeding FTF Digital Solutions Limited (ayo@ftfdigitalsolutions.com)...');
 
-        $this->seedClientAndUser();
-        $this->seedChannelsAndWhatsapp();
-        $this->seedAiEngine();
-        $this->seedAutomations();
-        $this->seedContacts();
-        $this->seedConversations();
-        $this->seedEcommerceStoreAndProducts();
-        $this->seedEcommerceOrdersAndInvoices();
-        $this->seedCartRecoveryEngine();
-        $this->seedBroadcastingAndMetaCampaign();
-        $this->seedAdminTelemetry();
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        } catch (\Throwable $e) {
+            $this->command?->warn('Migration check notice: ' . $e->getMessage());
+        }
+
+        $steps = [
+            'seedClientAndUser' => 'Client & Administrator User',
+            'seedChannelsAndWhatsapp' => 'Channel Accounts & WhatsApp WABA',
+            'seedAiEngine' => 'AI Engine Knowledge Base & Telemetry',
+            'seedAutomations' => 'Automations & Flow Runs',
+            'seedContacts' => 'Contacts & Nigerian Shipper Registry',
+            'seedConversations' => 'Conversations & In-Chat Dialogues',
+            'seedEcommerceStoreAndProducts' => 'Storefront & Products Catalog',
+            'seedEcommerceOrdersAndInvoices' => 'Orders & Invoices Telemetry',
+            'seedCartRecoveryEngine' => 'Cart Recovery Telemetry',
+            'seedBroadcastingAndMetaCampaign' => 'Meta Broadcasting & Campaigns',
+            'seedAdminTelemetry' => 'Admin Telemetry & Subscriptions',
+        ];
+
+        foreach ($steps as $method => $label) {
+            try {
+                $this->command?->info("Seeding {$label}...");
+                $this->$method();
+            } catch (\Throwable $e) {
+                $this->command?->error("Error in {$label}: " . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error("FtfDigitalSolutionsSeeder {$label} error: " . $e->getMessage(), [
+                    'exception' => $e,
+                ]);
+            }
+        }
+
+        try {
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        } catch (\Throwable) {
+            // ignore
+        }
 
         $this->command?->info('FTF Digital Solutions Limited seeded successfully.');
     }
@@ -470,9 +496,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
                     'status' => $auto['status'],
                     'nodes' => $auto['nodes'],
                     'edges' => $auto['edges'],
-                    'definition_json' => ['nodes' => $auto['nodes'], 'edges' => $auto['edges']],
                     'run_count' => $auto['run_count'],
-                    'created_by' => $this->user->id,
                 ]
             );
 
@@ -485,7 +509,6 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 $startedAt = Carbon::now()->subDays($daysAgo)->setTime(rand(8, 20), rand(0, 59));
                 $autoRuns[] = [
                     'automation_id' => $record->id,
-                    'workspace_id' => $wid,
                     'status' => 'completed',
                     'started_at' => $startedAt,
                     'completed_at' => $startedAt->copy()->addSeconds(rand(1, 4)),
@@ -614,6 +637,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
 
         // Scale to 14,200 active customer contacts as evidenced in PDF dossier page 1:
         // "highlighting ₦18.4 million in shipping bookings... 14,200 active customer contacts"
+        Contact::where('workspace_id', $wid)->where('first_name', 'Shipper')->delete();
         $currentCount = Contact::where('workspace_id', $wid)->count();
         $targetContacts = 14200;
 

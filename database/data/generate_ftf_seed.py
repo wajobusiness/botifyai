@@ -34,74 +34,74 @@ def main():
     emit("-- 1. Client Enterprise Record")
     created_client = (now - timedelta(days=300)).strftime("%Y-%m-%d %H:%M:%S")
     now_str = now.strftime("%Y-%m-%d %H:%M:%S")
-    emit("INSERT OR REPLACE INTO clients (id, name, email, status, base_currency, currency_symbol, currency_position, primary_color, created_at, updated_at)")
+    emit("REPLACE INTO clients (id, name, email, status, base_currency, currency_symbol, currency_position, primary_color, created_at, updated_at)")
     emit(f"VALUES (10, 'FTF Digital Solutions Limited', 'ayo@ftfdigitalsolutions.com', 'active', 'NGN', '₦', 'before', '#0D9488', '{created_client}', '{now_str}');")
     emit("")
 
     # 2. Users
     emit("-- 2. Client Administrator (Ayo)")
-    emit("INSERT OR REPLACE INTO users (id, client_id, workspace_id, name, email, role, status, client_role, email_verified_at, password, locale, display_currency, timezone, theme, created_at, updated_at)")
+    emit("REPLACE INTO users (id, client_id, workspace_id, name, email, role, status, client_role, email_verified_at, password, locale, display_currency, timezone, theme, created_at, updated_at)")
     emit(f"VALUES (10, 10, 10, 'Ayo', 'ayo@ftfdigitalsolutions.com', 'client', 'active', 'administrator', '{created_client}', '$2y$12$4e9eDq1EdfgU52i6l8vB0eJ2o3eI9fP2a9b.e.v10F.e12345678', 'en', 'NGN', 'Africa/Lagos', 'light', '{created_client}', '{now_str}');")
     emit("")
 
     # 3. Workspaces
     emit("-- 3. Enterprise Workspace")
-    emit("INSERT OR REPLACE INTO workspaces (id, owner_id, client_id, name, default_locale, currency_code, created_at, updated_at)")
+    emit("REPLACE INTO workspaces (id, owner_id, client_id, name, default_locale, currency_code, created_at, updated_at)")
     emit(f"VALUES (10, 10, 10, 'FTF Digital Solutions Workspace', 'en', 'NGN', '{created_client}', '{now_str}');")
     emit("")
 
     # 4. Workspace User Pivot
     emit("-- 4. Workspace Membership Pivot")
-    emit("INSERT OR REPLACE INTO workspace_user (workspace_id, user_id, role, created_at, updated_at)")
+    emit("REPLACE INTO workspace_user (workspace_id, user_id, role, created_at, updated_at)")
     emit(f"VALUES (10, 10, 'owner', '{created_client}', '{now_str}');")
     emit("")
 
     # 5. Client Subscription
     emit("-- 5. Active Enterprise Subscription")
     renews_str = (now + timedelta(days=60)).strftime("%Y-%m-%d %H:%M:%S")
-    emit("INSERT OR REPLACE INTO client_subscriptions (id, client_id, plan_id, billing_cycle, starts_at, ends_at, status, created_at, updated_at)")
+    emit("REPLACE INTO client_subscriptions (id, client_id, plan_id, billing_cycle, starts_at, ends_at, status, created_at, updated_at)")
     emit(f"VALUES (10, 10, 1, 'monthly', '{created_client}', '{renews_str}', 'active', '{created_client}', '{now_str}');")
     emit("")
 
     # 6. Channel Accounts
     emit("-- 6. Omnichannel Gateways (WhatsApp, Instagram, Messenger)")
-    emit("INSERT OR REPLACE INTO channel_accounts (id, workspace_id, channel, provider, display_name, phone_number_id, credentials, status, created_at, updated_at)")
+    emit("REPLACE INTO channel_accounts (id, workspace_id, channel, provider, display_name, phone_number_id, credentials, status, created_at, updated_at)")
     emit(f"VALUES (101, 10, 'whatsapp', 'meta', 'FTF Logistics WhatsApp Support & Tracking', '104928572910482', '{{\"system_user_token\":\"EAAG_FTF_LIVE_META_TOKEN_VERIFIED\"}}', 'active', '{created_client}', '{now_str}');")
-    emit("INSERT OR REPLACE INTO channel_accounts (id, workspace_id, channel, provider, display_name, credentials, status, created_at, updated_at)")
+    emit("REPLACE INTO channel_accounts (id, workspace_id, channel, provider, display_name, credentials, status, created_at, updated_at)")
     emit(f"VALUES (102, 10, 'instagram', 'meta', '@ftflogistics', '{{\"access_token\":\"IG_FTF_VERIFIED_TOKEN\"}}', 'active', '{created_client}', '{now_str}');")
-    emit("INSERT OR REPLACE INTO channel_accounts (id, workspace_id, channel, provider, display_name, credentials, status, created_at, updated_at)")
+    emit("REPLACE INTO channel_accounts (id, workspace_id, channel, provider, display_name, credentials, status, created_at, updated_at)")
     emit(f"VALUES (103, 10, 'messenger', 'meta', 'FTF Digital Solutions Limited', '{{\"access_token\":\"PAGE_FTF_VERIFIED_TOKEN\"}}', 'active', '{created_client}', '{now_str}');")
     emit("")
 
     # 7. WhatsApp Business Account & Phone Numbers
     emit("-- 7. WhatsApp Cloud API Integration")
-    emit("INSERT OR REPLACE INTO whatsapp_business_accounts (id, workspace_id, waba_id, credentials, webhook_verify_token, status, created_at, updated_at)")
+    emit("REPLACE INTO whatsapp_business_accounts (id, workspace_id, waba_id, credentials, webhook_verify_token, status, created_at, updated_at)")
     emit(f"VALUES (10, 10, 'waba_ftf_2024_enterprise', '{{\"system_user_token\":\"EAAG_FTF_LIVE_META_TOKEN_VERIFIED\"}}', 'wh_token_ftf_enterprise_random_9918237', 'active', '{created_client}', '{now_str}');")
-    emit("INSERT OR REPLACE INTO whatsapp_phone_numbers (id, waba_id_fk, phone_number_id, display_phone, verified_name, quality_rating, code_verification_status, created_at, updated_at)")
+    emit("REPLACE INTO whatsapp_phone_numbers (id, waba_id_fk, phone_number_id, display_phone, verified_name, quality_rating, code_verification_status, created_at, updated_at)")
     emit(f"VALUES (10, 10, '104928572910482', '+234 813 366 2232', 'FTF Digital Solutions Limited', 'GREEN', 'VERIFIED', '{created_client}', '{now_str}');")
     emit("")
 
     # 8. WhatsApp Auto Replies
     emit("-- 8. WhatsApp Instant Quotation & Package Tracking Auto-Replies")
-    emit("INSERT OR REPLACE INTO whatsapp_auto_replies (id, workspace_id, keyword, name, match_type, reply_text, is_active, created_at, updated_at)")
+    emit("REPLACE INTO whatsapp_auto_replies (id, workspace_id, keyword, name, match_type, reply_text, is_active, created_at, updated_at)")
     emit(f"VALUES (101, 10, 'track', 'Waybill & Package Status Tracking', 'contains', '📦 FTF Logistics Package Tracker: Please reply with your 8-digit Waybill Number (e.g. WB-100284) to get instant live GPS dispatch status.', 1, '{created_client}', '{now_str}');")
-    emit("INSERT OR REPLACE INTO whatsapp_auto_replies (id, workspace_id, keyword, name, match_type, reply_text, is_active, created_at, updated_at)")
+    emit("REPLACE INTO whatsapp_auto_replies (id, workspace_id, keyword, name, match_type, reply_text, is_active, created_at, updated_at)")
     emit(f"VALUES (102, 10, 'quote', 'Instant Shipping Rate Quotation', 'contains', '✈️ FTF Instant Shipping Quotation: Instant rates for UK Air Express, North America Priority Courier, and Nationwide Interstate Delivery.', 1, '{created_client}', '{now_str}');")
     emit("")
 
     # 9. Merchant Bank Account
     emit("-- 9. Merchant Bank Settlement Account (Zenith Bank PLC)")
-    emit("INSERT OR REPLACE INTO merchant_bank_accounts (id, workspace_id, bank_name, bank_code, account_number, account_name, recipient_code, currency, is_default, created_at, updated_at)")
+    emit("REPLACE INTO merchant_bank_accounts (id, workspace_id, bank_name, bank_code, account_number, account_name, recipient_code, currency, is_default, created_at, updated_at)")
     emit(f"VALUES (10, 10, 'Zenith Bank PLC', '057', '1018400021', 'FTF DIGITAL SOLUTIONS LIMITED', 'RCP_ftf_zenith_verified', 'NGN', 1, '{created_client}', '{now_str}');")
     emit("")
 
     # 10. Merchant Wallet & Ledger
     emit("-- 10. Merchant Escrow & Settlement Wallet (₦18,400,000.00 Gross Commercial Revenue)")
-    emit("INSERT OR REPLACE INTO merchant_wallets (id, workspace_id, currency, available_balance_cents, pending_balance_cents, total_withdrawn_cents, total_earned_cents, is_frozen, created_at, updated_at)")
+    emit("REPLACE INTO merchant_wallets (id, workspace_id, currency, available_balance_cents, pending_balance_cents, total_withdrawn_cents, total_earned_cents, is_frozen, created_at, updated_at)")
     emit(f"VALUES (10, 10, 'NGN', 1840000000, 0, 0, 1840000000, 0, '{created_client}', '{now_str}');")
     emit("")
     emit("-- 10b. Merchant Double-Entry Accounting Ledger")
-    emit(f"INSERT OR REPLACE INTO merchant_ledger_entries (id, workspace_id, wallet_id, entry_type, amount_cents, fee_cents, net_amount_cents, running_balance_cents, currency, reference_type, description, created_at, updated_at) VALUES (1, 10, 10, 'sale_credit', 1840000000, 27600000, 1812400000, 1812400000, 'NGN', 'order', 'Cumulative Processed Waybill Bookings & Freight Revenue', '{created_client}', '{now_str}');")
+    emit(f"REPLACE INTO merchant_ledger_entries (id, workspace_id, wallet_id, entry_type, amount_cents, fee_cents, net_amount_cents, running_balance_cents, currency, reference_type, description, created_at, updated_at) VALUES (1, 10, 10, 'sale_credit', 1840000000, 27600000, 1812400000, 1812400000, 'NGN', 'order', 'Cumulative Processed Waybill Bookings & Freight Revenue', '{created_client}', '{now_str}');")
     emit("")
 
     # 11. Ecommerce Store
@@ -114,7 +114,7 @@ def main():
         "gtm_container_id": "GTM-FTF2024",
         "clarity_project_id": "clarity_ftf_live"
     })
-    emit("INSERT OR REPLACE INTO ecommerce_stores (id, workspace_id, platform, name, domain, slug, currency, status, support_email, support_phone, brand_color, is_published, bank_account_id, marketing_pixels, published_at, created_at, updated_at)")
+    emit("REPLACE INTO ecommerce_stores (id, workspace_id, platform, name, domain, slug, currency, status, support_email, support_phone, brand_color, is_published, bank_account_id, marketing_pixels, published_at, created_at, updated_at)")
     emit(f"VALUES (10, 10, 'native', 'FTF Digital Solutions Limited', 'native', 'ftf-logistics', 'NGN', 'connected', 'ayo@ftfdigitalsolutions.com', '+234 813 366 2232', '#0D9488', 1, 10, '{pixels}', '{created_client}', '{created_client}', '{now_str}');")
     emit("")
 
@@ -129,7 +129,7 @@ def main():
     ]
     for p_id, p_name, p_price, p_desc in products:
         p_slug = p_name.lower().replace(' ', '-').replace('&', 'and')
-        emit(f"INSERT OR REPLACE INTO ecommerce_products (id, workspace_id, store_id, platform, name, slug, price, currency, product_type, description, is_published, created_at, updated_at)")
+        emit(f"REPLACE INTO ecommerce_products (id, workspace_id, store_id, platform, name, slug, price, currency, product_type, description, is_published, created_at, updated_at)")
         emit(f"VALUES ({p_id}, 10, 10, 'native', {q(p_name)}, '{p_slug}', {p_price}, 'NGN', 'digital', {q(p_desc)}, 1, '{created_client}', '{now_str}');")
     emit("")
 
@@ -146,7 +146,7 @@ def main():
     tag_map = {}
     for tid, tname, tcolor in tag_defs:
         tag_map[tname] = tid
-        emit(f"INSERT OR REPLACE INTO contact_tags (id, workspace_id, name, color, created_at, updated_at) VALUES ({tid}, 10, {q(tname)}, '{tcolor}', '{created_client}', '{now_str}');")
+        emit(f"REPLACE INTO contact_tags (id, workspace_id, name, color, created_at, updated_at) VALUES ({tid}, 10, {q(tname)}, '{tcolor}', '{created_client}', '{now_str}');")
     emit("")
 
     emit("-- 13b. Primary Nigerian Logistics Contacts (30 Top Contacts on Page 1)")
@@ -188,11 +188,11 @@ def main():
         u = str(uuid.uuid4())
         dt = (now - timedelta(minutes=(idx * 4))).strftime("%Y-%m-%d %H:%M:%S")
         custom = json.dumps({"destination_city": city, "account_tier": "Enterprise Shipper"})
-        emit("INSERT OR REPLACE INTO contacts (id, uuid, workspace_id, phone_e164, email, first_name, last_name, country, language, opt_in_whatsapp, opt_in_sms, opt_in_email, custom_fields, created_at, updated_at)")
+        emit("REPLACE INTO contacts (id, uuid, workspace_id, phone_e164, email, first_name, last_name, country, language, opt_in_whatsapp, opt_in_sms, opt_in_email, custom_fields, created_at, updated_at)")
         emit(f"VALUES ({cid}, '{u}', 10, '{ph}', '{em}', '{fn}', '{ln}', 'NG', 'en', 1, 1, 1, '{custom}', '{dt}', '{dt}');")
         for tname in tags:
             tid = tag_map[tname]
-            emit(f"INSERT OR REPLACE INTO contact_tag_pivot (contact_id, tag_id) VALUES ({cid}, {tid});")
+            emit(f"REPLACE INTO contact_tag_pivot (contact_id, tag_id) VALUES ({cid}, {tid});")
 
     emit("-- 13c. Background Contacts to reach exactly 14,200 Total Contacts")
     for i in range(31, 14201):
@@ -200,7 +200,7 @@ def main():
         ph = f"+234 80{((i * 7) % 9) + 1} {str(i).zfill(7)[:3]} {str(i).zfill(7)[3:]}"
         em = f"shipper_{i}@ftfclient.com"
         dt = (now - timedelta(days=random.randint(1, 28), minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
-        emit(f"INSERT OR REPLACE INTO contacts (id, uuid, workspace_id, phone_e164, email, first_name, last_name, country, language, opt_in_whatsapp, opt_in_sms, opt_in_email, created_at, updated_at) VALUES ({i}, '{u}', 10, '{ph}', '{em}', 'Shipper', '{i}', 'NG', 'en', 1, 1, 1, '{dt}', '{dt}');")
+        emit(f"REPLACE INTO contacts (id, uuid, workspace_id, phone_e164, email, first_name, last_name, country, language, opt_in_whatsapp, opt_in_sms, opt_in_email, created_at, updated_at) VALUES ({i}, '{u}', 10, '{ph}', '{em}', 'Shipper', '{i}', 'NG', 'en', 1, 1, 1, '{dt}', '{dt}');")
     emit("")
 
     # 14. Inbox Labels & Conversations
@@ -215,7 +215,7 @@ def main():
     lbl_map = {}
     for lid, lname, lcolor in inbox_label_defs:
         lbl_map[lname] = lid
-        emit(f"INSERT OR REPLACE INTO inbox_labels (id, workspace_id, name, color, created_at, updated_at) VALUES ({lid}, 10, {q(lname)}, '{lcolor}', '{created_client}', '{now_str}');")
+        emit(f"REPLACE INTO inbox_labels (id, workspace_id, name, color, created_at, updated_at) VALUES ({lid}, 10, {q(lname)}, '{lcolor}', '{created_client}', '{now_str}');")
     emit("")
 
     emit("-- 14b. 10 Active OPEN Conversations for Inbox Screenshots")
@@ -303,13 +303,13 @@ def main():
         num_msgs = len(d["messages"])
         first_dt = (datetime.strptime(last_dt, "%Y-%m-%d %H:%M:%S") - timedelta(minutes=(num_msgs - 1) * 3)).strftime("%Y-%m-%d %H:%M:%S")
         
-        emit(f"INSERT OR REPLACE INTO conversations (id, uuid, workspace_id, channel_account_id, contact_id, status, assigned_to, unread_count, last_message_at, last_inbound_at, created_at, updated_at) VALUES ({d_idx}, '{c_u}', 10, 101, {d['cid']}, '{d['status']}', 'bot', {d['unread']}, '{last_dt}', '{last_dt}', '{first_dt}', '{last_dt}');")
+        emit(f"REPLACE INTO conversations (id, uuid, workspace_id, channel_account_id, contact_id, status, assigned_to, unread_count, last_message_at, last_inbound_at, created_at, updated_at) VALUES ({d_idx}, '{c_u}', 10, 101, {d['cid']}, '{d['status']}', 'bot', {d['unread']}, '{last_dt}', '{last_dt}', '{first_dt}', '{last_dt}');")
         for lname in d["labels"]:
             lid = lbl_map[lname]
-            emit(f"INSERT OR REPLACE INTO inbox_label_conversation (label_id, conversation_id) VALUES ({lid}, {d_idx});")
+            emit(f"REPLACE INTO inbox_label_conversation (label_id, conversation_id) VALUES ({lid}, {d_idx});")
         for m_idx, (direction, body) in enumerate(d["messages"]):
             m_dt = (datetime.strptime(first_dt, "%Y-%m-%d %H:%M:%S") + timedelta(minutes=m_idx * 3)).strftime("%Y-%m-%d %H:%M:%S")
-            emit(f"INSERT OR REPLACE INTO messages (id, conversation_id, direction, channel, type, body, status, sent_by, sent_at, created_at, updated_at) VALUES ({msg_id_counter}, {d_idx}, '{direction}', 'whatsapp', 'text', {q(body)}, 'delivered', '{'bot' if direction=='out' else 'human'}', '{m_dt}', '{m_dt}', '{m_dt}');")
+            emit(f"REPLACE INTO messages (id, conversation_id, direction, channel, type, body, status, sent_by, sent_at, created_at, updated_at) VALUES ({msg_id_counter}, {d_idx}, '{direction}', 'whatsapp', 'text', {q(body)}, 'delivered', '{'bot' if direction=='out' else 'human'}', '{m_dt}', '{m_dt}', '{m_dt}');")
             msg_id_counter += 1
 
     emit("-- 14c. Background Resolved Conversations (290 Conversations to reach 300 Total)")
@@ -318,7 +318,7 @@ def main():
         days_ago = random.randint(1, 28)
         c_dt = (now - timedelta(days=days_ago, minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
         last_dt = (datetime.strptime(c_dt, "%Y-%m-%d %H:%M:%S") + timedelta(minutes=random.randint(5, 45))).strftime("%Y-%m-%d %H:%M:%S")
-        emit(f"INSERT OR REPLACE INTO conversations (id, uuid, workspace_id, channel_account_id, contact_id, status, assigned_to, unread_count, last_message_at, last_inbound_at, created_at, updated_at) VALUES ({cIdx}, '{c_u}', 10, 101, {cIdx}, 'resolved', 'bot', 0, '{last_dt}', '{c_dt}', '{c_dt}', '{last_dt}');")
+        emit(f"REPLACE INTO conversations (id, uuid, workspace_id, channel_account_id, contact_id, status, assigned_to, unread_count, last_message_at, last_inbound_at, created_at, updated_at) VALUES ({cIdx}, '{c_u}', 10, 101, {cIdx}, 'resolved', 'bot', 0, '{last_dt}', '{c_dt}', '{c_dt}', '{last_dt}');")
 
     emit("-- 15. High-Throughput Messages (35,657 Messages - 18,500 Outbound / 17,157 Inbound)")
     sample_out = [
@@ -341,7 +341,7 @@ def main():
         conv_id = ((mIdx - msg_id_counter) % 290) + 11
         m_dt = (now - timedelta(days=random.randint(0, 28), minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
         body = random.choice(sample_out) if direction == 'out' else random.choice(sample_in)
-        emit(f"INSERT OR REPLACE INTO messages (id, conversation_id, direction, channel, type, body, status, sent_by, sent_at, created_at, updated_at) VALUES ({mIdx}, {conv_id}, '{direction}', 'whatsapp', 'text', {q(body)}, 'delivered', '{'bot' if direction=='out' else 'human'}', '{m_dt}', '{m_dt}', '{m_dt}');")
+        emit(f"REPLACE INTO messages (id, conversation_id, direction, channel, type, body, status, sent_by, sent_at, created_at, updated_at) VALUES ({mIdx}, {conv_id}, '{direction}', 'whatsapp', 'text', {q(body)}, 'delivered', '{'bot' if direction=='out' else 'human'}', '{m_dt}', '{m_dt}', '{m_dt}');")
     emit("")
 
     # 16. Invoices & Orders (500 Orders, exactly ₦18,400,000 across 470 Paid Orders = 94%)
@@ -369,7 +369,7 @@ def main():
         placed = (now - timedelta(hours=hrs_ago)).strftime("%Y-%m-%d %H:%M:%S")
         paid_dt = placed if is_paid else "NULL"
         lines = json.dumps([{"name": "Waybill Booking & Freight Service", "sku": "FTF-LOGISTICS-SVC", "quantity": 1, "price": amt}])
-        emit(f"INSERT OR REPLACE INTO ecommerce_orders (id, workspace_id, store_id, external_order_id, uuid, platform, number, customer_name, customer_email, customer_phone, status, financial_status, payment_status, fulfillment_status, currency, total, line_items, tracking_number, tracking_url, payment_gateway, payment_reference, placed_at, paid_at, created_at, updated_at)")
+        emit(f"REPLACE INTO ecommerce_orders (id, workspace_id, store_id, external_order_id, uuid, platform, number, customer_name, customer_email, customer_phone, status, financial_status, payment_status, fulfillment_status, currency, total, line_items, tracking_number, tracking_url, payment_gateway, payment_reference, placed_at, paid_at, created_at, updated_at)")
         emit(f"VALUES ({idx}, 10, 10, 'ftf_inv_{inv_num}', '{u}', 'native', '#{inv_num}', '{cust}', '{cust.lower().replace(' ', '.')}@ftfclient.com', '+23480234567{idx:02d}', '{'completed' if is_paid else 'open'}', '{stat}', '{stat}', '{'fulfilled' if is_paid else 'unfulfilled'}', 'NGN', {amt}, '{lines}', 'WB-{inv_num}', 'https://botifyai.cloud/buy/ftf-logistics/status/WB-{inv_num}', 'paystack', 'pstk_ref_{inv_num}', '{placed}', {q(paid_dt) if is_paid else 'NULL'}, '{placed}', '{placed}');")
 
     running_sum = screenshot_paid_sum
@@ -388,7 +388,7 @@ def main():
         u = str(uuid.uuid4())
         placed = (now - timedelta(days=random.randint(2, 28), minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
         lines = json.dumps([{"name": "Waybill Booking & Freight Transit", "sku": "FTF-LOGISTICS-SVC", "quantity": 1, "price": amt}])
-        emit(f"INSERT OR REPLACE INTO ecommerce_orders (id, workspace_id, store_id, external_order_id, uuid, platform, number, customer_name, customer_email, customer_phone, status, financial_status, payment_status, fulfillment_status, currency, total, line_items, tracking_number, tracking_url, payment_gateway, payment_reference, placed_at, paid_at, created_at, updated_at)")
+        emit(f"REPLACE INTO ecommerce_orders (id, workspace_id, store_id, external_order_id, uuid, platform, number, customer_name, customer_email, customer_phone, status, financial_status, payment_status, fulfillment_status, currency, total, line_items, tracking_number, tracking_url, payment_gateway, payment_reference, placed_at, paid_at, created_at, updated_at)")
         emit(f"VALUES ({idx}, 10, 10, 'ftf_inv_{inv_num}', '{u}', 'native', '#{inv_num}', 'Enterprise Client {idx}', 'client_{idx}@ftfclient.com', '+23480{idx:08d}', '{'completed' if is_paid else 'open'}', '{stat}', '{stat}', '{'fulfilled' if is_paid else 'unfulfilled'}', 'NGN', {amt}, '{lines}', 'WB-{inv_num}', 'https://botifyai.cloud/buy/ftf-logistics/status/WB-{inv_num}', 'paystack', 'pstk_ref_{inv_num}', '{placed}', {q(placed) if is_paid else 'NULL'}, '{placed}', '{placed}');")
     emit("")
 
@@ -400,7 +400,7 @@ def main():
         rec_dt = (datetime.strptime(ab_dt, "%Y-%m-%d %H:%M:%S") + timedelta(minutes=random.randint(12, 120))).strftime("%Y-%m-%d %H:%M:%S") if is_rec else None
         tot = random.choice([24500.00, 32000.00, 40000.00, 58000.00, 75000.00])
         lines = json.dumps([{"name": "Waybill Booking & Freight Service", "quantity": 1, "price": 40000.00}])
-        emit(f"INSERT OR REPLACE INTO ecommerce_carts (id, workspace_id, store_id, contact_id, external_id, total, currency, line_items, recovery_url, abandoned_at, recovery_triggered_at, recovered_at, created_at, updated_at)")
+        emit(f"REPLACE INTO ecommerce_carts (id, workspace_id, store_id, contact_id, external_id, total, currency, line_items, recovery_url, abandoned_at, recovery_triggered_at, recovered_at, created_at, updated_at)")
         emit(f"VALUES ({i}, 10, 10, {i}, 'ftf_cart_{i:05d}', {tot}, 'NGN', '{lines}', 'https://botifyai.cloud/buy/ftf-logistics/checkout/recover?cart=ftf_cart_{i}', '{ab_dt}', '{ab_dt}', {q(rec_dt)}, '{ab_dt}', '{rec_dt or ab_dt}');")
     emit("")
 
@@ -413,7 +413,7 @@ def main():
     payload = json.dumps({"body": "Hello {{contact.first_name}}, your shipping waybill is ready for dispatch."})
     template = json.dumps({"name": "waybill_dispatch_recovery", "language": "en"})
     camp_u = str(uuid.uuid4())
-    emit(f"INSERT OR REPLACE INTO campaigns (id, uuid, workspace_id, name, campaign_type, channel, whatsapp_phone_number_id, audience_type, audience_ref, template_ref, payload_json, schedule_at, timezone, status, totals_json, created_by, created_at, updated_at)")
+    emit(f"REPLACE INTO campaigns (id, uuid, workspace_id, name, campaign_type, channel, whatsapp_phone_number_id, audience_type, audience_ref, template_ref, payload_json, schedule_at, timezone, status, totals_json, created_by, created_at, updated_at)")
     emit(f"VALUES (10, '{camp_u}', 10, 'In-Chat Waybill Dispatch & Checkout Recovery', 'broadcast', 'whatsapp', '104928572910482', 'segment', 'Incomplete Checkouts & Active Shippers', '{template}', '{payload}', '{(now - timedelta(days=10)).strftime('%Y-%m-%d %H:%M:%S')}', 'Africa/Lagos', 'completed', '{totals}', 10, '{created_client}', '{now_str}');")
     
     emit("-- 18b. Campaign Delivery Telemetry (500 Recipients)")
@@ -427,7 +427,7 @@ def main():
         read_dt = (datetime.strptime(deliv_dt, "%Y-%m-%d %H:%M:%S") + timedelta(minutes=random.randint(2, 45))).strftime("%Y-%m-%d %H:%M:%S") if is_read else None
         click_dt = (datetime.strptime(read_dt, "%Y-%m-%d %H:%M:%S") + timedelta(minutes=random.randint(1, 10))).strftime("%Y-%m-%d %H:%M:%S") if (is_read and r <= 175) else None
         f_reason = "Meta API temporary provider rejection (321 denied)" if is_fail else None
-        emit(f"INSERT OR REPLACE INTO campaign_recipients (id, campaign_id, contact_id, status, provider_message_id, sent_at, delivered_at, read_at, clicked_at, failed_reason, created_at, updated_at) VALUES ({r}, 10, {r}, '{st}', 'wamid.HBgL{uuid.uuid4().hex[:20]}', '{s_dt}', {q(deliv_dt)}, {q(read_dt)}, {q(click_dt)}, {q(f_reason)}, '{s_dt}', '{click_dt or read_dt or deliv_dt or s_dt}');")
+        emit(f"REPLACE INTO campaign_recipients (id, campaign_id, contact_id, status, provider_message_id, sent_at, delivered_at, read_at, clicked_at, failed_reason, created_at, updated_at) VALUES ({r}, 10, {r}, '{st}', 'wamid.HBgL{uuid.uuid4().hex[:20]}', '{s_dt}', {q(deliv_dt)}, {q(read_dt)}, {q(click_dt)}, {q(f_reason)}, '{s_dt}', '{click_dt or read_dt or deliv_dt or s_dt}');")
     
     emit("-- 19. Monthly Usage Meters")
     period = int(now.strftime("%Y%m"))
@@ -436,16 +436,16 @@ def main():
         ('ai_tokens', 2450000), ('campaigns_sent', 24), ('lead_credits', 14200)
     ]
     for idx, (m, v) in enumerate(meters, start=101):
-        emit(f"INSERT OR REPLACE INTO usage_meters (id, workspace_id, metric, period, value, created_at, updated_at) VALUES ({idx}, 10, '{m}', {period}, {v}, '{now_str}', '{now_str}');")
+        emit(f"REPLACE INTO usage_meters (id, workspace_id, metric, period, value, created_at, updated_at) VALUES ({idx}, 10, '{m}', {period}, {v}, '{now_str}', '{now_str}');")
     emit("")
 
     # 20. AI Knowledge Base & Copilot Runs (500 runs, 98.4% success, sub-second latency)
     emit("-- 20. AI Knowledge Base & Chatbot Copilot Telemetry (500 Runs, 98.4% resolution, sub-second latency)")
-    emit(f"INSERT OR REPLACE INTO ai_provider_configs (id, workspace_id, provider, credentials, default_model_chat, default_model_embed, enabled, created_at, updated_at) VALUES (10, 10, 'openai', '{{\"api_key\":\"sk-ftf-production-live-gateway\"}}', 'gpt-4o-mini', 'text-embedding-3-small', 1, '{created_client}', '{now_str}');")
-    emit(f"INSERT OR REPLACE INTO ai_knowledge_bases (id, workspace_id, name, embedding_model, dimensions, status, created_at, updated_at) VALUES (10, 10, 'FTF Cross-Border Logistics & Quotation KB', 'text-embedding-3-small', 1536, 'active', '{created_client}', '{now_str}');")
-    emit(f"INSERT OR REPLACE INTO ai_kb_documents (id, kb_id, title, source_type, source_ref, status, tokens, last_indexed_at, created_at, updated_at) VALUES (10, 10, 'FTF Shipping Tariffs & Waybill Routing', 'text', 'doc:ftf-logistics-core', 'indexed', 1450, '{(now - timedelta(days=5)).strftime('%Y-%m-%d %H:%M:%S')}', '{created_client}', '{now_str}');")
-    emit(f"INSERT OR REPLACE INTO ai_kb_chunks (id, kb_id, document_id, ord, content, tokens, created_at, updated_at) VALUES (10, 10, 10, 0, 'FTF Digital Solutions Limited is a leading cross-border logistics company handling local, interstate, and international shipping across Nigeria, the UK, and North America. Express transit is 3-5 days for UK and 5-7 days for North America.', 250, '{created_client}', '{now_str}');")
-    emit(f"INSERT OR REPLACE INTO ai_chatbots (id, workspace_id, ai_kb_id, name, system_prompt, tone, max_context_chunks, fallback_reply, channels, enabled, is_default, created_at, updated_at) VALUES (10, 10, 10, 'FTF Logistics AI Quotation & Tracking Copilot', 'You are the official AI Sales Copilot for FTF Digital Solutions Limited.', 'professional', 5, 'Our senior coordinator is reviewing your custom freight booking.', '[\"whatsapp\",\"instagram\",\"messenger\",\"web\"]', 1, 1, '{created_client}', '{now_str}');")
+    emit(f"REPLACE INTO ai_provider_configs (id, workspace_id, provider, credentials, default_model_chat, default_model_embed, enabled, created_at, updated_at) VALUES (10, 10, 'openai', '{{\"api_key\":\"sk-ftf-production-live-gateway\"}}', 'gpt-4o-mini', 'text-embedding-3-small', 1, '{created_client}', '{now_str}');")
+    emit(f"REPLACE INTO ai_knowledge_bases (id, workspace_id, name, embedding_model, dimensions, status, created_at, updated_at) VALUES (10, 10, 'FTF Cross-Border Logistics & Quotation KB', 'text-embedding-3-small', 1536, 'active', '{created_client}', '{now_str}');")
+    emit(f"REPLACE INTO ai_kb_documents (id, kb_id, title, source_type, source_ref, status, tokens, last_indexed_at, created_at, updated_at) VALUES (10, 10, 'FTF Shipping Tariffs & Waybill Routing', 'text', 'doc:ftf-logistics-core', 'indexed', 1450, '{(now - timedelta(days=5)).strftime('%Y-%m-%d %H:%M:%S')}', '{created_client}', '{now_str}');")
+    emit(f"REPLACE INTO ai_kb_chunks (id, kb_id, document_id, ord, content, tokens, created_at, updated_at) VALUES (10, 10, 10, 0, 'FTF Digital Solutions Limited is a leading cross-border logistics company handling local, interstate, and international shipping across Nigeria, the UK, and North America. Express transit is 3-5 days for UK and 5-7 days for North America.', 250, '{created_client}', '{now_str}');")
+    emit(f"REPLACE INTO ai_chatbots (id, workspace_id, ai_kb_id, name, system_prompt, tone, max_context_chunks, fallback_reply, channels, enabled, is_default, created_at, updated_at) VALUES (10, 10, 10, 'FTF Logistics AI Quotation & Tracking Copilot', 'You are the official AI Sales Copilot for FTF Digital Solutions Limited.', 'professional', 5, 'Our senior coordinator is reviewing your custom freight booking.', '[\"whatsapp\",\"instagram\",\"messenger\",\"web\"]', 1, 1, '{created_client}', '{now_str}');")
 
     for r_idx in range(1, 501):
         prompt = random.randint(240, 780)
@@ -455,7 +455,7 @@ def main():
         cost = int(((prompt * 0.000015 + comp * 0.00006) * 100) + 1)
         lat = random.randint(380, 720) # sub-second latency
         r_dt = (now - timedelta(days=random.randint(0, 28), minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
-        emit(f"INSERT OR REPLACE INTO ai_runs (id, chatbot_id, prompt_tokens, completion_tokens, cost_cents, latency_ms, model, status, created_at, updated_at) VALUES ({r_idx}, 10, {prompt}, {comp}, {cost}, {lat}, 'gpt-4o-mini', '{st}', '{r_dt}', '{r_dt}');")
+        emit(f"REPLACE INTO ai_runs (id, chatbot_id, prompt_tokens, completion_tokens, cost_cents, latency_ms, model, status, created_at, updated_at) VALUES ({r_idx}, 10, {prompt}, {comp}, {cost}, {lat}, 'gpt-4o-mini', '{st}', '{r_dt}', '{r_dt}');")
 
     # 21. Automations (6 Named Flows with nodes, edges, and runs)
     emit("-- 21. Active Workflows (6 Named Flows with Full Node-Edge Topologies)")
@@ -548,13 +548,12 @@ def main():
         f_u = str(uuid.uuid4())
         nodes_json = json.dumps(flow["nodes"]).replace("'", "''")
         edges_json = json.dumps(flow["edges"]).replace("'", "''")
-        def_json = json.dumps({"nodes": flow["nodes"], "edges": flow["edges"]}).replace("'", "''")
-        emit(f"INSERT OR REPLACE INTO automations (id, uuid, workspace_id, name, trigger_type, status, nodes, edges, definition_json, run_count, created_by, created_at, updated_at)")
-        emit(f"VALUES ({flow['id']}, '{f_u}', 10, {q(flow['name'])}, '{flow['trigger']}', 'active', '{nodes_json}', '{edges_json}', '{def_json}', {flow['run_count']}, 10, '{created_client}', '{now_str}');")
+        emit(f"REPLACE INTO automations (id, uuid, workspace_id, name, trigger_type, status, nodes, edges, run_count, created_at, updated_at)")
+        emit(f"VALUES ({flow['id']}, '{f_u}', 10, {q(flow['name'])}, '{flow['trigger']}', 'active', '{nodes_json}', '{edges_json}', {flow['run_count']}, '{created_client}', '{now_str}');")
         
         for r_idx in range(1, flow["run_count"] + 1):
             s_dt = (now - timedelta(days=random.randint(0, 20), minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
-            emit(f"INSERT OR REPLACE INTO automation_runs (id, automation_id, workspace_id, status, started_at, completed_at, created_at, updated_at) VALUES ({run_counter}, {flow['id']}, 10, 'completed', '{s_dt}', '{s_dt}', '{s_dt}', '{s_dt}');")
+            emit(f"REPLACE INTO automation_runs (id, automation_id, status, started_at, completed_at, created_at, updated_at) VALUES ({run_counter}, {flow['id']}, 'completed', '{s_dt}', '{s_dt}', '{s_dt}', '{s_dt}');")
             run_counter += 1
     emit("")
 

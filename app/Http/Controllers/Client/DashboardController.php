@@ -61,7 +61,7 @@ class DashboardController extends Controller
         $onboardingProgress = $onboarding->getProgress($user);
 
         // ── Date window (current + previous for deltas) ──────────────────────────
-        $wsId = $user->workspace_id;
+        $wsId = $request->session()->get('current_workspace_id') ?? $user->current_workspace_id ?? $user->workspace_id;
         $from = Carbon::now()->subDays($range - 1)->startOfDay();
         $to = Carbon::now()->endOfDay();
         $prevTo = $from->copy()->subDay()->endOfDay();
