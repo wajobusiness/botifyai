@@ -27,8 +27,10 @@ use App\Modules\Ecommerce\Models\EcommerceStore;
 use App\Modules\Ecommerce\Models\MerchantBankAccount;
 use App\Modules\Ecommerce\Models\MerchantLedgerEntry;
 use App\Modules\Ecommerce\Models\MerchantWallet;
+use App\Modules\Inbox\Models\InboxLabel;
 use App\Modules\Shared\Models\ChannelAccount;
 use App\Modules\Shared\Models\Contact;
+use App\Modules\Shared\Models\ContactTag;
 use App\Modules\Shared\Models\Conversation;
 use App\Modules\Shared\Models\Message;
 use App\Modules\Whatsapp\Models\WhatsappAutoReply;
@@ -37,6 +39,7 @@ use App\Modules\Whatsapp\Models\WhatsappPhoneNumber;
 use App\Services\ClientWorkspaceService;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -359,24 +362,102 @@ class FtfDigitalSolutionsSeeder extends Seeder
 
         $automations = [
             [
-                'name' => 'WhatsApp Instant Package & Waybill Tracking',
-                'trigger_type' => 'message_received',
+                'name' => 'Waybill & Tracking Lookup Flow',
+                'trigger_type' => 'message.received',
                 'status' => 'active',
+                'run_count' => 384,
+                'nodes' => [
+                    ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 250, 'y' => 50], 'data' => ['label' => 'Incoming WhatsApp Message']],
+                    ['id' => 'condition-1', 'type' => 'condition', 'position' => ['x' => 250, 'y' => 150], 'data' => ['label' => 'Contains Waybill Regex (#FTF- / WB-)']],
+                    ['id' => 'action-1', 'type' => 'action', 'position' => ['x' => 250, 'y' => 250], 'data' => ['label' => 'Query Waybill Tracking API']],
+                    ['id' => 'action-2', 'type' => 'action', 'position' => ['x' => 250, 'y' => 350], 'data' => ['label' => 'Send WhatsApp Live GPS Dispatch Status']],
+                ],
+                'edges' => [
+                    ['id' => 'e1-2', 'source' => 'trigger-1', 'target' => 'condition-1'],
+                    ['id' => 'e2-3', 'source' => 'condition-1', 'target' => 'action-1'],
+                    ['id' => 'e3-4', 'source' => 'action-1', 'target' => 'action-2'],
+                ],
             ],
             [
-                'name' => 'Automated In-Chat Instant Quotation & Rate Calculator',
-                'trigger_type' => 'inquiry_received',
+                'name' => 'Instant Shipping Rate Calculator',
+                'trigger_type' => 'message.received',
                 'status' => 'active',
+                'run_count' => 291,
+                'nodes' => [
+                    ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 250, 'y' => 50], 'data' => ['label' => 'Keyword "quote" or "rate"']],
+                    ['id' => 'action-1', 'type' => 'action', 'position' => ['x' => 250, 'y' => 150], 'data' => ['label' => 'Extract Weight (kg) & Destination City']],
+                    ['id' => 'action-2', 'type' => 'action', 'position' => ['x' => 250, 'y' => 250], 'data' => ['label' => 'Compute Dynamic Tariff (UK Express / Interstate)']],
+                    ['id' => 'action-3', 'type' => 'action', 'position' => ['x' => 250, 'y' => 350], 'data' => ['label' => 'Send WhatsApp Quote + 1-Click Paystack Link']],
+                ],
+                'edges' => [
+                    ['id' => 'e1-2', 'source' => 'trigger-1', 'target' => 'action-1'],
+                    ['id' => 'e2-3', 'source' => 'action-1', 'target' => 'action-2'],
+                    ['id' => 'e3-4', 'source' => 'action-2', 'target' => 'action-3'],
+                ],
             ],
             [
-                'name' => 'Meta API Abandoned Cart Recovery Sequence',
-                'trigger_type' => 'cart_abandoned',
+                'name' => 'In-Chat Waybill Invoicing (Paystack API)',
+                'trigger_type' => 'order.placed',
                 'status' => 'active',
+                'run_count' => 470,
+                'nodes' => [
+                    ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 250, 'y' => 50], 'data' => ['label' => 'Waybill Booking Order Created']],
+                    ['id' => 'action-1', 'type' => 'action', 'position' => ['x' => 250, 'y' => 150], 'data' => ['label' => 'Generate Paystack Payment Reference & QR']],
+                    ['id' => 'action-2', 'type' => 'action', 'position' => ['x' => 250, 'y' => 250], 'data' => ['label' => 'Send Interactive Invoice WhatsApp Message']],
+                    ['id' => 'action-3', 'type' => 'action', 'position' => ['x' => 250, 'y' => 350], 'data' => ['label' => 'Auto-Reconcile Merchant Ledger Balance']],
+                ],
+                'edges' => [
+                    ['id' => 'e1-2', 'source' => 'trigger-1', 'target' => 'action-1'],
+                    ['id' => 'e2-3', 'source' => 'action-1', 'target' => 'action-2'],
+                    ['id' => 'e3-4', 'source' => 'action-2', 'target' => 'action-3'],
+                ],
             ],
             [
-                'name' => 'Event-Driven Omnichannel Lead Routing (FastAPI / Redis)',
-                'trigger_type' => 'lead_qualified',
+                'name' => 'Abandoned Checkout Recovery (WhatsApp)',
+                'trigger_type' => 'cart.abandoned',
                 'status' => 'active',
+                'run_count' => 100,
+                'nodes' => [
+                    ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 250, 'y' => 50], 'data' => ['label' => 'Cart Inactive for 30 Minutes']],
+                    ['id' => 'delay-1', 'type' => 'delay', 'position' => ['x' => 250, 'y' => 150], 'data' => ['label' => 'Wait 15 Minutes']],
+                    ['id' => 'action-1', 'type' => 'action', 'position' => ['x' => 250, 'y' => 250], 'data' => ['label' => 'Send Meta Template: waybill_dispatch_recovery']],
+                    ['id' => 'action-2', 'type' => 'action', 'position' => ['x' => 250, 'y' => 350], 'data' => ['label' => 'Apply 5% Freight Voucher on WhatsApp Click']],
+                ],
+                'edges' => [
+                    ['id' => 'e1-2', 'source' => 'trigger-1', 'target' => 'delay-1'],
+                    ['id' => 'e2-3', 'source' => 'delay-1', 'target' => 'action-1'],
+                    ['id' => 'e3-4', 'source' => 'action-1', 'target' => 'action-2'],
+                ],
+            ],
+            [
+                'name' => 'Omnichannel Cross-Border Dispatch (Meta Cloud API)',
+                'trigger_type' => 'webhook.received',
+                'status' => 'active',
+                'run_count' => 158,
+                'nodes' => [
+                    ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 250, 'y' => 50], 'data' => ['label' => 'Customs Cargo Cleared Webhook']],
+                    ['id' => 'action-1', 'type' => 'action', 'position' => ['x' => 250, 'y' => 150], 'data' => ['label' => 'Assign Local Dispatch Hub & Rider']],
+                    ['id' => 'action-2', 'type' => 'action', 'position' => ['x' => 250, 'y' => 250], 'data' => ['label' => 'Broadcast SMS & WhatsApp Dispatch Notice']],
+                ],
+                'edges' => [
+                    ['id' => 'e1-2', 'source' => 'trigger-1', 'target' => 'action-1'],
+                    ['id' => 'e2-3', 'source' => 'action-1', 'target' => 'action-2'],
+                ],
+            ],
+            [
+                'name' => 'VIP Freight Customs Clearance Alert',
+                'trigger_type' => 'contact.tag_added',
+                'status' => 'active',
+                'run_count' => 64,
+                'nodes' => [
+                    ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 250, 'y' => 50], 'data' => ['label' => 'Tag "Customs Clearance" Added']],
+                    ['id' => 'action-1', 'type' => 'action', 'position' => ['x' => 250, 'y' => 150], 'data' => ['label' => 'Generate Formal Bill of Lading Assessment']],
+                    ['id' => 'action-2', 'type' => 'action', 'position' => ['x' => 250, 'y' => 250], 'data' => ['label' => 'Notify Dedicated Logistics Account Manager']],
+                ],
+                'edges' => [
+                    ['id' => 'e1-2', 'source' => 'trigger-1', 'target' => 'action-1'],
+                    ['id' => 'e2-3', 'source' => 'action-1', 'target' => 'action-2'],
+                ],
             ],
         ];
 
@@ -384,9 +465,13 @@ class FtfDigitalSolutionsSeeder extends Seeder
             $record = Automation::updateOrCreate(
                 ['workspace_id' => $wid, 'name' => $auto['name']],
                 [
+                    'uuid' => (string) Str::uuid(),
                     'trigger_type' => $auto['trigger_type'],
                     'status' => $auto['status'],
-                    'definition_json' => ['nodes' => [], 'edges' => []],
+                    'nodes' => $auto['nodes'],
+                    'edges' => $auto['edges'],
+                    'definition_json' => ['nodes' => $auto['nodes'], 'edges' => $auto['edges']],
+                    'run_count' => $auto['run_count'],
                     'created_by' => $this->user->id,
                 ]
             );
@@ -394,20 +479,28 @@ class FtfDigitalSolutionsSeeder extends Seeder
             AutomationRun::where('automation_id', $record->id)->delete();
 
             $autoRuns = [];
-            for ($r = 0; $r < 25; $r++) {
+            $runTarget = $auto['run_count'];
+            for ($r = 0; $r < $runTarget; $r++) {
                 $daysAgo = rand(0, 20);
                 $startedAt = Carbon::now()->subDays($daysAgo)->setTime(rand(8, 20), rand(0, 59));
                 $autoRuns[] = [
                     'automation_id' => $record->id,
                     'workspace_id' => $wid,
-                    'status' => 'success',
+                    'status' => 'completed',
                     'started_at' => $startedAt,
                     'completed_at' => $startedAt->copy()->addSeconds(rand(1, 4)),
                     'created_at' => $startedAt,
                     'updated_at' => $startedAt,
                 ];
+
+                if (count($autoRuns) >= 200) {
+                    DB::table('automation_runs')->insert($autoRuns);
+                    $autoRuns = [];
+                }
             }
-            DB::table('automation_runs')->insert($autoRuns);
+            if (! empty($autoRuns)) {
+                DB::table('automation_runs')->insert($autoRuns);
+            }
         }
     }
 
@@ -415,23 +508,78 @@ class FtfDigitalSolutionsSeeder extends Seeder
     {
         $wid = $this->workspace->id;
 
-        // Named contacts from screenshots and case studies
-        $seedContactsList = [
-            ['first_name' => 'Emeka', 'last_name' => 'Okonkwo', 'email' => 'emeka.o@meridianlogistics.ng', 'phone' => '+2348031122334', 'city' => 'Lagos'],
-            ['first_name' => 'Babatunde', 'last_name' => 'Adeyemi', 'email' => 'tunde.adeyemi@crossborder.co.uk', 'phone' => '+447911123456', 'city' => 'London'],
-            ['first_name' => 'Chioma', 'last_name' => 'Eze', 'email' => 'chioma.eze@africantradehub.com', 'phone' => '+2348149988776', 'city' => 'Abuja'],
-            ['first_name' => 'Ngozi', 'last_name' => 'Okonjo', 'email' => 'ngozi.okonjo@ftfclient.com', 'phone' => '+2348023456701', 'city' => 'Enugu'],
-            ['first_name' => 'Aisha', 'last_name' => 'Bello', 'email' => 'aisha.bello@ftfclient.com', 'phone' => '+2348023456702', 'city' => 'Kano'],
-            ['first_name' => 'Tunde', 'last_name' => 'Bakare', 'email' => 'tunde.bakare@ftfclient.com', 'phone' => '+2348023456703', 'city' => 'Ibadan'],
-            ['first_name' => 'Chiamaka', 'last_name' => 'Nze', 'email' => 'chiamaka.nze@ftfclient.com', 'phone' => '+2348023456704', 'city' => 'Owerri'],
-            ['first_name' => 'Ibrahim', 'last_name' => 'Musa', 'email' => 'ibrahim.musa@ftfclient.com', 'phone' => '+2348023456705', 'city' => 'Kaduna'],
-            ['first_name' => 'Amaka', 'last_name' => 'Obi', 'email' => 'amaka.obi@ftfclient.com', 'phone' => '+2348023456706', 'city' => 'Port Harcourt'],
-            ['first_name' => 'Yusuf', 'last_name' => 'Garba', 'email' => 'yusuf.garba@ftfclient.com', 'phone' => '+2348023456707', 'city' => 'Jos'],
-            ['first_name' => 'Bolaji', 'last_name' => 'Davies', 'email' => 'bolaji.davies@ftfclient.com', 'phone' => '+2348023456708', 'city' => 'Lagos'],
-            ['first_name' => 'Fatima', 'last_name' => 'Dangote', 'email' => 'fatima.dangote@ftfclient.com', 'phone' => '+2348023456710', 'city' => 'Kano'],
+        // Ensure contact_tags and pivot tables exist
+        if (! Schema::hasTable('contact_tags')) {
+            Schema::create('contact_tags', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('workspace_id');
+                $table->string('name', 64);
+                $table->string('color', 16)->default('#6366f1');
+                $table->timestamps();
+                $table->unique(['workspace_id', 'name']);
+            });
+        }
+        if (! Schema::hasTable('contact_tag_pivot')) {
+            Schema::create('contact_tag_pivot', function (Blueprint $table) {
+                $table->unsignedBigInteger('contact_id');
+                $table->unsignedBigInteger('tag_id');
+                $table->primary(['contact_id', 'tag_id']);
+            });
+        }
+
+        $tagDefinitions = [
+            'Logistics Client' => '#0d9488',
+            'Waybill Inquiry' => '#2563eb',
+            'Cross-Border Freight' => '#4f46e5',
+            'VIP Shipper' => '#d97706',
+            'Abandoned Cart' => '#e11d48',
+            'UK Express' => '#059669',
         ];
 
-        foreach ($seedContactsList as $c) {
+        $tags = [];
+        foreach ($tagDefinitions as $name => $color) {
+            $tags[$name] = ContactTag::updateOrCreate(
+                ['workspace_id' => $wid, 'name' => $name],
+                ['color' => $color]
+            );
+        }
+
+        // 30 Primary Nigerian contacts with Nigerian phone numbers (+234 803 *** **** format)
+        $primaryContactsList = [
+            ['first_name' => 'Emeka', 'last_name' => 'Okonkwo', 'email' => 'emeka.o@meridianlogistics.ng', 'phone' => '+234 803 241 8920', 'city' => 'Lagos', 'tags' => ['Logistics Client', 'Waybill Inquiry', 'Cross-Border Freight']],
+            ['first_name' => 'Babatunde', 'last_name' => 'Adeyemi', 'email' => 'tunde.adeyemi@crossborder.co.uk', 'phone' => '+234 803 555 0192', 'city' => 'London / Lagos', 'tags' => ['Cross-Border Freight', 'UK Express']],
+            ['first_name' => 'Chioma', 'last_name' => 'Eze', 'email' => 'chioma.eze@africantradehub.com', 'phone' => '+234 814 998 8776', 'city' => 'Abuja', 'tags' => ['VIP Shipper', 'Logistics Client']],
+            ['first_name' => 'Ngozi', 'last_name' => 'Okonjo', 'email' => 'ngozi.okonjo@ftfclient.com', 'phone' => '+234 802 345 6701', 'city' => 'Enugu', 'tags' => ['Logistics Client', 'Waybill Inquiry']],
+            ['first_name' => 'Aisha', 'last_name' => 'Bello', 'email' => 'aisha.bello@ftfclient.com', 'phone' => '+234 802 345 6702', 'city' => 'Kano', 'tags' => ['Abandoned Cart', 'Logistics Client']],
+            ['first_name' => 'Tunde', 'last_name' => 'Bakare', 'email' => 'tunde.bakare@ftfclient.com', 'phone' => '+234 802 345 6703', 'city' => 'Ibadan', 'tags' => ['Waybill Inquiry']],
+            ['first_name' => 'Chiamaka', 'last_name' => 'Nze', 'email' => 'chiamaka.nze@ftfclient.com', 'phone' => '+234 802 345 6704', 'city' => 'Owerri', 'tags' => ['Cross-Border Freight', 'UK Express']],
+            ['first_name' => 'Ibrahim', 'last_name' => 'Musa', 'email' => 'ibrahim.musa@ftfclient.com', 'phone' => '+234 806 712 3456', 'city' => 'Kaduna', 'tags' => ['Logistics Client', 'Waybill Inquiry']],
+            ['first_name' => 'Amaka', 'last_name' => 'Obi', 'email' => 'amaka.obi@ftfclient.com', 'phone' => '+234 805 123 4567', 'city' => 'Port Harcourt', 'tags' => ['VIP Shipper', 'Cross-Border Freight']],
+            ['first_name' => 'Yusuf', 'last_name' => 'Garba', 'email' => 'yusuf.garba@ftfclient.com', 'phone' => '+234 703 890 1234', 'city' => 'Jos', 'tags' => ['Logistics Client']],
+            ['first_name' => 'Bolaji', 'last_name' => 'Davies', 'email' => 'bolaji.davies@ftfclient.com', 'phone' => '+234 902 345 6789', 'city' => 'Lagos', 'tags' => ['VIP Shipper', 'Logistics Client']],
+            ['first_name' => 'Fatima', 'last_name' => 'Dangote', 'email' => 'fatima.dangote@ftfclient.com', 'phone' => '+234 818 234 5678', 'city' => 'Kano', 'tags' => ['VIP Shipper', 'Logistics Client']],
+            ['first_name' => 'Olumide', 'last_name' => 'Adeleke', 'email' => 'olumide.adeleke@ftfclient.com', 'phone' => '+234 809 123 4567', 'city' => 'Ibadan', 'tags' => ['Waybill Inquiry']],
+            ['first_name' => 'Nnamdi', 'last_name' => 'Azikiwe', 'email' => 'nnamdi.azikiwe@ftfclient.com', 'phone' => '+234 816 789 0123', 'city' => 'Onitsha', 'tags' => ['Logistics Client', 'Cross-Border Freight']],
+            ['first_name' => 'Folashade', 'last_name' => 'Tinubu', 'email' => 'folashade.t@ftfclient.com', 'phone' => '+234 813 456 7890', 'city' => 'Lagos', 'tags' => ['VIP Shipper']],
+            ['first_name' => 'Abubakar', 'last_name' => 'Shehu', 'email' => 'abubakar.shehu@ftfclient.com', 'phone' => '+234 803 987 6543', 'city' => 'Sokoto', 'tags' => ['Logistics Client', 'Waybill Inquiry']],
+            ['first_name' => 'Ifeanyi', 'last_name' => 'Ubah', 'email' => 'ifeanyi.ubah@ftfclient.com', 'phone' => '+234 814 321 0987', 'city' => 'Nnewi', 'tags' => ['Cross-Border Freight']],
+            ['first_name' => 'Damilola', 'last_name' => 'Fashola', 'email' => 'dami.fashola@ftfclient.com', 'phone' => '+234 805 678 1234', 'city' => 'Lagos', 'tags' => ['Logistics Client', 'UK Express']],
+            ['first_name' => 'Kemi', 'last_name' => 'Adeosun', 'email' => 'kemi.adeosun@ftfclient.com', 'phone' => '+234 802 987 1234', 'city' => 'Abeokuta', 'tags' => ['VIP Shipper', 'Cross-Border Freight']],
+            ['first_name' => 'Funke', 'last_name' => 'Akindele', 'email' => 'funke.a@ftfclient.com', 'phone' => '+234 803 111 2233', 'city' => 'Lagos', 'tags' => ['Logistics Client']],
+            ['first_name' => 'Osagie', 'last_name' => 'Alonge', 'email' => 'osagie.alonge@ftfclient.com', 'phone' => '+234 818 999 8888', 'city' => 'Benin City', 'tags' => ['Waybill Inquiry']],
+            ['first_name' => 'Zainab', 'last_name' => 'Ahmed', 'email' => 'zainab.ahmed@ftfclient.com', 'phone' => '+234 703 123 9876', 'city' => 'Kaduna', 'tags' => ['Logistics Client', 'Cross-Border Freight']],
+            ['first_name' => 'Olamide', 'last_name' => 'Adedeji', 'email' => 'olamide.adedeji@ftfclient.com', 'phone' => '+234 902 888 7766', 'city' => 'Lagos', 'tags' => ['Abandoned Cart']],
+            ['first_name' => 'Blessing', 'last_name' => 'Okagbare', 'email' => 'blessing.o@ftfclient.com', 'phone' => '+234 809 555 4433', 'city' => 'Warri', 'tags' => ['Logistics Client', 'UK Express']],
+            ['first_name' => 'Kelechi', 'last_name' => 'Iheanacho', 'email' => 'kelechi.i@ftfclient.com', 'phone' => '+234 816 444 3322', 'city' => 'Owerri', 'tags' => ['VIP Shipper']],
+            ['first_name' => 'Victor', 'last_name' => 'Osimhen', 'email' => 'victor.osimhen@ftfclient.com', 'phone' => '+234 803 777 6655', 'city' => 'Lagos', 'tags' => ['VIP Shipper', 'Cross-Border Freight']],
+            ['first_name' => 'Chinua', 'last_name' => 'Achebe', 'email' => 'chinua.achebe@ftfclient.com', 'phone' => '+234 814 111 9900', 'city' => 'Ogidi', 'tags' => ['Logistics Client']],
+            ['first_name' => 'Simi', 'last_name' => 'Ogunleye', 'email' => 'simi.ogunleye@ftfclient.com', 'phone' => '+234 805 222 3344', 'city' => 'Lagos', 'tags' => ['Waybill Inquiry', 'UK Express']],
+            ['first_name' => 'Bankole', 'last_name' => 'Wellington', 'email' => 'banky.w@ftfclient.com', 'phone' => '+234 802 666 7788', 'city' => 'Lagos', 'tags' => ['VIP Shipper', 'Cross-Border Freight']],
+            ['first_name' => 'Yetunde', 'last_name' => 'Ayeni', 'email' => 'yetunde.ayeni@ftfclient.com', 'phone' => '+234 803 888 9900', 'city' => 'Ilorin', 'tags' => ['Logistics Client', 'Waybill Inquiry']],
+        ];
+
+        $now = Carbon::now();
+        foreach ($primaryContactsList as $idx => $c) {
             $contact = Contact::updateOrCreate(
                 ['workspace_id' => $wid, 'phone_e164' => $c['phone']],
                 [
@@ -447,7 +595,21 @@ class FtfDigitalSolutionsSeeder extends Seeder
                     'custom_fields' => ['destination_city' => $c['city'], 'account_tier' => 'Enterprise Shipper'],
                 ]
             );
-            $this->bk($contact, Carbon::now()->subDays(rand(1, 25)));
+
+            // Anchor these 30 contacts at the top of Page 1 (ordered by latest)
+            $contactCreated = $now->copy()->subMinutes($idx * 4);
+            $this->bk($contact, $contactCreated);
+
+            // Sync tags
+            $tagIds = [];
+            foreach ($c['tags'] as $tagName) {
+                if (isset($tags[$tagName])) {
+                    $tagIds[] = $tags[$tagName]->id;
+                }
+            }
+            if (! empty($tagIds)) {
+                $contact->tags()->sync($tagIds);
+            }
         }
 
         // Scale to 14,200 active customer contacts as evidenced in PDF dossier page 1:
@@ -456,18 +618,19 @@ class FtfDigitalSolutionsSeeder extends Seeder
         $targetContacts = 14200;
 
         if ($currentCount < $targetContacts) {
-            $now = Carbon::now();
             $batch = [];
             $batchSize = 1000;
 
             for ($i = $currentCount + 1; $i <= $targetContacts; $i++) {
-                $daysAgo = rand(0, 28);
+                $daysAgo = rand(1, 28);
                 $createdAt = $now->copy()->subDays($daysAgo)->subMinutes(rand(0, 1400));
+                $pad = str_pad((string) $i, 7, '0', STR_PAD_LEFT);
+                $phPrefix = (($i * 7) % 9) + 1;
 
                 $batch[] = [
                     'uuid' => (string) Str::uuid(),
                     'workspace_id' => $wid,
-                    'phone_e164' => '+23480' . str_pad((string) $i, 8, '0', STR_PAD_LEFT),
+                    'phone_e164' => "+234 80{$phPrefix} " . substr($pad, 0, 3) . " " . substr($pad, 3),
                     'email' => "shipper_{$i}@ftfclient.com",
                     'first_name' => 'Shipper',
                     'last_name' => (string) $i,
@@ -498,7 +661,42 @@ class FtfDigitalSolutionsSeeder extends Seeder
             return;
         }
 
-        $contacts = Contact::where('workspace_id', $wid)->take(300)->get();
+        // Ensure inbox_labels and pivot tables exist
+        if (! Schema::hasTable('inbox_labels')) {
+            Schema::create('inbox_labels', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('workspace_id');
+                $table->string('name', 64);
+                $table->string('color', 16)->default('#6366f1');
+                $table->timestamps();
+                $table->unique(['workspace_id', 'name']);
+            });
+        }
+        if (! Schema::hasTable('inbox_label_conversation')) {
+            Schema::create('inbox_label_conversation', function (Blueprint $table) {
+                $table->unsignedBigInteger('label_id');
+                $table->unsignedBigInteger('conversation_id');
+                $table->primary(['label_id', 'conversation_id']);
+            });
+        }
+
+        $labelDefinitions = [
+            'Waybill Tracking' => '#0d9488',
+            'Express Freight' => '#2563eb',
+            'Payment Pending' => '#d97706',
+            'Customs Clearance' => '#7c3aed',
+            'VIP Shipper' => '#e11d48',
+        ];
+
+        $labels = [];
+        foreach ($labelDefinitions as $name => $color) {
+            $labels[$name] = InboxLabel::updateOrCreate(
+                ['workspace_id' => $wid, 'name' => $name],
+                ['color' => $color]
+            );
+        }
+
+        $contacts = Contact::where('workspace_id', $wid)->orderBy('id')->take(300)->get();
         if ($contacts->isEmpty()) {
             return;
         }
@@ -506,25 +704,32 @@ class FtfDigitalSolutionsSeeder extends Seeder
         // Clean existing conversations to allow clean re-seed
         $existingConvIds = Conversation::where('workspace_id', $wid)->pluck('id')->toArray();
         if (! empty($existingConvIds)) {
+            DB::table('inbox_label_conversation')->whereIn('conversation_id', $existingConvIds)->delete();
             Message::whereIn('conversation_id', $existingConvIds)->delete();
             Conversation::where('workspace_id', $wid)->delete();
         }
 
-        // 1. Seed 3 real high-impact conversations with rich transcripts
+        $now = Carbon::now();
+
+        // 1. Seed 10 realistic OPEN conversation threads for screenshot readiness
         $primaryDialogs = [
             [
-                'contact' => $contacts->first(),
-                'status' => 'resolved',
+                'contact' => $contacts->firstWhere('phone_e164', '+234 803 241 8920') ?? $contacts->get(0),
+                'status' => 'open',
+                'unread_count' => 0,
+                'labels' => ['Waybill Tracking', 'Express Freight'],
+                'minutes_ago' => 8,
                 'messages' => [
-                    ['in', 'Hi, I need to track waybill #WB-10028401 shipped from Manchester to Lagos.'],
-                    ['out', 'Hello Emeka! 📦 Your shipment (Waybill #WB-10028401) cleared Lagos MMIA Customs today at 08:45 AM. Out for doorstep delivery via courier dispatch. Estimated arrival: Today by 3:00 PM.'],
-                    ['in', 'That was fast! Thank you so much.'],
-                    ['out', 'You are very welcome! Thanks for shipping with FTF Digital Solutions. Have a great day! ✨'],
+                    ['in', 'Hello, what is the status of waybill #FTF-84920?'],
+                    ['out', 'Your shipment arrived at Lagos Central Hub and is scheduled for dispatch today at 2:00 PM.'],
                 ],
             ],
             [
-                'contact' => $contacts->skip(1)->first(),
-                'status' => 'resolved',
+                'contact' => $contacts->firstWhere('phone_e164', '+234 803 555 0192') ?? $contacts->get(1),
+                'status' => 'open',
+                'unread_count' => 1,
+                'labels' => ['Express Freight', 'Payment Pending'],
+                'minutes_ago' => 22,
                 'messages' => [
                     ['in', 'Hello, how much does it cost to send a 15kg commercial carton to London Heathrow?'],
                     ['out', 'Hi Babatunde! ✈️ For a 15kg commercial parcel to London, our express air freight rate is ₦18,500 per 5kg block (Total: ₦55,500 inclusive of customs waybill). Would you like me to generate your instant payment booking link?'],
@@ -533,35 +738,130 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 ],
             ],
             [
-                'contact' => $contacts->skip(2)->first(),
+                'contact' => $contacts->firstWhere('phone_e164', '+234 814 998 8776') ?? $contacts->get(2),
                 'status' => 'open',
+                'unread_count' => 0,
+                'labels' => ['VIP Shipper', 'Customs Clearance'],
+                'minutes_ago' => 45,
                 'messages' => [
-                    ['in', 'Good day, please confirm pickup schedule for our international diplomatic cargo.'],
-                    ['out', 'Good day Chioma! Our Abuja logistics team is scheduled for pickup at 2:00 PM today. A dedicated waybill supervisor has been assigned.'],
+                    ['in', 'Good day, please confirm pickup schedule for our international diplomatic cargo in Maitama.'],
+                    ['out', 'Good day Chioma! Our Abuja logistics team is scheduled for pickup at 2:00 PM today. A dedicated waybill supervisor has been assigned (Ref: #FTF-DIP-9901).'],
+                ],
+            ],
+            [
+                'contact' => $contacts->firstWhere('phone_e164', '+234 802 345 6702') ?? $contacts->get(4),
+                'status' => 'open',
+                'unread_count' => 1,
+                'labels' => ['Waybill Tracking'],
+                'minutes_ago' => 70,
+                'messages' => [
+                    ['out', 'Hi Aisha! 👋 We noticed you started booking a freight shipment from Kano to Lagos but did not complete the checkout. Do you need any assistance with cargo dimensions or weight?'],
+                    ['in', 'Hi, I was checking if there is any discount for multi-carton textile shipments.'],
+                    ['out', 'I have applied your 5% seasonal freight discount! You can complete your Kano to Lagos dispatch checkout here: https://botifyai.cloud/cart/recover/FTF-88219'],
+                ],
+            ],
+            [
+                'contact' => $contacts->firstWhere('phone_e164', '+234 806 712 3456') ?? $contacts->get(7),
+                'status' => 'open',
+                'unread_count' => 0,
+                'labels' => ['Waybill Tracking'],
+                'minutes_ago' => 95,
+                'messages' => [
+                    ['in', 'Please confirm departure time for the Kaduna rail cargo.'],
+                    ['out', 'Waybill #FTF-KAD-5510 is cleared for transit on the Abuja-Kaduna secure rail express. Scheduled departure: 11:30 AM today.'],
+                ],
+            ],
+            [
+                'contact' => $contacts->firstWhere('phone_e164', '+234 802 345 6701') ?? $contacts->get(3),
+                'status' => 'open',
+                'unread_count' => 0,
+                'labels' => ['Express Freight', 'Customs Clearance'],
+                'minutes_ago' => 125,
+                'messages' => [
+                    ['in', 'Has the customs documentation for container #FTF-CON-4402 been approved at Apapa Port?'],
+                    ['out', 'Customs duty assessment for your UK air cargo import is ₦14,200. Paid automatically via Paystack escrow. Inspection clearance form WB-APAPA-092 is attached.'],
+                ],
+            ],
+            [
+                'contact' => $contacts->firstWhere('phone_e164', '+234 902 345 6789') ?? $contacts->get(10),
+                'status' => 'open',
+                'unread_count' => 0,
+                'labels' => ['VIP Shipper'],
+                'minutes_ago' => 180,
+                'messages' => [
+                    ['in', 'Could you send over the weekly dispatch manifest for our corporate account?'],
+                    ['out', 'Your weekly consolidated freight dispatch summary (42 waybills) has been emailed to finance@daviesventures.ng. All tracking links are live.'],
+                ],
+            ],
+            [
+                'contact' => $contacts->firstWhere('phone_e164', '+234 818 234 5678') ?? $contacts->get(11),
+                'status' => 'open',
+                'unread_count' => 1,
+                'labels' => ['Express Freight'],
+                'minutes_ago' => 240,
+                'messages' => [
+                    ['in', 'Do you have temperature-controlled reefers for Port Harcourt transit?'],
+                    ['out', 'Yes, we operate certified 20ft & 40ft refrigerated reefers maintained at 2°C–8°C with real-time IoT temperature logging. Port Harcourt cold-chain container delivery confirmed for Thursday 9:00 AM.'],
+                ],
+            ],
+            [
+                'contact' => $contacts->firstWhere('phone_e164', '+234 809 123 4567') ?? $contacts->get(12),
+                'status' => 'open',
+                'unread_count' => 0,
+                'labels' => ['Waybill Tracking'],
+                'minutes_ago' => 310,
+                'messages' => [
+                    ['in', 'Tracking WB #FTF-IB-3091 please.'],
+                    ['out', 'Waybill #FTF-IB-3091 successfully handed over to recipient at Ring Road, Ibadan. Signed POD by: S. Adeleke.'],
+                ],
+            ],
+            [
+                'contact' => $contacts->firstWhere('phone_e164', '+234 802 345 6704') ?? $contacts->get(6),
+                'status' => 'open',
+                'unread_count' => 0,
+                'labels' => ['Express Freight'],
+                'minutes_ago' => 380,
+                'messages' => [
+                    ['in', 'Flight departure confirmation for the London consignment please.'],
+                    ['out', 'London Stansted air cargo flight FTF-BA07 departed on time. Estimated MMIA arrival: tomorrow 05:15 AM.'],
                 ],
             ],
         ];
 
         $allConvIds = [];
-        $now = Carbon::now();
 
         foreach ($primaryDialogs as $d) {
+            $lastMsgTime = $now->copy()->subMinutes($d['minutes_ago']);
+            $numMsgs = count($d['messages']);
+            $firstMsgTime = $lastMsgTime->copy()->subMinutes(($numMsgs - 1) * 3);
+
             $convo = Conversation::create([
                 'workspace_id' => $wid,
                 'channel_account_id' => $channel->id,
                 'contact_id' => $d['contact']->id,
                 'status' => $d['status'],
                 'assigned_to' => 'bot',
-                'unread_count' => 0,
-                'last_message_at' => $now->copy()->subMinutes(rand(10, 360)),
-                'last_inbound_at' => $now->copy()->subMinutes(rand(10, 360)),
-                'created_at' => $now->copy()->subDays(rand(1, 15)),
-                'updated_at' => $now,
+                'unread_count' => $d['unread_count'],
+                'last_message_at' => $lastMsgTime,
+                'last_inbound_at' => $lastMsgTime,
+                'created_at' => $firstMsgTime,
+                'updated_at' => $lastMsgTime,
             ]);
             $allConvIds[] = $convo->id;
 
-            foreach ($d['messages'] as $m) {
-                $msgTime = $convo->created_at->copy()->addMinutes(rand(1, 30));
+            // Attach labels
+            $labelIds = [];
+            foreach ($d['labels'] as $labelName) {
+                if (isset($labels[$labelName])) {
+                    $labelIds[] = $labels[$labelName]->id;
+                }
+            }
+            if (! empty($labelIds)) {
+                $convo->labels()->sync($labelIds);
+            }
+
+            foreach ($d['messages'] as $mIdx => $m) {
+                $msgTime = $firstMsgTime->copy()->addMinutes($mIdx * 3);
                 Message::create([
                     'conversation_id' => $convo->id,
                     'direction' => $m[0],
@@ -577,26 +877,24 @@ class FtfDigitalSolutionsSeeder extends Seeder
             }
         }
 
-        // 2. Seed remaining 297 conversations to reach 300 (matches "Showing 1 to 10 of 300 results" in PDF Page 2)
-        // 98.4% resolved rate
-        $batchConvs = [];
-        for ($cIdx = 4; $cIdx <= 300; $cIdx++) {
-            $isResolved = ($cIdx <= 295); // 295 of 300 = 98.33% (~98.4%)
-            $cContact = $contacts->skip($cIdx - 1)->first() ?? $contacts->first();
-            $daysAgo = rand(0, 28);
+        // 2. Seed remaining 290 conversations to reach 300 total (matches "Showing 1 to 10 of 300 results" in PDF Page 2)
+        for ($cIdx = 11; $cIdx <= 300; $cIdx++) {
+            $cContact = $contacts->get($cIdx - 1) ?? $contacts->first();
+            $daysAgo = rand(1, 28);
             $createdAt = $now->copy()->subDays($daysAgo)->subMinutes(rand(0, 1400));
+            $lastMsgAt = $createdAt->copy()->addMinutes(rand(5, 45));
 
             $convo = Conversation::create([
                 'workspace_id' => $wid,
                 'channel_account_id' => $channel->id,
                 'contact_id' => $cContact->id,
-                'status' => $isResolved ? 'resolved' : 'open',
+                'status' => 'resolved',
                 'assigned_to' => 'bot',
                 'unread_count' => 0,
-                'last_message_at' => $createdAt->copy()->addMinutes(rand(2, 45)),
+                'last_message_at' => $lastMsgAt,
                 'last_inbound_at' => $createdAt,
                 'created_at' => $createdAt,
-                'updated_at' => $createdAt,
+                'updated_at' => $lastMsgAt,
             ]);
             $allConvIds[] = $convo->id;
         }
@@ -604,9 +902,10 @@ class FtfDigitalSolutionsSeeder extends Seeder
         // 3. Batch seed messages to achieve high-throughput telemetry:
         // Total messages: 35,657 (matching PDF Meta API campaign dispatches and chat volume)
         // 18,500 messages out, 17,157 messages in
+        $existingMsgCount = Message::whereIn('conversation_id', $allConvIds)->count();
         $totalOut = 18500;
         $totalIn = 17157;
-        $totalMsg = $totalOut + $totalIn;
+        $totalMsg = ($totalOut + $totalIn) - $existingMsgCount;
 
         $msgBatch = [];
         $batchSize = 2000;
@@ -625,9 +924,10 @@ class FtfDigitalSolutionsSeeder extends Seeder
             'Please send the pickup agent contact number.',
         ];
 
+        $bgConvIds = array_slice($allConvIds, 10);
         for ($mIdx = 1; $mIdx <= $totalMsg; $mIdx++) {
-            $isOut = ($mIdx <= $totalOut);
-            $convId = $allConvIds[($mIdx - 1) % count($allConvIds)];
+            $isOut = ($mIdx <= ($totalOut - 20));
+            $convId = $bgConvIds[($mIdx - 1) % count($bgConvIds)];
             $daysAgo = rand(0, 28);
             $createdAt = $now->copy()->subDays($daysAgo)->subMinutes(rand(0, 1400));
 

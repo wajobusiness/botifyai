@@ -89,14 +89,14 @@ def main():
     emit(f"VALUES (102, 10, 'quote', 'Instant Shipping Rate Quotation', 'contains', '✈️ FTF Instant Shipping Quotation: Instant rates for UK Air Express, North America Priority Courier, and Nationwide Interstate Delivery.', 1, '{created_client}', '{now_str}');")
     emit("")
 
-    # 9. Merchant Bank Account (MySQL schema: workspace_id, bank_name, bank_code, account_number, account_name, recipient_code, currency, is_default)
+    # 9. Merchant Bank Account
     emit("-- 9. Merchant Bank Settlement Account (Zenith Bank PLC)")
     emit("INSERT OR REPLACE INTO merchant_bank_accounts (id, workspace_id, bank_name, bank_code, account_number, account_name, recipient_code, currency, is_default, created_at, updated_at)")
     emit(f"VALUES (10, 10, 'Zenith Bank PLC', '057', '1018400021', 'FTF DIGITAL SOLUTIONS LIMITED', 'RCP_ftf_zenith_verified', 'NGN', 1, '{created_client}', '{now_str}');")
     emit("")
 
-    # 10. Merchant Wallet (₦18,400,000.00 Gross Commercial Revenue)
-    emit("-- 10. Merchant Escrow & Settlement Wallet")
+    # 10. Merchant Wallet & Ledger
+    emit("-- 10. Merchant Escrow & Settlement Wallet (₦18,400,000.00 Gross Commercial Revenue)")
     emit("INSERT OR REPLACE INTO merchant_wallets (id, workspace_id, currency, available_balance_cents, pending_balance_cents, total_withdrawn_cents, total_earned_cents, is_frozen, created_at, updated_at)")
     emit(f"VALUES (10, 10, 'NGN', 1840000000, 0, 0, 1840000000, 0, '{created_client}', '{now_str}');")
     emit("")
@@ -133,52 +133,214 @@ def main():
         emit(f"VALUES ({p_id}, 10, 10, 'native', {q(p_name)}, '{p_slug}', {p_price}, 'NGN', 'digital', {q(p_desc)}, 1, '{created_client}', '{now_str}');")
     emit("")
 
-    # 13. Contacts (Scale to 14,200 active customer contacts)
-    emit("-- 13. Customer Contacts (14,200 Active Shippers)")
-    named_contacts = [
-        (1, 'Emeka', 'Okonkwo', 'emeka.o@meridianlogistics.ng', '+2348031122334', 'Lagos'),
-        (2, 'Babatunde', 'Adeyemi', 'tunde.adeyemi@crossborder.co.uk', '+447911123456', 'London'),
-        (3, 'Chioma', 'Eze', 'chioma.eze@africantradehub.com', '+2348149988776', 'Abuja'),
-        (4, 'Ngozi', 'Okonjo', 'ngozi.okonjo@ftfclient.com', '+2348023456701', 'Enugu'),
-        (5, 'Aisha', 'Bello', 'aisha.bello@ftfclient.com', '+2348023456702', 'Kano'),
-        (6, 'Tunde', 'Bakare', 'tunde.bakare@ftfclient.com', '+2348023456703', 'Ibadan'),
-        (7, 'Chiamaka', 'Nze', 'chiamaka.nze@ftfclient.com', '+2348023456704', 'Owerri'),
-        (8, 'Ibrahim', 'Musa', 'ibrahim.musa@ftfclient.com', '+2348023456705', 'Kaduna'),
-        (9, 'Amaka', 'Obi', 'amaka.obi@ftfclient.com', '+2348023456706', 'Port Harcourt'),
-        (10, 'Yusuf', 'Garba', 'yusuf.garba@ftfclient.com', '+2348023456707', 'Jos'),
-        (11, 'Bolaji', 'Davies', 'bolaji.davies@ftfclient.com', '+2348023456708', 'Lagos'),
-        (12, 'Fatima', 'Dangote', 'fatima.dangote@ftfclient.com', '+2348023456710', 'Kano')
+    # 13. Contact Tags & Contacts
+    emit("-- 13. Contact Tags")
+    tag_defs = [
+        (1, 'Logistics Client', '#0d9488'),
+        (2, 'Waybill Inquiry', '#2563eb'),
+        (3, 'Cross-Border Freight', '#4f46e5'),
+        (4, 'VIP Shipper', '#d97706'),
+        (5, 'Abandoned Cart', '#e11d48'),
+        (6, 'UK Express', '#059669'),
     ]
-    for cid, fn, ln, em, ph, city in named_contacts:
+    tag_map = {}
+    for tid, tname, tcolor in tag_defs:
+        tag_map[tname] = tid
+        emit(f"INSERT OR REPLACE INTO contact_tags (id, workspace_id, name, color, created_at, updated_at) VALUES ({tid}, 10, {q(tname)}, '{tcolor}', '{created_client}', '{now_str}');")
+    emit("")
+
+    emit("-- 13b. Primary Nigerian Logistics Contacts (30 Top Contacts on Page 1)")
+    primary_contacts = [
+        (1, 'Emeka', 'Okonkwo', 'emeka.o@meridianlogistics.ng', '+234 803 241 8920', 'Lagos', ['Logistics Client', 'Waybill Inquiry', 'Cross-Border Freight']),
+        (2, 'Babatunde', 'Adeyemi', 'tunde.adeyemi@crossborder.co.uk', '+234 803 555 0192', 'London / Lagos', ['Cross-Border Freight', 'UK Express']),
+        (3, 'Chioma', 'Eze', 'chioma.eze@africantradehub.com', '+234 814 998 8776', 'Abuja', ['VIP Shipper', 'Logistics Client']),
+        (4, 'Ngozi', 'Okonjo', 'ngozi.okonjo@ftfclient.com', '+234 802 345 6701', 'Enugu', ['Logistics Client', 'Waybill Inquiry']),
+        (5, 'Aisha', 'Bello', 'aisha.bello@ftfclient.com', '+234 802 345 6702', 'Kano', ['Abandoned Cart', 'Logistics Client']),
+        (6, 'Tunde', 'Bakare', 'tunde.bakare@ftfclient.com', '+234 802 345 6703', 'Ibadan', ['Waybill Inquiry']),
+        (7, 'Chiamaka', 'Nze', 'chiamaka.nze@ftfclient.com', '+234 802 345 6704', 'Owerri', ['Cross-Border Freight', 'UK Express']),
+        (8, 'Ibrahim', 'Musa', 'ibrahim.musa@ftfclient.com', '+234 806 712 3456', 'Kaduna', ['Logistics Client', 'Waybill Inquiry']),
+        (9, 'Amaka', 'Obi', 'amaka.obi@ftfclient.com', '+234 805 123 4567', 'Port Harcourt', ['VIP Shipper', 'Cross-Border Freight']),
+        (10, 'Yusuf', 'Garba', 'yusuf.garba@ftfclient.com', '+234 703 890 1234', 'Jos', ['Logistics Client']),
+        (11, 'Bolaji', 'Davies', 'bolaji.davies@ftfclient.com', '+234 902 345 6789', 'Lagos', ['VIP Shipper', 'Logistics Client']),
+        (12, 'Fatima', 'Dangote', 'fatima.dangote@ftfclient.com', '+234 818 234 5678', 'Kano', ['VIP Shipper', 'Logistics Client']),
+        (13, 'Olumide', 'Adeleke', 'olumide.adeleke@ftfclient.com', '+234 809 123 4567', 'Ibadan', ['Waybill Inquiry']),
+        (14, 'Nnamdi', 'Azikiwe', 'nnamdi.azikiwe@ftfclient.com', '+234 816 789 0123', 'Onitsha', ['Logistics Client', 'Cross-Border Freight']),
+        (15, 'Folashade', 'Tinubu', 'folashade.t@ftfclient.com', '+234 813 456 7890', 'Lagos', ['VIP Shipper']),
+        (16, 'Abubakar', 'Shehu', 'abubakar.shehu@ftfclient.com', '+234 803 987 6543', 'Sokoto', ['Logistics Client', 'Waybill Inquiry']),
+        (17, 'Ifeanyi', 'Ubah', 'ifeanyi.ubah@ftfclient.com', '+234 814 321 0987', 'Nnewi', ['Cross-Border Freight']),
+        (18, 'Damilola', 'Fashola', 'dami.fashola@ftfclient.com', '+234 805 678 1234', 'Lagos', ['Logistics Client', 'UK Express']),
+        (19, 'Kemi', 'Adeosun', 'kemi.adeosun@ftfclient.com', '+234 802 987 1234', 'Abeokuta', ['VIP Shipper', 'Cross-Border Freight']),
+        (20, 'Funke', 'Akindele', 'funke.a@ftfclient.com', '+234 803 111 2233', 'Lagos', ['Logistics Client']),
+        (21, 'Osagie', 'Alonge', 'osagie.alonge@ftfclient.com', '+234 818 999 8888', 'Benin City', ['Waybill Inquiry']),
+        (22, 'Zainab', 'Ahmed', 'zainab.ahmed@ftfclient.com', '+234 703 123 9876', 'Kaduna', ['Logistics Client', 'Cross-Border Freight']),
+        (23, 'Olamide', 'Adedeji', 'olamide.adedeji@ftfclient.com', '+234 902 888 7766', 'Lagos', ['Abandoned Cart']),
+        (24, 'Blessing', 'Okagbare', 'blessing.o@ftfclient.com', '+234 809 555 4433', 'Warri', ['Logistics Client', 'UK Express']),
+        (25, 'Kelechi', 'Iheanacho', 'kelechi.i@ftfclient.com', '+234 816 444 3322', 'Owerri', ['VIP Shipper']),
+        (26, 'Victor', 'Osimhen', 'victor.osimhen@ftfclient.com', '+234 803 777 6655', 'Lagos', ['VIP Shipper', 'Cross-Border Freight']),
+        (27, 'Chinua', 'Achebe', 'chinua.achebe@ftfclient.com', '+234 814 111 9900', 'Ogidi', ['Logistics Client']),
+        (28, 'Simi', 'Ogunleye', 'simi.ogunleye@ftfclient.com', '+234 805 222 3344', 'Lagos', ['Waybill Inquiry', 'UK Express']),
+        (29, 'Bankole', 'Wellington', 'banky.w@ftfclient.com', '+234 802 666 7788', 'Lagos', ['VIP Shipper', 'Cross-Border Freight']),
+        (30, 'Yetunde', 'Ayeni', 'yetunde.ayeni@ftfclient.com', '+234 803 888 9900', 'Ilorin', ['Logistics Client', 'Waybill Inquiry']),
+    ]
+
+    emit("DELETE FROM contact_tag_pivot;")
+    for idx, (cid, fn, ln, em, ph, city, tags) in enumerate(primary_contacts):
         u = str(uuid.uuid4())
-        dt = (now - timedelta(days=random.randint(1, 20))).strftime("%Y-%m-%d %H:%M:%S")
+        dt = (now - timedelta(minutes=(idx * 4))).strftime("%Y-%m-%d %H:%M:%S")
         custom = json.dumps({"destination_city": city, "account_tier": "Enterprise Shipper"})
         emit("INSERT OR REPLACE INTO contacts (id, uuid, workspace_id, phone_e164, email, first_name, last_name, country, language, opt_in_whatsapp, opt_in_sms, opt_in_email, custom_fields, created_at, updated_at)")
         emit(f"VALUES ({cid}, '{u}', 10, '{ph}', '{em}', '{fn}', '{ln}', 'NG', 'en', 1, 1, 1, '{custom}', '{dt}', '{dt}');")
+        for tname in tags:
+            tid = tag_map[tname]
+            emit(f"INSERT OR REPLACE INTO contact_tag_pivot (contact_id, tag_id) VALUES ({cid}, {tid});")
 
-    # Generate additional contacts up to 14,200
-    for i in range(13, 14201):
+    emit("-- 13c. Background Contacts to reach exactly 14,200 Total Contacts")
+    for i in range(31, 14201):
         u = str(uuid.uuid4())
-        ph = f"+23480{i:08d}"
+        ph = f"+234 80{((i * 7) % 9) + 1} {str(i).zfill(7)[:3]} {str(i).zfill(7)[3:]}"
         em = f"shipper_{i}@ftfclient.com"
-        dt = (now - timedelta(days=random.randint(0, 28), minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
+        dt = (now - timedelta(days=random.randint(1, 28), minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
         emit(f"INSERT OR REPLACE INTO contacts (id, uuid, workspace_id, phone_e164, email, first_name, last_name, country, language, opt_in_whatsapp, opt_in_sms, opt_in_email, created_at, updated_at) VALUES ({i}, '{u}', 10, '{ph}', '{em}', 'Shipper', '{i}', 'NG', 'en', 1, 1, 1, '{dt}', '{dt}');")
     emit("")
 
-    # 14. Conversations (300 total) & Messages (35,657 total)
-    emit("-- 14. Real-time Customer Inquiries & Conversations (300 Conversations)")
-    for cIdx in range(1, 301):
-        st = 'open' if cIdx in (3, 50, 120, 200, 280) else 'resolved'
+    # 14. Inbox Labels & Conversations
+    emit("-- 14. Inbox Labels")
+    inbox_label_defs = [
+        (1, 'Waybill Tracking', '#0d9488'),
+        (2, 'Express Freight', '#2563eb'),
+        (3, 'Payment Pending', '#d97706'),
+        (4, 'Customs Clearance', '#7c3aed'),
+        (5, 'VIP Shipper', '#e11d48'),
+    ]
+    lbl_map = {}
+    for lid, lname, lcolor in inbox_label_defs:
+        lbl_map[lname] = lid
+        emit(f"INSERT OR REPLACE INTO inbox_labels (id, workspace_id, name, color, created_at, updated_at) VALUES ({lid}, 10, {q(lname)}, '{lcolor}', '{created_client}', '{now_str}');")
+    emit("")
+
+    emit("-- 14b. 10 Active OPEN Conversations for Inbox Screenshots")
+    primary_dialogs = [
+        {
+            "cid": 1, "status": "open", "unread": 0, "labels": ["Waybill Tracking", "Express Freight"], "min_ago": 8,
+            "messages": [
+                ("in", "Hello, what is the status of waybill #FTF-84920?"),
+                ("out", "Your shipment arrived at Lagos Central Hub and is scheduled for dispatch today at 2:00 PM."),
+            ]
+        },
+        {
+            "cid": 2, "status": "open", "unread": 1, "labels": ["Express Freight", "Payment Pending"], "min_ago": 22,
+            "messages": [
+                ("in", "Hello, how much does it cost to send a 15kg commercial carton to London Heathrow?"),
+                ("out", "Hi Babatunde! ✈️ For a 15kg commercial parcel to London, our express air freight rate is ₦18,500 per 5kg block (Total: ₦55,500 inclusive of customs waybill). Would you like me to generate your instant payment booking link?"),
+                ("in", "Yes please send the payment link."),
+                ("out", "Here is your direct 1-click in-chat booking and payment link: https://botifyai.cloud/buy/ftf-logistics/order-checkout/WB-10028405. Pay via Paystack or Flutterwave."),
+            ]
+        },
+        {
+            "cid": 3, "status": "open", "unread": 0, "labels": ["VIP Shipper", "Customs Clearance"], "min_ago": 45,
+            "messages": [
+                ("in", "Good day, please confirm pickup schedule for our international diplomatic cargo in Maitama."),
+                ("out", "Good day Chioma! Our Abuja logistics team is scheduled for pickup at 2:00 PM today. A dedicated waybill supervisor has been assigned (Ref: #FTF-DIP-9901)."),
+            ]
+        },
+        {
+            "cid": 5, "status": "open", "unread": 1, "labels": ["Waybill Tracking"], "min_ago": 70,
+            "messages": [
+                ("out", "Hi Aisha! 👋 We noticed you started booking a freight shipment from Kano to Lagos but did not complete the checkout. Do you need any assistance with cargo dimensions or weight?"),
+                ("in", "Hi, I was checking if there is any discount for multi-carton textile shipments."),
+                ("out", "I have applied your 5% seasonal freight discount! You can complete your Kano to Lagos dispatch checkout here: https://botifyai.cloud/cart/recover/FTF-88219"),
+            ]
+        },
+        {
+            "cid": 8, "status": "open", "unread": 0, "labels": ["Waybill Tracking"], "min_ago": 95,
+            "messages": [
+                ("in", "Please confirm departure time for the Kaduna rail cargo."),
+                ("out", "Waybill #FTF-KAD-5510 is cleared for transit on the Abuja-Kaduna secure rail express. Scheduled departure: 11:30 AM today."),
+            ]
+        },
+        {
+            "cid": 4, "status": "open", "unread": 0, "labels": ["Express Freight", "Customs Clearance"], "min_ago": 125,
+            "messages": [
+                ("in", "Has the customs documentation for container #FTF-CON-4402 been approved at Apapa Port?"),
+                ("out", "Customs duty assessment for your UK air cargo import is ₦14,200. Paid automatically via Paystack escrow. Inspection clearance form WB-APAPA-092 is attached."),
+            ]
+        },
+        {
+            "cid": 11, "status": "open", "unread": 0, "labels": ["VIP Shipper"], "min_ago": 180,
+            "messages": [
+                ("in", "Could you send over the weekly dispatch manifest for our corporate account?"),
+                ("out", "Your weekly consolidated freight dispatch summary (42 waybills) has been emailed to finance@daviesventures.ng. All tracking links are live."),
+            ]
+        },
+        {
+            "cid": 12, "status": "open", "unread": 1, "labels": ["Express Freight"], "min_ago": 240,
+            "messages": [
+                ("in", "Do you have temperature-controlled reefers for Port Harcourt transit?"),
+                ("out", "Yes, we operate certified 20ft & 40ft refrigerated reefers maintained at 2°C–8°C with real-time IoT temperature logging. Port Harcourt cold-chain container delivery confirmed for Thursday 9:00 AM."),
+            ]
+        },
+        {
+            "cid": 13, "status": "open", "unread": 0, "labels": ["Waybill Tracking"], "min_ago": 310,
+            "messages": [
+                ("in", "Tracking WB #FTF-IB-3091 please."),
+                ("out", "Waybill #FTF-IB-3091 successfully handed over to recipient at Ring Road, Ibadan. Signed POD by: S. Adeleke."),
+            ]
+        },
+        {
+            "cid": 7, "status": "open", "unread": 0, "labels": ["Express Freight"], "min_ago": 380,
+            "messages": [
+                ("in", "Flight departure confirmation for the London consignment please."),
+                ("out", "London Stansted air cargo flight FTF-BA07 departed on time. Estimated MMIA arrival: tomorrow 05:15 AM."),
+            ]
+        },
+    ]
+
+    emit("DELETE FROM inbox_label_conversation;")
+    msg_id_counter = 1
+    for d_idx, d in enumerate(primary_dialogs, start=1):
         c_u = str(uuid.uuid4())
-        c_dt = (now - timedelta(days=random.randint(0, 28), minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
-        emit(f"INSERT OR REPLACE INTO conversations (id, uuid, workspace_id, channel_account_id, contact_id, status, assigned_to, unread_count, last_message_at, last_inbound_at, created_at, updated_at) VALUES ({cIdx}, '{c_u}', 10, 101, {cIdx}, '{st}', 'bot', 0, '{c_dt}', '{c_dt}', '{c_dt}', '{c_dt}');")
+        last_dt = (now - timedelta(minutes=d["min_ago"])).strftime("%Y-%m-%d %H:%M:%S")
+        num_msgs = len(d["messages"])
+        first_dt = (datetime.strptime(last_dt, "%Y-%m-%d %H:%M:%S") - timedelta(minutes=(num_msgs - 1) * 3)).strftime("%Y-%m-%d %H:%M:%S")
+        
+        emit(f"INSERT OR REPLACE INTO conversations (id, uuid, workspace_id, channel_account_id, contact_id, status, assigned_to, unread_count, last_message_at, last_inbound_at, created_at, updated_at) VALUES ({d_idx}, '{c_u}', 10, 101, {d['cid']}, '{d['status']}', 'bot', {d['unread']}, '{last_dt}', '{last_dt}', '{first_dt}', '{last_dt}');")
+        for lname in d["labels"]:
+            lid = lbl_map[lname]
+            emit(f"INSERT OR REPLACE INTO inbox_label_conversation (label_id, conversation_id) VALUES ({lid}, {d_idx});")
+        for m_idx, (direction, body) in enumerate(d["messages"]):
+            m_dt = (datetime.strptime(first_dt, "%Y-%m-%d %H:%M:%S") + timedelta(minutes=m_idx * 3)).strftime("%Y-%m-%d %H:%M:%S")
+            emit(f"INSERT OR REPLACE INTO messages (id, conversation_id, direction, channel, type, body, status, sent_by, sent_at, created_at, updated_at) VALUES ({msg_id_counter}, {d_idx}, '{direction}', 'whatsapp', 'text', {q(body)}, 'delivered', '{'bot' if direction=='out' else 'human'}', '{m_dt}', '{m_dt}', '{m_dt}');")
+            msg_id_counter += 1
+
+    emit("-- 14c. Background Resolved Conversations (290 Conversations to reach 300 Total)")
+    for cIdx in range(11, 301):
+        c_u = str(uuid.uuid4())
+        days_ago = random.randint(1, 28)
+        c_dt = (now - timedelta(days=days_ago, minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
+        last_dt = (datetime.strptime(c_dt, "%Y-%m-%d %H:%M:%S") + timedelta(minutes=random.randint(5, 45))).strftime("%Y-%m-%d %H:%M:%S")
+        emit(f"INSERT OR REPLACE INTO conversations (id, uuid, workspace_id, channel_account_id, contact_id, status, assigned_to, unread_count, last_message_at, last_inbound_at, created_at, updated_at) VALUES ({cIdx}, '{c_u}', 10, 101, {cIdx}, 'resolved', 'bot', 0, '{last_dt}', '{c_dt}', '{c_dt}', '{last_dt}');")
 
     emit("-- 15. High-Throughput Messages (35,657 Messages - 18,500 Outbound / 17,157 Inbound)")
-    for mIdx in range(1, 35658):
+    sample_out = [
+        'Hello! Your waybill tracking details have been verified.',
+        'Here is your express freight quotation invoice.',
+        'Your parcel has cleared airport customs and is out for delivery.',
+        'Thanks for choosing FTF Digital Solutions Limited.',
+        'Your in-chat checkout payment link is active: https://botifyai.cloud/buy/ftf-logistics',
+    ]
+    sample_in = [
+        'Hi, please give me the status of my waybill.',
+        'How much is 10kg shipping to London?',
+        'Payment has been sent via Paystack.',
+        'Thank you for the quick update!',
+        'Please send the pickup agent contact number.',
+    ]
+    for mIdx in range(msg_id_counter, 35658):
         direction = 'out' if mIdx <= 18500 else 'in'
-        conv_id = ((mIdx - 1) % 300) + 1
+        # Route background messages ONLY to background conversations (11 to 300)
+        conv_id = ((mIdx - msg_id_counter) % 290) + 11
         m_dt = (now - timedelta(days=random.randint(0, 28), minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
-        body = "📦 Your FTF shipping waybill tracking update has been dispatched." if direction == 'out' else "Hi, please send my waybill GPS delivery schedule."
+        body = random.choice(sample_out) if direction == 'out' else random.choice(sample_in)
         emit(f"INSERT OR REPLACE INTO messages (id, conversation_id, direction, channel, type, body, status, sent_by, sent_at, created_at, updated_at) VALUES ({mIdx}, {conv_id}, '{direction}', 'whatsapp', 'text', {q(body)}, 'delivered', '{'bot' if direction=='out' else 'human'}', '{m_dt}', '{m_dt}', '{m_dt}');")
     emit("")
 
@@ -295,20 +457,105 @@ def main():
         r_dt = (now - timedelta(days=random.randint(0, 28), minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
         emit(f"INSERT OR REPLACE INTO ai_runs (id, chatbot_id, prompt_tokens, completion_tokens, cost_cents, latency_ms, model, status, created_at, updated_at) VALUES ({r_idx}, 10, {prompt}, {comp}, {cost}, {lat}, 'gpt-4o-mini', '{st}', '{r_dt}', '{r_dt}');")
 
-    # 21. Automations (4 Active Workflows)
-    emit("-- 21. Active Workflows (4 Automations)")
-    autos = [
-        (101, 'WhatsApp Instant Package & Waybill Tracking', 'message_received'),
-        (102, 'Automated In-Chat Instant Quotation & Rate Calculator', 'inquiry_received'),
-        (103, 'Meta API Abandoned Cart Recovery Sequence', 'cart_abandoned'),
-        (104, 'Event-Driven Omnichannel Lead Routing (FastAPI / Redis)', 'lead_qualified')
+    # 21. Automations (6 Named Flows with nodes, edges, and runs)
+    emit("-- 21. Active Workflows (6 Named Flows with Full Node-Edge Topologies)")
+    flows = [
+        {
+            "id": 101, "name": "Waybill & Tracking Lookup Flow", "trigger": "message.received", "run_count": 384,
+            "nodes": [
+                {"id": "trigger-1", "type": "trigger", "position": {"x": 250, "y": 50}, "data": {"label": "Incoming WhatsApp Message"}},
+                {"id": "condition-1", "type": "condition", "position": {"x": 250, "y": 150}, "data": {"label": "Contains Waybill Regex (#FTF- / WB-)"}},
+                {"id": "action-1", "type": "action", "position": {"x": 250, "y": 250}, "data": {"label": "Query Waybill Tracking API"}},
+                {"id": "action-2", "type": "action", "position": {"x": 250, "y": 350}, "data": {"label": "Send WhatsApp Live GPS Dispatch Status"}}
+            ],
+            "edges": [
+                {"id": "e1-2", "source": "trigger-1", "target": "condition-1"},
+                {"id": "e2-3", "source": "condition-1", "target": "action-1"},
+                {"id": "e3-4", "source": "action-1", "target": "action-2"}
+            ]
+        },
+        {
+            "id": 102, "name": "Instant Shipping Rate Calculator", "trigger": "message.received", "run_count": 291,
+            "nodes": [
+                {"id": "trigger-1", "type": "trigger", "position": {"x": 250, "y": 50}, "data": {"label": "Keyword quote or rate"}},
+                {"id": "action-1", "type": "action", "position": {"x": 250, "y": 150}, "data": {"label": "Extract Weight (kg) & Destination City"}},
+                {"id": "action-2", "type": "action", "position": {"x": 250, "y": 250}, "data": {"label": "Compute Dynamic Tariff (UK Express / Interstate)"}},
+                {"id": "action-3", "type": "action", "position": {"x": 250, "y": 350}, "data": {"label": "Send WhatsApp Quote + 1-Click Paystack Link"}}
+            ],
+            "edges": [
+                {"id": "e1-2", "source": "trigger-1", "target": "action-1"},
+                {"id": "e2-3", "source": "action-1", "target": "action-2"},
+                {"id": "e3-4", "source": "action-2", "target": "action-3"}
+            ]
+        },
+        {
+            "id": 103, "name": "In-Chat Waybill Invoicing (Paystack API)", "trigger": "order.placed", "run_count": 470,
+            "nodes": [
+                {"id": "trigger-1", "type": "trigger", "position": {"x": 250, "y": 50}, "data": {"label": "Waybill Booking Order Created"}},
+                {"id": "action-1", "type": "action", "position": {"x": 250, "y": 150}, "data": {"label": "Generate Paystack Payment Reference & QR"}},
+                {"id": "action-2", "type": "action", "position": {"x": 250, "y": 250}, "data": {"label": "Send Interactive Invoice WhatsApp Message"}},
+                {"id": "action-3", "type": "action", "position": {"x": 250, "y": 350}, "data": {"label": "Auto-Reconcile Merchant Ledger Balance"}}
+            ],
+            "edges": [
+                {"id": "e1-2", "source": "trigger-1", "target": "action-1"},
+                {"id": "e2-3", "source": "action-1", "target": "action-2"},
+                {"id": "e3-4", "source": "action-2", "target": "action-3"}
+            ]
+        },
+        {
+            "id": 104, "name": "Abandoned Checkout Recovery (WhatsApp)", "trigger": "cart.abandoned", "run_count": 100,
+            "nodes": [
+                {"id": "trigger-1", "type": "trigger", "position": {"x": 250, "y": 50}, "data": {"label": "Cart Inactive for 30 Minutes"}},
+                {"id": "delay-1", "type": "delay", "position": {"x": 250, "y": 150}, "data": {"label": "Wait 15 Minutes"}},
+                {"id": "action-1", "type": "action", "position": {"x": 250, "y": 250}, "data": {"label": "Send Meta Template: waybill_dispatch_recovery"}},
+                {"id": "action-2", "type": "action", "position": {"x": 250, "y": 350}, "data": {"label": "Apply 5% Freight Voucher on WhatsApp Click"}}
+            ],
+            "edges": [
+                {"id": "e1-2", "source": "trigger-1", "target": "delay-1"},
+                {"id": "e2-3", "source": "delay-1", "target": "action-1"},
+                {"id": "e3-4", "source": "action-1", "target": "action-2"}
+            ]
+        },
+        {
+            "id": 105, "name": "Omnichannel Cross-Border Dispatch (Meta Cloud API)", "trigger": "webhook.received", "run_count": 158,
+            "nodes": [
+                {"id": "trigger-1", "type": "trigger", "position": {"x": 250, "y": 50}, "data": {"label": "Customs Cargo Cleared Webhook"}},
+                {"id": "action-1", "type": "action", "position": {"x": 250, "y": 150}, "data": {"label": "Assign Local Dispatch Hub & Rider"}},
+                {"id": "action-2", "type": "action", "position": {"x": 250, "y": 250}, "data": {"label": "Broadcast SMS & WhatsApp Dispatch Notice"}}
+            ],
+            "edges": [
+                {"id": "e1-2", "source": "trigger-1", "target": "action-1"},
+                {"id": "e2-3", "source": "action-1", "target": "action-2"}
+            ]
+        },
+        {
+            "id": 106, "name": "VIP Freight Customs Clearance Alert", "trigger": "contact.tag_added", "run_count": 64,
+            "nodes": [
+                {"id": "trigger-1", "type": "trigger", "position": {"x": 250, "y": 50}, "data": {"label": "Tag Customs Clearance Added"}},
+                {"id": "action-1", "type": "action", "position": {"x": 250, "y": 150}, "data": {"label": "Generate Formal Bill of Lading Assessment"}},
+                {"id": "action-2", "type": "action", "position": {"x": 250, "y": 250}, "data": {"label": "Notify Dedicated Logistics Account Manager"}}
+            ],
+            "edges": [
+                {"id": "e1-2", "source": "trigger-1", "target": "action-1"},
+                {"id": "e2-3", "source": "action-1", "target": "action-2"}
+            ]
+        }
     ]
-    for aid, aname, atrig in autos:
-        emit(f"INSERT OR REPLACE INTO automations (id, workspace_id, name, trigger_type, status, definition_json, created_by, created_at, updated_at) VALUES ({aid}, 10, {q(aname)}, '{atrig}', 'active', '{{\"nodes\":[],\"edges\":[]}}', 10, '{created_client}', '{now_str}');")
-        for ar in range(1, 13):
-            ar_id = (aid * 100) + ar
+
+    emit("DELETE FROM automation_runs;")
+    run_counter = 1
+    for flow in flows:
+        f_u = str(uuid.uuid4())
+        nodes_json = json.dumps(flow["nodes"]).replace("'", "''")
+        edges_json = json.dumps(flow["edges"]).replace("'", "''")
+        def_json = json.dumps({"nodes": flow["nodes"], "edges": flow["edges"]}).replace("'", "''")
+        emit(f"INSERT OR REPLACE INTO automations (id, uuid, workspace_id, name, trigger_type, status, nodes, edges, definition_json, run_count, created_by, created_at, updated_at)")
+        emit(f"VALUES ({flow['id']}, '{f_u}', 10, {q(flow['name'])}, '{flow['trigger']}', 'active', '{nodes_json}', '{edges_json}', '{def_json}', {flow['run_count']}, 10, '{created_client}', '{now_str}');")
+        
+        for r_idx in range(1, flow["run_count"] + 1):
             s_dt = (now - timedelta(days=random.randint(0, 20), minutes=random.randint(0, 1400))).strftime("%Y-%m-%d %H:%M:%S")
-            emit(f"INSERT OR REPLACE INTO automation_runs (id, automation_id, workspace_id, status, started_at, completed_at, created_at, updated_at) VALUES ({ar_id}, {aid}, 10, 'success', '{s_dt}', '{s_dt}', '{s_dt}', '{s_dt}');")
+            emit(f"INSERT OR REPLACE INTO automation_runs (id, automation_id, workspace_id, status, started_at, completed_at, created_at, updated_at) VALUES ({run_counter}, {flow['id']}, 10, 'completed', '{s_dt}', '{s_dt}', '{s_dt}', '{s_dt}');")
+            run_counter += 1
     emit("")
 
     # Write SQL script
@@ -324,11 +571,60 @@ def main():
     cur.execute("PRAGMA synchronous = OFF")
     cur.execute("PRAGMA journal_mode = MEMORY")
     
-    # Ensure tables exist
+    # Ensure tables exist in SQLite
     cur.execute("DROP TABLE IF EXISTS merchant_bank_accounts")
     cur.execute("CREATE TABLE IF NOT EXISTS merchant_bank_accounts (id INTEGER PRIMARY KEY, workspace_id INTEGER, bank_name TEXT, bank_code TEXT, account_number TEXT, account_name TEXT, recipient_code TEXT, currency TEXT DEFAULT 'NGN', is_default INTEGER DEFAULT 1, created_at DATETIME, updated_at DATETIME)")
     cur.execute("CREATE TABLE IF NOT EXISTS merchant_wallets (id INTEGER PRIMARY KEY, workspace_id INTEGER, currency TEXT DEFAULT 'NGN', available_balance_cents INTEGER DEFAULT 0, pending_balance_cents INTEGER DEFAULT 0, total_withdrawn_cents INTEGER DEFAULT 0, total_earned_cents INTEGER DEFAULT 0, is_frozen INTEGER DEFAULT 0, created_at DATETIME, updated_at DATETIME)")
     cur.execute("CREATE TABLE IF NOT EXISTS merchant_ledger_entries (id INTEGER PRIMARY KEY, workspace_id INTEGER, wallet_id INTEGER, entry_type TEXT, amount_cents INTEGER, fee_cents INTEGER, net_amount_cents INTEGER, running_balance_cents INTEGER, currency TEXT, reference_type TEXT, reference_id INTEGER, description TEXT, created_at DATETIME, updated_at DATETIME)")
+    
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS contact_tags (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        workspace_id INTEGER NOT NULL,
+        name VARCHAR(64) NOT NULL,
+        color VARCHAR(16) DEFAULT '#6366f1',
+        created_at DATETIME,
+        updated_at DATETIME,
+        UNIQUE(workspace_id, name)
+    )''')
+
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS contact_tag_pivot (
+        contact_id INTEGER NOT NULL,
+        tag_id INTEGER NOT NULL,
+        PRIMARY KEY (contact_id, tag_id)
+    )''')
+
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS inbox_labels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        workspace_id INTEGER NOT NULL,
+        name VARCHAR(64) NOT NULL,
+        color VARCHAR(16) DEFAULT '#6366f1',
+        created_at DATETIME,
+        updated_at DATETIME,
+        UNIQUE(workspace_id, name)
+    )''')
+
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS inbox_label_conversation (
+        label_id INTEGER NOT NULL,
+        conversation_id INTEGER NOT NULL,
+        PRIMARY KEY (label_id, conversation_id)
+    )''')
+
+    for col, ctype in [('uuid', 'TEXT'), ('nodes', 'JSON'), ('edges', 'JSON'), ('run_count', 'INTEGER DEFAULT 0'), ('trigger_config', 'JSON'), ('trigger_token', 'TEXT')]:
+        try:
+            cur.execute(f'ALTER TABLE automations ADD COLUMN {col} {ctype}')
+        except Exception:
+            pass
+
+    for col, ctype in [('contact_id', 'INTEGER'), ('context', 'JSON'), ('current_node_id', 'TEXT'), ('resume_node_id', 'TEXT'), ('error', 'TEXT')]:
+        try:
+            cur.execute(f'ALTER TABLE automation_runs ADD COLUMN {col} {ctype}')
+        except Exception:
+            pass
+
     try:
         cur.execute("ALTER TABLE ecommerce_stores ADD COLUMN bank_account_id INTEGER")
     except Exception:
