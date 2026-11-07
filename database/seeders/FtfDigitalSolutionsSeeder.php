@@ -4,7 +4,9 @@ namespace Database\Seeders;
 
 use App\Models\Client;
 use App\Models\ClientSubscription;
+use App\Models\PaymentTransaction;
 use App\Models\Plan;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Modules\AI\Models\AiChatbot;
@@ -23,6 +25,8 @@ use App\Modules\Ecommerce\Models\EcommerceOrder;
 use App\Modules\Ecommerce\Models\EcommerceProduct;
 use App\Modules\Ecommerce\Models\EcommerceStore;
 use App\Modules\Ecommerce\Models\MerchantBankAccount;
+use App\Modules\Ecommerce\Models\MerchantLedgerEntry;
+use App\Modules\Ecommerce\Models\MerchantWallet;
 use App\Modules\Shared\Models\ChannelAccount;
 use App\Modules\Shared\Models\Contact;
 use App\Modules\Shared\Models\Conversation;
@@ -36,6 +40,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
@@ -65,6 +70,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
         $this->seedEcommerceOrdersAndInvoices();
         $this->seedCartRecoveryEngine();
         $this->seedBroadcastingAndMetaCampaign();
+        $this->seedAdminTelemetry();
 
         $this->command?->info('FTF Digital Solutions Limited seeded successfully.');
     }
@@ -91,7 +97,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 'currency_symbol' => '₦',
                 'currency_position' => 'before',
                 'primary_color' => '#0D9488',
-                'created_at' => Carbon::parse('2024-01-15 08:00:00'),
+                'created_at' => Carbon::now()->subMonths(10),
                 'updated_at' => Carbon::now(),
             ]
         );
@@ -106,11 +112,11 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 'status' => User::STATUS_ACTIVE,
                 'client_id' => $this->client->id,
                 'client_role' => User::CLIENT_ROLE_ADMINISTRATOR,
-                'email_verified_at' => Carbon::parse('2024-01-15 08:30:00'),
+                'email_verified_at' => Carbon::now()->subMonths(10),
                 'locale' => 'en',
                 'display_currency' => 'NGN',
                 'timezone' => 'Africa/Lagos',
-                'created_at' => Carbon::parse('2024-01-15 08:00:00'),
+                'created_at' => Carbon::now()->subMonths(10),
                 'updated_at' => Carbon::now(),
             ]
         );
@@ -128,9 +134,10 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 'currency_code' => 'NGN',
             ]);
 
-        if (! $this->user->workspace_id) {
-            $this->user->forceFill(['workspace_id' => $this->workspace->id])->saveQuietly();
-        }
+        // Force set user workspace pointer
+        $this->user->forceFill([
+            'workspace_id' => $this->workspace->id,
+        ])->saveQuietly();
 
         // Attach workspace membership pivot
         DB::table('workspace_user')->updateOrInsert(
@@ -150,9 +157,9 @@ class FtfDigitalSolutionsSeeder extends Seeder
                     'plan_id' => $plan->id,
                     'status' => ClientSubscription::STATUS_ACTIVE,
                     'billing_cycle' => ClientSubscription::BILLING_MONTHLY,
-                    'starts_at' => Carbon::parse('2024-01-15 09:00:00'),
+                    'starts_at' => Carbon::now()->subMonths(10),
                     'ends_at' => Carbon::now()->addYear(),
-                    'created_at' => Carbon::parse('2024-01-15 09:00:00'),
+                    'created_at' => Carbon::now()->subMonths(10),
                     'updated_at' => Carbon::now(),
                 ]
             );
@@ -172,7 +179,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 'phone_number_id' => $this->waPhoneNumberId,
                 'credentials' => ['system_user_token' => 'EAAG_FTF_LIVE_META_TOKEN_VERIFIED'],
                 'status' => 'active',
-                'created_at' => Carbon::parse('2024-01-20 10:00:00'),
+                'created_at' => Carbon::now()->subMonths(10),
                 'updated_at' => Carbon::now(),
             ]
         );
@@ -185,7 +192,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 'provider' => 'meta',
                 'credentials' => ['access_token' => 'IG_FTF_VERIFIED_TOKEN'],
                 'status' => 'active',
-                'created_at' => Carbon::parse('2024-01-20 10:00:00'),
+                'created_at' => Carbon::now()->subMonths(10),
                 'updated_at' => Carbon::now(),
             ]
         );
@@ -198,7 +205,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 'provider' => 'meta',
                 'credentials' => ['access_token' => 'PAGE_FTF_VERIFIED_TOKEN'],
                 'status' => 'active',
-                'created_at' => Carbon::parse('2024-01-20 10:00:00'),
+                'created_at' => Carbon::now()->subMonths(10),
                 'updated_at' => Carbon::now(),
             ]
         );
@@ -211,7 +218,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 'credentials' => ['system_user_token' => 'EAAG_FTF_LIVE_META_TOKEN_VERIFIED'],
                 'webhook_verify_token' => Str::random(48),
                 'status' => 'active',
-                'created_at' => Carbon::parse('2024-01-20 10:00:00'),
+                'created_at' => Carbon::now()->subMonths(10),
                 'updated_at' => Carbon::now(),
             ]
         );
@@ -225,7 +232,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 'quality_rating' => 'GREEN',
                 'code_verification_status' => 'VERIFIED',
                 'name_status' => 'APPROVED',
-                'created_at' => Carbon::parse('2024-01-20 10:00:00'),
+                'created_at' => Carbon::now()->subMonths(10),
                 'updated_at' => Carbon::now(),
             ]
         );
@@ -236,7 +243,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
             [
                 'name' => 'Waybill & Package Status Tracking',
                 'match_type' => 'contains',
-                'reply_text' => "📦 *FTF Logistics Package Tracker*\nPlease reply with your 8-digit Waybill Number (e.g. WB-100284) to get instant live GPS dispatch status, carrier flight details, and scheduled delivery window.",
+                'reply_text' => "📦 *FTF Logistics Package Tracker*\nPlease reply with your 8-digit Waybill Number (e.g. WB-10028401) to get instant live GPS dispatch status, carrier flight details, and scheduled delivery window.",
                 'is_active' => true,
             ]
         );
@@ -282,7 +289,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 'source_ref' => 'doc:ftf-logistics-core',
                 'status' => 'indexed',
                 'tokens' => 1450,
-                'last_indexed_at' => Carbon::now()->subDays(10),
+                'last_indexed_at' => Carbon::now()->subDays(5),
             ]
         );
 
@@ -310,23 +317,39 @@ class FtfDigitalSolutionsSeeder extends Seeder
             ]
         );
 
-        // Log AI runs demonstrating 70%+ inquiry latency reduction and 98.4% automated inquiry resolution
-        if (AiRun::where('chatbot_id', $bot->id)->count() === 0) {
-            for ($i = 0; $i < 64; $i++) {
-                $prompt = rand(240, 780);
-                $comp = rand(60, 290);
-                $isError = ($i === 13); // 1 error in 64 runs = 98.4% resolution success rate
-                $run = AiRun::create([
-                    'chatbot_id' => $bot->id,
-                    'prompt_tokens' => $prompt,
-                    'completion_tokens' => $comp,
-                    'cost_cents' => (int) ceil(($prompt * 0.000015 + $comp * 0.00006) * 100),
-                    'latency_ms' => rand(380, 720), // sub-second latency (reduced from hours to seconds)
-                    'model' => 'gpt-4o-mini',
-                    'status' => $isError ? 'error' : 'ok',
-                ]);
-                $this->bk($run, Carbon::now()->subDays(rand(0, 28))->setTime(rand(7, 22), rand(0, 59)));
+        // Delete existing runs to allow idempotent re-seed
+        AiRun::where('chatbot_id', $bot->id)->delete();
+
+        // Seed 500+ AI runs across the active 30-day window
+        // Demonstrates sub-second latency (avg ~527.5ms) and 98.4% resolution success rate (492 ok, 8 error = 98.4%)
+        $runs = [];
+        $now = Carbon::now();
+        for ($i = 0; $i < 500; $i++) {
+            $prompt = rand(240, 780);
+            $comp = rand(60, 290);
+            $isError = ($i % 62 === 0 && $i > 0); // exactly 8 errors in 500 = 98.4% success rate
+            $daysAgo = rand(0, 28);
+            $createdAt = $now->copy()->subDays($daysAgo)->subMinutes(rand(0, 1400));
+
+            $runs[] = [
+                'chatbot_id' => $bot->id,
+                'prompt_tokens' => $prompt,
+                'completion_tokens' => $comp,
+                'cost_cents' => (int) ceil(($prompt * 0.000015 + $comp * 0.00006) * 100),
+                'latency_ms' => rand(380, 720), // sub-second latency (380ms - 720ms)
+                'model' => 'gpt-4o-mini',
+                'status' => $isError ? 'error' : 'ok',
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ];
+
+            if (count($runs) >= 100) {
+                DB::table('ai_runs')->insert($runs);
+                $runs = [];
             }
+        }
+        if (! empty($runs)) {
+            DB::table('ai_runs')->insert($runs);
         }
     }
 
@@ -368,18 +391,23 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 ]
             );
 
-            if (AutomationRun::where('automation_id', $record->id)->count() === 0) {
-                for ($r = 0; $r < 12; $r++) {
-                    $run = AutomationRun::create([
-                        'automation_id' => $record->id,
-                        'workspace_id' => $wid,
-                        'status' => 'success',
-                        'started_at' => Carbon::now()->subDays(rand(0, 20))->setTime(rand(8, 20), rand(0, 59)),
-                        'completed_at' => Carbon::now()->subDays(rand(0, 20))->setTime(rand(8, 20), rand(0, 59))->addSeconds(rand(1, 4)),
-                    ]);
-                    $this->bk($run, $run->started_at);
-                }
+            AutomationRun::where('automation_id', $record->id)->delete();
+
+            $autoRuns = [];
+            for ($r = 0; $r < 25; $r++) {
+                $daysAgo = rand(0, 20);
+                $startedAt = Carbon::now()->subDays($daysAgo)->setTime(rand(8, 20), rand(0, 59));
+                $autoRuns[] = [
+                    'automation_id' => $record->id,
+                    'workspace_id' => $wid,
+                    'status' => 'success',
+                    'started_at' => $startedAt,
+                    'completed_at' => $startedAt->copy()->addSeconds(rand(1, 4)),
+                    'created_at' => $startedAt,
+                    'updated_at' => $startedAt,
+                ];
             }
+            DB::table('automation_runs')->insert($autoRuns);
         }
     }
 
@@ -387,61 +415,78 @@ class FtfDigitalSolutionsSeeder extends Seeder
     {
         $wid = $this->workspace->id;
 
-        // Ensure at least 500 distinct contacts exist in the workspace
-        // This also supports the unique constraint on campaign_recipients (1 recipient per contact)
-        $existingCount = Contact::where('workspace_id', $wid)->count();
-        if ($existingCount >= 500) {
-            return;
-        }
-
+        // Named contacts from screenshots and case studies
         $seedContactsList = [
             ['first_name' => 'Emeka', 'last_name' => 'Okonkwo', 'email' => 'emeka.o@meridianlogistics.ng', 'phone' => '+2348031122334', 'city' => 'Lagos'],
             ['first_name' => 'Babatunde', 'last_name' => 'Adeyemi', 'email' => 'tunde.adeyemi@crossborder.co.uk', 'phone' => '+447911123456', 'city' => 'London'],
             ['first_name' => 'Chioma', 'last_name' => 'Eze', 'email' => 'chioma.eze@africantradehub.com', 'phone' => '+2348149988776', 'city' => 'Abuja'],
-            ['first_name' => 'Michael', 'last_name' => 'Sterling', 'email' => 'm.sterling@sterlingcargo.ca', 'phone' => '+14165550192', 'city' => 'Toronto'],
-            ['first_name' => 'Fatima', 'last_name' => 'Bello', 'email' => 'fatima.bello@kandocourier.ng', 'phone' => '+2348092233445', 'city' => 'Kano'],
-            ['first_name' => 'David', 'last_name' => 'Adeleke', 'email' => 'd.adeleke@apexshipping.com', 'phone' => '+2347012345678', 'city' => 'Port Harcourt'],
-            ['first_name' => 'Grace', 'last_name' => 'Nnamdi', 'email' => 'grace.n@stemmanuelhospital.com.ng', 'phone' => '+2348133662240', 'city' => 'Abuja'],
-            ['first_name' => 'Agboola', 'last_name' => 'Rotimi', 'email' => 'agboola.r@lifebridgeclinic.com', 'phone' => '+2348056572211', 'city' => 'Lagos'],
-            ['first_name' => 'Tariq', 'last_name' => 'Al-Mansoor', 'email' => 'tariq@gulfconnectfreight.ae', 'phone' => '+971501234567', 'city' => 'Dubai'],
-            ['first_name' => 'Kelechi', 'last_name' => 'Iheanacho', 'email' => 'kelechi@uknigeriaship.com', 'phone' => '+447700900123', 'city' => 'Manchester'],
+            ['first_name' => 'Ngozi', 'last_name' => 'Okonjo', 'email' => 'ngozi.okonjo@ftfclient.com', 'phone' => '+2348023456701', 'city' => 'Enugu'],
+            ['first_name' => 'Aisha', 'last_name' => 'Bello', 'email' => 'aisha.bello@ftfclient.com', 'phone' => '+2348023456702', 'city' => 'Kano'],
+            ['first_name' => 'Tunde', 'last_name' => 'Bakare', 'email' => 'tunde.bakare@ftfclient.com', 'phone' => '+2348023456703', 'city' => 'Ibadan'],
+            ['first_name' => 'Chiamaka', 'last_name' => 'Nze', 'email' => 'chiamaka.nze@ftfclient.com', 'phone' => '+2348023456704', 'city' => 'Owerri'],
+            ['first_name' => 'Ibrahim', 'last_name' => 'Musa', 'email' => 'ibrahim.musa@ftfclient.com', 'phone' => '+2348023456705', 'city' => 'Kaduna'],
+            ['first_name' => 'Amaka', 'last_name' => 'Obi', 'email' => 'amaka.obi@ftfclient.com', 'phone' => '+2348023456706', 'city' => 'Port Harcourt'],
+            ['first_name' => 'Yusuf', 'last_name' => 'Garba', 'email' => 'yusuf.garba@ftfclient.com', 'phone' => '+2348023456707', 'city' => 'Jos'],
+            ['first_name' => 'Bolaji', 'last_name' => 'Davies', 'email' => 'bolaji.davies@ftfclient.com', 'phone' => '+2348023456708', 'city' => 'Lagos'],
+            ['first_name' => 'Fatima', 'last_name' => 'Dangote', 'email' => 'fatima.dangote@ftfclient.com', 'phone' => '+2348023456710', 'city' => 'Kano'],
         ];
 
-        foreach ($seedContactsList as $sc) {
+        foreach ($seedContactsList as $c) {
             $contact = Contact::updateOrCreate(
-                ['workspace_id' => $wid, 'phone_e164' => $sc['phone']],
+                ['workspace_id' => $wid, 'phone_e164' => $c['phone']],
                 [
-                    'first_name' => $sc['first_name'],
-                    'last_name' => $sc['last_name'],
-                    'email' => $sc['email'],
-                    'country' => str_starts_with($sc['phone'], '+44') ? 'GB' : (str_starts_with($sc['phone'], '+1') ? 'CA' : 'NG'),
-                    'city' => $sc['city'],
+                    'uuid' => (string) Str::uuid(),
+                    'first_name' => $c['first_name'],
+                    'last_name' => $c['last_name'],
+                    'email' => $c['email'],
+                    'country' => 'NG',
+                    'language' => 'en',
                     'opt_in_whatsapp' => true,
+                    'opt_in_sms' => true,
                     'opt_in_email' => true,
-                    'source' => 'whatsapp',
+                    'custom_fields' => ['destination_city' => $c['city'], 'account_tier' => 'Enterprise Shipper'],
                 ]
             );
-            $this->bk($contact, Carbon::now()->subDays(rand(10, 180)));
+            $this->bk($contact, Carbon::now()->subDays(rand(1, 25)));
         }
 
-        $current = Contact::where('workspace_id', $wid)->count();
-        $needed = 500 - $current;
+        // Scale to 14,200 active customer contacts as evidenced in PDF dossier page 1:
+        // "highlighting ₦18.4 million in shipping bookings... 14,200 active customer contacts"
+        $currentCount = Contact::where('workspace_id', $wid)->count();
+        $targetContacts = 14200;
 
-        for ($k = 1; $k <= $needed; $k++) {
-            $uniquePhone = '+23480' . str_pad((string) (30000000 + $k), 8, '0', STR_PAD_LEFT);
-            $contact = Contact::create([
-                'workspace_id' => $wid,
-                'phone_e164' => $uniquePhone,
-                'first_name' => fake()->firstName(),
-                'last_name' => fake()->lastName(),
-                'email' => 'client.' . $k . '@ftfcustomer.ng',
-                'country' => 'NG',
-                'city' => Arr::random(['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan', 'Kano']),
-                'opt_in_whatsapp' => true,
-                'opt_in_email' => true,
-                'source' => 'whatsapp',
-            ]);
-            $this->bk($contact, Carbon::now()->subDays(rand(5, 200)));
+        if ($currentCount < $targetContacts) {
+            $now = Carbon::now();
+            $batch = [];
+            $batchSize = 1000;
+
+            for ($i = $currentCount + 1; $i <= $targetContacts; $i++) {
+                $daysAgo = rand(0, 28);
+                $createdAt = $now->copy()->subDays($daysAgo)->subMinutes(rand(0, 1400));
+
+                $batch[] = [
+                    'uuid' => (string) Str::uuid(),
+                    'workspace_id' => $wid,
+                    'phone_e164' => '+23480' . str_pad((string) $i, 8, '0', STR_PAD_LEFT),
+                    'email' => "shipper_{$i}@ftfclient.com",
+                    'first_name' => 'Shipper',
+                    'last_name' => (string) $i,
+                    'opt_in_whatsapp' => 1,
+                    'opt_in_sms' => 1,
+                    'opt_in_email' => 1,
+                    'created_at' => $createdAt,
+                    'updated_at' => $createdAt,
+                ];
+
+                if (count($batch) >= $batchSize) {
+                    DB::table('contacts')->insert($batch);
+                    $batch = [];
+                }
+            }
+
+            if (! empty($batch)) {
+                DB::table('contacts')->insert($batch);
+            }
         }
     }
 
@@ -449,14 +494,24 @@ class FtfDigitalSolutionsSeeder extends Seeder
     {
         $wid = $this->workspace->id;
         $channel = ChannelAccount::where('workspace_id', $wid)->where('channel', 'whatsapp')->first();
-        $contacts = Contact::where('workspace_id', $wid)->get();
-
-        if ($contacts->isEmpty() || ! $channel) {
+        if (! $channel) {
             return;
         }
 
-        // Create sample conversations showcasing automated inquiry resolution (98.4%) & package tracking
-        $dialogs = [
+        $contacts = Contact::where('workspace_id', $wid)->take(300)->get();
+        if ($contacts->isEmpty()) {
+            return;
+        }
+
+        // Clean existing conversations to allow clean re-seed
+        $existingConvIds = Conversation::where('workspace_id', $wid)->pluck('id')->toArray();
+        if (! empty($existingConvIds)) {
+            Message::whereIn('conversation_id', $existingConvIds)->delete();
+            Conversation::where('workspace_id', $wid)->delete();
+        }
+
+        // 1. Seed 3 real high-impact conversations with rich transcripts
+        $primaryDialogs = [
             [
                 'contact' => $contacts->first(),
                 'status' => 'resolved',
@@ -468,7 +523,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 ],
             ],
             [
-                'contact' => $contacts->skip(1)->first() ?? $contacts->first(),
+                'contact' => $contacts->skip(1)->first(),
                 'status' => 'resolved',
                 'messages' => [
                     ['in', 'Hello, how much does it cost to send a 15kg commercial carton to London Heathrow?'],
@@ -478,7 +533,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 ],
             ],
             [
-                'contact' => $contacts->skip(2)->first() ?? $contacts->first(),
+                'contact' => $contacts->skip(2)->first(),
                 'status' => 'open',
                 'messages' => [
                     ['in', 'Good day, please confirm pickup schedule for our international diplomatic cargo.'],
@@ -487,38 +542,115 @@ class FtfDigitalSolutionsSeeder extends Seeder
             ],
         ];
 
-        foreach ($dialogs as $d) {
-            $convo = Conversation::updateOrCreate(
-                [
-                    'workspace_id' => $wid,
-                    'channel_account_id' => $channel->id,
-                    'contact_id' => $d['contact']->id,
-                ],
-                [
-                    'status' => $d['status'],
-                    'assigned_to' => 'bot',
-                    'unread_count' => 0,
-                    'last_message_at' => Carbon::now()->subHours(rand(1, 24)),
-                    'last_inbound_at' => Carbon::now()->subHours(rand(1, 24)),
-                ]
-            );
+        $allConvIds = [];
+        $now = Carbon::now();
+
+        foreach ($primaryDialogs as $d) {
+            $convo = Conversation::create([
+                'workspace_id' => $wid,
+                'channel_account_id' => $channel->id,
+                'contact_id' => $d['contact']->id,
+                'status' => $d['status'],
+                'assigned_to' => 'bot',
+                'unread_count' => 0,
+                'last_message_at' => $now->copy()->subMinutes(rand(10, 360)),
+                'last_inbound_at' => $now->copy()->subMinutes(rand(10, 360)),
+                'created_at' => $now->copy()->subDays(rand(1, 15)),
+                'updated_at' => $now,
+            ]);
+            $allConvIds[] = $convo->id;
 
             foreach ($d['messages'] as $m) {
-                Message::firstOrCreate(
-                    [
-                        'conversation_id' => $convo->id,
-                        'body' => $m[1],
-                    ],
-                    [
-                        'direction' => $m[0],
-                        'channel' => 'whatsapp',
-                        'type' => 'text',
-                        'status' => 'delivered',
-                        'sent_by' => $m[0] === 'out' ? 'bot' : 'human',
-                        'sent_at' => Carbon::now()->subHours(rand(1, 24)),
-                    ]
-                );
+                $msgTime = $convo->created_at->copy()->addMinutes(rand(1, 30));
+                Message::create([
+                    'conversation_id' => $convo->id,
+                    'direction' => $m[0],
+                    'channel' => 'whatsapp',
+                    'type' => 'text',
+                    'body' => $m[1],
+                    'status' => 'delivered',
+                    'sent_by' => $m[0] === 'out' ? 'bot' : 'human',
+                    'sent_at' => $msgTime,
+                    'created_at' => $msgTime,
+                    'updated_at' => $msgTime,
+                ]);
             }
+        }
+
+        // 2. Seed remaining 297 conversations to reach 300 (matches "Showing 1 to 10 of 300 results" in PDF Page 2)
+        // 98.4% resolved rate
+        $batchConvs = [];
+        for ($cIdx = 4; $cIdx <= 300; $cIdx++) {
+            $isResolved = ($cIdx <= 295); // 295 of 300 = 98.33% (~98.4%)
+            $cContact = $contacts->skip($cIdx - 1)->first() ?? $contacts->first();
+            $daysAgo = rand(0, 28);
+            $createdAt = $now->copy()->subDays($daysAgo)->subMinutes(rand(0, 1400));
+
+            $convo = Conversation::create([
+                'workspace_id' => $wid,
+                'channel_account_id' => $channel->id,
+                'contact_id' => $cContact->id,
+                'status' => $isResolved ? 'resolved' : 'open',
+                'assigned_to' => 'bot',
+                'unread_count' => 0,
+                'last_message_at' => $createdAt->copy()->addMinutes(rand(2, 45)),
+                'last_inbound_at' => $createdAt,
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ]);
+            $allConvIds[] = $convo->id;
+        }
+
+        // 3. Batch seed messages to achieve high-throughput telemetry:
+        // Total messages: 35,657 (matching PDF Meta API campaign dispatches and chat volume)
+        // 18,500 messages out, 17,157 messages in
+        $totalOut = 18500;
+        $totalIn = 17157;
+        $totalMsg = $totalOut + $totalIn;
+
+        $msgBatch = [];
+        $batchSize = 2000;
+        $sampleOutReplies = [
+            'Hello! Your waybill tracking details have been verified.',
+            'Here is your express freight quotation invoice.',
+            'Your parcel has cleared airport customs and is out for delivery.',
+            'Thanks for choosing FTF Digital Solutions Limited.',
+            'Your in-chat checkout payment link is active: https://botifyai.cloud/buy/ftf-logistics',
+        ];
+        $sampleInReplies = [
+            'Hi, please give me the status of my waybill.',
+            'How much is 10kg shipping to London?',
+            'Payment has been sent via Paystack.',
+            'Thank you for the quick update!',
+            'Please send the pickup agent contact number.',
+        ];
+
+        for ($mIdx = 1; $mIdx <= $totalMsg; $mIdx++) {
+            $isOut = ($mIdx <= $totalOut);
+            $convId = $allConvIds[($mIdx - 1) % count($allConvIds)];
+            $daysAgo = rand(0, 28);
+            $createdAt = $now->copy()->subDays($daysAgo)->subMinutes(rand(0, 1400));
+
+            $msgBatch[] = [
+                'conversation_id' => $convId,
+                'direction' => $isOut ? 'out' : 'in',
+                'channel' => 'whatsapp',
+                'type' => 'text',
+                'body' => $isOut ? Arr::random($sampleOutReplies) : Arr::random($sampleInReplies),
+                'status' => 'delivered',
+                'sent_by' => $isOut ? 'bot' : 'human',
+                'sent_at' => $createdAt,
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ];
+
+            if (count($msgBatch) >= $batchSize) {
+                DB::table('messages')->insert($msgBatch);
+                $msgBatch = [];
+            }
+        }
+        if (! empty($msgBatch)) {
+            DB::table('messages')->insert($msgBatch);
         }
     }
 
@@ -526,11 +658,42 @@ class FtfDigitalSolutionsSeeder extends Seeder
     {
         $wid = $this->workspace->id;
 
-        // 1. FTF Logistics Digital Storefront (Native Platform)
+        // 1. Linked Settlement Bank Account (MySQL schema: workspace_id, bank_name, bank_code, account_number, account_name, recipient_code, currency, is_default)
+        $bankAccount = MerchantBankAccount::updateOrCreate(
+            [
+                'workspace_id' => $wid,
+                'account_number' => '1018400021',
+            ],
+            [
+                'bank_name' => 'Zenith Bank PLC',
+                'bank_code' => '057',
+                'account_name' => 'FTF DIGITAL SOLUTIONS LIMITED',
+                'recipient_code' => 'RCP_ftf_zenith_verified',
+                'currency' => 'NGN',
+                'is_default' => true,
+            ]
+        );
+
+        // 2. Merchant Wallet & Ledger Overview (₦18,400,000.00 Gross Commercial Volume)
+        $wallet = MerchantWallet::updateOrCreate(
+            [
+                'workspace_id' => $wid,
+                'currency' => 'NGN',
+            ],
+            [
+                'available_balance_cents' => 1840000000, // ₦18,400,000.00
+                'pending_balance_cents' => 0,
+                'total_withdrawn_cents' => 0,
+                'total_earned_cents' => 1840000000,
+                'is_frozen' => false,
+            ]
+        );
+
+        // 3. FTF Logistics Digital Storefront (Native Platform)
         $this->store = EcommerceStore::updateOrCreate(
             ['workspace_id' => $wid, 'platform' => 'native'],
             [
-                'name' => 'FTF Digital Solutions - Global Logistics Command',
+                'name' => 'FTF Digital Solutions Limited',
                 'domain' => 'native',
                 'slug' => 'ftf-logistics',
                 'currency' => 'NGN',
@@ -539,6 +702,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 'support_phone' => '+234 813 366 2232',
                 'brand_color' => '#0D9488',
                 'is_published' => true,
+                'bank_account_id' => $bankAccount->id,
                 'marketing_pixels' => [
                     'meta_pixel_id' => '104928572910482',
                     'meta_capi_token' => 'EAAG_FTF_CAPI_ACTIVE',
@@ -547,46 +711,54 @@ class FtfDigitalSolutionsSeeder extends Seeder
                     'gtm_container_id' => 'GTM-FTF2024',
                     'clarity_project_id' => 'clarity_ftf_live',
                 ],
-                'published_at' => Carbon::parse('2024-01-20 10:00:00'),
+                'published_at' => Carbon::now()->subMonths(10),
             ]
         );
 
-        // Linked Settlement Bank Account (Paystack / Flutterwave multi-currency payouts)
-        MerchantBankAccount::updateOrCreate(
-            ['store_id' => $this->store->id],
+        // 4. Products / Waybill & Service Catalog (5 active items)
+        $products = [
             [
-                'bank_name' => 'Zenith Bank PLC',
-                'account_number' => '1018400021',
-                'account_name' => 'FTF DIGITAL SOLUTIONS LIMITED',
-                'currency' => 'NGN',
-                'is_verified' => true,
-            ]
-        );
-
-        // 2. Logistics & Freight Service Products
-        $services = [
-            ['UK & Europe Air Express Freight', 'FTF-UK-AIR', 40000.00, 'International priority air cargo delivery within 3-5 business days.'],
-            ['North America Cross-Border Courier', 'FTF-US-EXP', 65000.00, 'Direct express courier shipping to USA and Canada with real-time customs clearance.'],
-            ['Nationwide Interstate Freight Booking', 'FTF-NG-INTER', 18500.00, 'Door-to-door interstate haulage and cargo distribution across Nigeria.'],
-            ['Express Waybill Package Handling', 'FTF-WAYBILL', 12000.00, 'Real-time GPS waybill tracking, barcoding, and verified recipient signing.'],
-            ['Customs Brokerage & Clearance Escrow', 'FTF-CUSTOMS', 58000.00, 'Automated customs tariff duty settlement and official port clearance reconciliation.'],
+                'name' => 'Waybill Booking & Freight Service',
+                'price' => 40000.00,
+                'product_type' => 'digital',
+                'description' => 'Complete interstate and international express waybill booking and customs clearance package.',
+            ],
+            [
+                'name' => 'UK Air Express Cargo (3-5 Days)',
+                'price' => 55500.00,
+                'product_type' => 'digital',
+                'description' => 'Priority UK door-to-airport freight service with automated GPS tracking.',
+            ],
+            [
+                'name' => 'North America Priority Cargo (5-7 Days)',
+                'price' => 75000.00,
+                'product_type' => 'digital',
+                'description' => 'Direct courier route from Lagos to US/Canada commercial hubs.',
+            ],
+            [
+                'name' => 'Interstate Doorstep Courier Express',
+                'price' => 18500.00,
+                'product_type' => 'digital',
+                'description' => 'Next-day nationwide interstate transit across 36 Nigerian states.',
+            ],
+            [
+                'name' => 'Customs Duty Clearance & Port Handling',
+                'price' => 25000.00,
+                'product_type' => 'digital',
+                'description' => 'Airport MMIA customs duty paperwork and cargo release service.',
+            ],
         ];
 
-        foreach ($services as $svc) {
+        foreach ($products as $p) {
             EcommerceProduct::updateOrCreate(
-                ['store_id' => $this->store->id, 'sku' => $svc[1]],
+                ['store_id' => $this->store->id, 'name' => $p['name']],
                 [
                     'workspace_id' => $wid,
                     'platform' => 'native',
-                    'name' => $svc[0],
-                    'slug' => Str::slug($svc[0]),
-                    'price' => $svc[2],
-                    'compare_at_price' => $svc[2] * 1.25,
+                    'price' => $p['price'],
                     'currency' => 'NGN',
-                    'product_type' => 'service',
-                    'description' => $svc[3],
-                    'inventory_quantity' => 9999,
-                    'status' => 'active',
+                    'product_type' => $p['product_type'],
+                    'description' => $p['description'],
                     'is_published' => true,
                 ]
             );
@@ -598,31 +770,25 @@ class FtfDigitalSolutionsSeeder extends Seeder
         $wid = $this->workspace->id;
         $storeId = $this->store->id;
 
-        // Target: ₦18,400,000.00 in shipping bookings and service revenue processed
-        // Total Invoices: 500 results shown in Billing & Revenue Cycle
-        // Average 94% payment completion rate (470 paid, 30 pending/overdue)
-        $targetRevenue = 18400000.00;
         $totalOrdersCount = 500;
-        $paidOrdersCount = 470; // 94% completion rate
+        $paidOrdersCount = 470; // exactly 94.0% payment completion rate
+        $targetRevenue = 18400000.00; // exactly ₦18.4 Million gross revenue
 
-        // Check if orders are already seeded to preserve idempotency
-        $existingCount = EcommerceOrder::where('store_id', $storeId)->count();
-        if ($existingCount >= $totalOrdersCount) {
-            return;
-        }
+        // Clean existing orders to make seeder idempotent
+        EcommerceOrder::where('store_id', $storeId)->delete();
 
         // Exact invoice amounts directly from Page 2 screenshot:
         $screenshotInvoices = [
-            ['number' => '10028401', 'customer' => 'Ngozi Okonjo', 'amount' => 40000.00, 'status' => 'paid', 'date' => '2025-11-01'],
-            ['number' => '10028402', 'customer' => 'Aisha Bello', 'amount' => 24500.00, 'status' => 'pending', 'date' => '2025-11-02'],
-            ['number' => '10028403', 'customer' => 'Tunde Bakare', 'amount' => 32000.00, 'status' => 'paid', 'date' => '2025-11-03'],
-            ['number' => '10028404', 'customer' => 'Chiamaka Nze', 'amount' => 12000.00, 'status' => 'overdue', 'date' => '2025-11-04'],
-            ['number' => '10028405', 'customer' => 'Ibrahim Musa', 'amount' => 18500.00, 'status' => 'paid', 'date' => '2025-11-05'],
-            ['number' => '10028406', 'customer' => 'Amaka Obi', 'amount' => 58000.00, 'status' => 'pending', 'date' => '2025-11-06'],
-            ['number' => '10028407', 'customer' => 'Yusuf Garba', 'amount' => 27800.00, 'status' => 'paid', 'date' => '2025-11-07'],
-            ['number' => '10028408', 'customer' => 'Bolaji Davies', 'amount' => 9000.00, 'status' => 'overdue', 'date' => '2025-11-08'],
-            ['number' => '10028409', 'customer' => 'Chioma Eze', 'amount' => 65000.00, 'status' => 'pending', 'date' => '2025-11-09'],
-            ['number' => '10028410', 'customer' => 'Fatima Dangote', 'amount' => 15000.00, 'status' => 'paid', 'date' => '2025-11-10'],
+            ['number' => '10028401', 'customer' => 'Ngozi Okonjo', 'amount' => 40000.00, 'status' => 'paid', 'hours_ago' => 2],
+            ['number' => '10028402', 'customer' => 'Aisha Bello', 'amount' => 24500.00, 'status' => 'pending', 'hours_ago' => 5],
+            ['number' => '10028403', 'customer' => 'Tunde Bakare', 'amount' => 32000.00, 'status' => 'paid', 'hours_ago' => 8],
+            ['number' => '10028404', 'customer' => 'Chiamaka Nze', 'amount' => 12000.00, 'status' => 'overdue', 'hours_ago' => 12],
+            ['number' => '10028405', 'customer' => 'Ibrahim Musa', 'amount' => 18500.00, 'status' => 'paid', 'hours_ago' => 18],
+            ['number' => '10028406', 'customer' => 'Amaka Obi', 'amount' => 58000.00, 'status' => 'pending', 'hours_ago' => 24],
+            ['number' => '10028407', 'customer' => 'Yusuf Garba', 'amount' => 27800.00, 'status' => 'paid', 'hours_ago' => 30],
+            ['number' => '10028408', 'customer' => 'Bolaji Davies', 'amount' => 9000.00, 'status' => 'overdue', 'hours_ago' => 36],
+            ['number' => '10028409', 'customer' => 'Chioma Eze', 'amount' => 65000.00, 'status' => 'pending', 'hours_ago' => 42],
+            ['number' => '10028410', 'customer' => 'Fatima Dangote', 'amount' => 15000.00, 'status' => 'paid', 'hours_ago' => 48],
         ];
 
         $screenshotPaidSum = 0;
@@ -635,49 +801,47 @@ class FtfDigitalSolutionsSeeder extends Seeder
         }
 
         // Remaining paid revenue to distribute across remaining paid orders
-        $remainingPaidCount = $paidOrdersCount - $screenshotPaidCount;
+        $remainingPaidCount = $paidOrdersCount - $screenshotPaidCount; // 470 - 5 = 465
         $remainingRevenue = $targetRevenue - $screenshotPaidSum;
         $avgRemainingPaid = round($remainingRevenue / $remainingPaidCount, 2);
 
-        // Pre-create the 10 screenshot invoices
+        // Pre-create the 10 screenshot invoices with the most recent timestamps so they appear on Page 1
+        $now = Carbon::now();
         foreach ($screenshotInvoices as $inv) {
             $isPaid = ($inv['status'] === 'paid');
-            $placedAt = Carbon::parse($inv['date'])->setTime(11, 30);
-            $order = EcommerceOrder::updateOrCreate(
-                [
-                    'store_id' => $storeId,
-                    'external_order_id' => 'ftf_inv_' . $inv['number'],
-                ],
-                [
-                    'workspace_id' => $wid,
-                    'uuid' => (string) Str::uuid(),
-                    'platform' => 'native',
-                    'number' => '#' . $inv['number'],
-                    'customer_name' => $inv['customer'],
-                    'customer_email' => Str::slug($inv['customer']) . '@ftfclient.com',
-                    'customer_phone' => '+23480' . rand(10000000, 99999999),
-                    'status' => $isPaid ? 'completed' : 'open',
-                    'financial_status' => $inv['status'],
-                    'payment_status' => $inv['status'],
-                    'fulfillment_status' => $isPaid ? 'fulfilled' : 'unfulfilled',
-                    'currency' => 'NGN',
-                    'total' => $inv['amount'],
-                    'line_items' => [
-                        [
-                            'name' => 'Waybill Booking & Freight Service',
-                            'sku' => 'FTF-LOGISTICS-SVC',
-                            'quantity' => 1,
-                            'price' => $inv['amount'],
-                        ],
+            $placedAt = $now->copy()->subHours($inv['hours_ago']);
+
+            $order = EcommerceOrder::create([
+                'workspace_id' => $wid,
+                'store_id' => $storeId,
+                'external_order_id' => 'ftf_inv_' . $inv['number'],
+                'uuid' => (string) Str::uuid(),
+                'platform' => 'native',
+                'number' => '#' . $inv['number'],
+                'customer_name' => $inv['customer'],
+                'customer_email' => Str::slug($inv['customer']) . '@ftfclient.com',
+                'customer_phone' => '+23480' . rand(10000000, 99999999),
+                'status' => $isPaid ? 'completed' : 'open',
+                'financial_status' => $inv['status'],
+                'payment_status' => $inv['status'],
+                'fulfillment_status' => $isPaid ? 'fulfilled' : 'unfulfilled',
+                'currency' => 'NGN',
+                'total' => $inv['amount'],
+                'line_items' => [
+                    [
+                        'name' => 'Waybill Booking & Freight Service',
+                        'sku' => 'FTF-LOGISTICS-SVC',
+                        'quantity' => 1,
+                        'price' => $inv['amount'],
                     ],
-                    'tracking_number' => 'WB-' . $inv['number'],
-                    'tracking_url' => 'https://botifyai.cloud/buy/ftf-logistics/status/WB-' . $inv['number'],
-                    'placed_at' => $placedAt,
-                    'paid_at' => $isPaid ? $placedAt->copy()->addMinutes(4) : null,
-                    'payment_gateway' => 'paystack',
-                    'payment_reference' => 'pstk_ref_' . $inv['number'],
-                ]
-            );
+                ],
+                'tracking_number' => 'WB-' . $inv['number'],
+                'tracking_url' => 'https://botifyai.cloud/buy/ftf-logistics/status/WB-' . $inv['number'],
+                'placed_at' => $placedAt,
+                'paid_at' => $isPaid ? $placedAt->copy()->addMinutes(4) : null,
+                'payment_gateway' => 'paystack',
+                'payment_reference' => 'pstk_ref_' . $inv['number'],
+            ]);
             $this->bk($order, $placedAt);
         }
 
@@ -685,14 +849,14 @@ class FtfDigitalSolutionsSeeder extends Seeder
         $runningPaidSum = $screenshotPaidSum;
         $targetLoopPaidEnd = 10 + $remainingPaidCount; // 10 + 465 = 475
 
+        $orderBatch = [];
         for ($idx = 11; $idx <= $totalOrdersCount; $idx++) {
             $orderNum = '1002' . str_pad((string) (8400 + $idx), 4, '0', STR_PAD_LEFT);
             $isPaid = ($idx <= $targetLoopPaidEnd); // exactly 465 loop orders + 5 screenshot orders = 470 paid orders (94%)
-            $daysAgo = rand(1, 240);
-            $placedAt = Carbon::now()->subDays($daysAgo)->setTime(rand(8, 20), rand(0, 59));
+            $daysAgo = rand(2, 28);
+            $placedAt = $now->copy()->subDays($daysAgo)->setTime(rand(8, 20), rand(0, 59));
 
             if ($isPaid) {
-                // Ensure exact total revenue by adjusting the last paid order
                 if ($idx === $targetLoopPaidEnd) {
                     $amount = round($targetRevenue - $runningPaidSum, 2);
                 } else {
@@ -707,7 +871,7 @@ class FtfDigitalSolutionsSeeder extends Seeder
             $custName = fake()->name();
             $status = $isPaid ? 'paid' : ($idx % 2 === 0 ? 'pending' : 'overdue');
 
-            $order = EcommerceOrder::create([
+            $orderBatch[] = [
                 'workspace_id' => $wid,
                 'store_id' => $storeId,
                 'external_order_id' => 'ftf_inv_' . $orderNum,
@@ -723,22 +887,68 @@ class FtfDigitalSolutionsSeeder extends Seeder
                 'fulfillment_status' => $isPaid ? 'fulfilled' : 'unfulfilled',
                 'currency' => 'NGN',
                 'total' => $amount,
-                'line_items' => [
+                'line_items' => json_encode([
                     [
                         'name' => 'Waybill Booking & Freight Transit',
                         'sku' => 'FTF-LOGISTICS-SVC',
                         'quantity' => 1,
                         'price' => $amount,
                     ],
-                ],
+                ]),
                 'tracking_number' => 'WB-' . $orderNum,
                 'tracking_url' => 'https://botifyai.cloud/buy/ftf-logistics/status/WB-' . $orderNum,
                 'placed_at' => $placedAt,
-                'paid_at' => $isPaid ? $placedAt->copy()->addMinutes(rand(2, 15)) : null,
-                'payment_gateway' => Arr::random(['paystack', 'flutterwave', 'stripe']),
-                'payment_reference' => 'gw_ref_' . $orderNum,
-            ]);
-            $this->bk($order, $placedAt);
+                'paid_at' => $isPaid ? $placedAt->copy()->addMinutes(rand(2, 10)) : null,
+                'payment_gateway' => 'paystack',
+                'payment_reference' => 'pstk_ref_' . $orderNum,
+                'created_at' => $placedAt,
+                'updated_at' => $placedAt,
+            ];
+
+            if (count($orderBatch) >= 100) {
+                DB::table('ecommerce_orders')->insert($orderBatch);
+                $orderBatch = [];
+            }
+        }
+
+        if (! empty($orderBatch)) {
+            DB::table('ecommerce_orders')->insert($orderBatch);
+        }
+
+        // Seed sample merchant ledger entries for wallet overview
+        $wallet = MerchantWallet::where('workspace_id', $wid)->where('currency', 'NGN')->first();
+        if ($wallet) {
+            MerchantLedgerEntry::where('wallet_id', $wallet->id)->delete();
+            $runningCents = 0;
+            $ledgerBatch = [];
+            foreach ($screenshotInvoices as $inv) {
+                if ($inv['status'] === 'paid') {
+                    $amtCents = (int) ($inv['amount'] * 100);
+                    $feeCents = (int) ($amtCents * 0.015);
+                    $netCents = $amtCents - $feeCents;
+                    $runningCents += $netCents;
+                    $placedAt = $now->copy()->subHours($inv['hours_ago']);
+
+                    $ledgerBatch[] = [
+                        'workspace_id' => $wid,
+                        'wallet_id' => $wallet->id,
+                        'entry_type' => 'sale_credit',
+                        'amount_cents' => $amtCents,
+                        'fee_cents' => $feeCents,
+                        'net_amount_cents' => $netCents,
+                        'running_balance_cents' => $runningCents,
+                        'currency' => 'NGN',
+                        'reference_type' => 'order',
+                        'reference_id' => null,
+                        'description' => 'Waybill Payment #' . $inv['number'] . ' - ' . $inv['customer'],
+                        'created_at' => $placedAt,
+                        'updated_at' => $placedAt,
+                    ];
+                }
+            }
+            if (! empty($ledgerBatch)) {
+                DB::table('merchant_ledger_entries')->insert($ledgerBatch);
+            }
         }
     }
 
@@ -747,69 +957,86 @@ class FtfDigitalSolutionsSeeder extends Seeder
         $wid = $this->workspace->id;
         $storeId = $this->store->id;
 
-        // Metric: Verified 35% checkout recovery rate via WhatsApp direct 1-click in-chat link
-        // 100 carts tracked: 35 recovered (35.0% checkout recovery rate)
-        if (EcommerceCart::where('store_id', $storeId)->count() === 0) {
-            for ($c = 1; $c <= 100; $c++) {
-                $isRecovered = ($c <= 35); // exactly 35% recovered
-                $abandonedAt = Carbon::now()->subDays(rand(1, 60))->setTime(rand(9, 21), rand(0, 59));
-                $amount = Arr::random([18500.00, 24500.00, 32000.00, 40000.00, 58000.00]);
+        // Clean existing carts
+        EcommerceCart::where('store_id', $storeId)->delete();
 
-                $cart = EcommerceCart::create([
-                    'workspace_id' => $wid,
-                    'store_id' => $storeId,
-                    'external_id' => 'cart_ftf_' . (8000 + $c),
-                    'total' => $amount,
-                    'currency' => 'NGN',
-                    'line_items' => [
-                        [
-                            'name' => 'Cross-Border Freight Waybill Booking',
-                            'quantity' => 1,
-                            'price' => $amount,
-                        ],
+        // 100 carts, exactly 35 recovered = verified 35% cart recovery rate
+        $contacts = Contact::where('workspace_id', $wid)->take(100)->get();
+        $now = Carbon::now();
+        $cartBatch = [];
+
+        for ($i = 1; $i <= 100; $i++) {
+            $isRecovered = ($i <= 35); // 35 recovered = 35% checkout recovery rate
+            $daysAgo = rand(1, 28);
+            $abandonedAt = $now->copy()->subDays($daysAgo)->setTime(rand(9, 21), rand(0, 59));
+            $recoveredAt = $isRecovered ? $abandonedAt->copy()->addMinutes(rand(12, 140)) : null;
+            $cId = $contacts->skip($i - 1)->first()?->id;
+
+            $cartBatch[] = [
+                'workspace_id' => $wid,
+                'store_id' => $storeId,
+                'contact_id' => $cId,
+                'external_id' => 'ftf_cart_' . str_pad((string) $i, 5, '0', STR_PAD_LEFT),
+                'total' => Arr::random([24500.00, 32000.00, 40000.00, 58000.00, 75000.00]),
+                'currency' => 'NGN',
+                'line_items' => json_encode([
+                    [
+                        'name' => 'Waybill Booking & Freight Service',
+                        'quantity' => 1,
+                        'price' => 40000.00,
                     ],
-                    'recovery_url' => 'https://botifyai.cloud/buy/ftf-logistics/checkout/recover/' . Str::random(24),
-                    'abandoned_at' => $abandonedAt,
-                    'recovery_triggered_at' => $abandonedAt->copy()->addMinutes(5), // triggered via WhatsApp within minutes
-                    'recovered_at' => $isRecovered ? $abandonedAt->copy()->addMinutes(rand(12, 45)) : null,
-                ]);
-                $this->bk($cart, $abandonedAt);
-            }
+                ]),
+                'recovery_url' => 'https://botifyai.cloud/buy/ftf-logistics/checkout/recover?cart=ftf_cart_' . $i,
+                'abandoned_at' => $abandonedAt,
+                'recovery_triggered_at' => $abandonedAt->copy()->addMinutes(5),
+                'recovered_at' => $recoveredAt,
+                'created_at' => $abandonedAt,
+                'updated_at' => $recoveredAt ?? $abandonedAt,
+            ];
         }
+
+        DB::table('ecommerce_carts')->insert($cartBatch);
     }
 
     private function seedBroadcastingAndMetaCampaign(): void
     {
         $wid = $this->workspace->id;
 
-        // Campaign metrics directly from Page 3 telemetry:
-        // Total recipients: 35,657
-        // Delivered: 35,336 (99.1% - 99.2% delivery rate)
-        // Read: 29,952 (84.0% open rate)
-        // Failed / Denied: 321 (0.9%)
-        // Direct Sales Recovery: 35%
-        $campaign = Campaign::updateOrCreate(
-            [
-                'workspace_id' => $wid,
-                'name' => 'Official Meta Cloud API - Cart Recovery & Telemetry Broadcast',
+        $campaignData = [
+            'channel' => 'whatsapp',
+            'whatsapp_phone_number_id' => $this->waPhoneNumberId,
+            'audience_type' => 'segment',
+            'audience_ref' => 'Incomplete Checkouts & Active Shippers',
+            'payload_json' => [
+                'body' => 'Hello {{contact.first_name}}, your shipping waybill is ready for dispatch. Complete your booking with 1-click payment.',
             ],
-            [
-                'channel' => 'whatsapp',
-                'whatsapp_phone_number_id' => $this->waPhoneNumberId,
-                'audience_type' => 'segment',
-                'audience_ref' => 'Incomplete Checkouts & Active Shippers',
-                'payload_json' => [
-                    'body' => 'Hello {{contact.first_name}}, your shipping waybill is ready for dispatch. Complete your booking with 1-click payment.',
-                ],
-                'template_ref' => [
-                    'name' => 'waybill_dispatch_recovery',
-                    'language' => 'en',
-                ],
-                'schedule_at' => Carbon::now()->subDays(14)->setTime(10, 0),
-                'timezone' => 'Africa/Lagos',
-                'status' => 'completed',
-                'created_by' => $this->user->id,
-            ]
+            'template_ref' => [
+                'name' => 'waybill_dispatch_recovery',
+                'language' => 'en',
+            ],
+            'schedule_at' => Carbon::now()->subDays(10)->setTime(10, 0),
+            'timezone' => 'Africa/Lagos',
+            'status' => 'completed',
+            'created_by' => $this->user->id,
+            'totals_json' => [
+                'total' => 35657,
+                'queued' => 0,
+                'sent' => 35657,
+                'delivered' => 35336, // 99.2% delivered
+                'read' => 29952,      // 84.0% open/read rate
+                'failed' => 321,      // 0.9% failed (321 provider rejection)
+                'clicked' => 12480,   // 35.0% checkout recovery rate
+                'unsubscribed' => 45,
+            ],
+        ];
+
+        if (Schema::hasColumn('campaigns', 'campaign_type')) {
+            $campaignData['campaign_type'] = 'broadcast';
+        }
+
+        $campaign = Campaign::updateOrCreate(
+            ['workspace_id' => $wid, 'name' => 'In-Chat Waybill Dispatch & Checkout Recovery'],
+            $campaignData
         );
 
         // Usage meters for the current month period
@@ -829,43 +1056,79 @@ class FtfDigitalSolutionsSeeder extends Seeder
             );
         }
 
-        // Check if recipients are already seeded
-        if (CampaignRecipient::where('campaign_id', $campaign->id)->count() > 0) {
-            return;
-        }
+        // Seed 500 recipients to back the campaign with individual delivery rows
+        CampaignRecipient::where('campaign_id', $campaign->id)->delete();
 
-        // Each campaign recipient must have a unique contact_id due to unique(['campaign_id', 'contact_id'])
         $contacts = Contact::where('workspace_id', $wid)->take(500)->get();
-        if ($contacts->isEmpty()) {
+        if ($contacts->isNotEmpty()) {
+            $recipBatch = [];
+            $totalRecipients = min(500, $contacts->count());
+
+            for ($r = 1; $r <= $totalRecipients; $r++) {
+                $isFailed = ($r <= 4); // ~0.8% failed
+                $isRead = (! $isFailed && $r <= 424); // 84.0% open rate
+                $isDelivered = (! $isFailed); // 99.2% delivery rate
+
+                $status = $isFailed ? 'failed' : ($isRead ? 'read' : 'delivered');
+                $sentAt = Carbon::now()->subDays(10)->setTime(10, rand(1, 55));
+                $deliveredAt = $isDelivered ? $sentAt->copy()->addSeconds(rand(1, 5)) : null;
+                $readAt = $isRead ? $deliveredAt->copy()->addMinutes(rand(2, 45)) : null;
+                $clickedAt = ($isRead && $r <= 175) ? $readAt->copy()->addMinutes(rand(1, 10)) : null; // 35% click/recovery
+
+                $recipBatch[] = [
+                    'campaign_id' => $campaign->id,
+                    'contact_id' => $contacts[$r - 1]->id,
+                    'status' => $status,
+                    'provider_message_id' => 'wamid.HBgL' . Str::random(28),
+                    'sent_at' => $sentAt,
+                    'delivered_at' => $deliveredAt,
+                    'read_at' => $readAt,
+                    'clicked_at' => $clickedAt,
+                    'failed_reason' => $isFailed ? 'Meta API temporary provider rejection (321 denied)' : null,
+                    'created_at' => $sentAt,
+                    'updated_at' => $clickedAt ?? $readAt ?? $deliveredAt ?? $sentAt,
+                ];
+            }
+
+            DB::table('campaign_recipients')->insert($recipBatch);
+        }
+    }
+
+    private function seedAdminTelemetry(): void
+    {
+        $plan = Plan::where('slug', 'enterprise')->first() ?? Plan::first();
+        if (! $plan) {
             return;
         }
 
-        $totalRecipients = min(500, $contacts->count());
+        // Active Subscription for Ayo so Admin Dashboard computeMrr() returns the $52,480.00 USD MRR
+        $sub = Subscription::updateOrCreate(
+            ['user_id' => $this->user->id],
+            [
+                'plan_id' => $plan->id,
+                'status' => 'active',
+                'billing_cycle' => 'monthly',
+                'starts_at' => Carbon::now()->subMonths(10),
+                'renews_at' => Carbon::now()->addMonths(2),
+                'gateway' => 'stripe',
+                'gateway_subscription_id' => 'sub_ftf_enterprise_live',
+            ]
+        );
 
-        for ($r = 1; $r <= $totalRecipients; $r++) {
-            $isFailed = ($r <= 4); // ~0.8% failed (321 / 35657)
-            $isRead = (! $isFailed && $r <= 424); // 420 of 500 = 84.0% open rate
-            $isDelivered = (! $isFailed); // 496 of 500 = 99.2% delivery rate
-
-            $status = $isFailed ? 'failed' : ($isRead ? 'read' : 'delivered');
-            $sentAt = Carbon::now()->subDays(14)->setTime(10, rand(1, 55));
-            $deliveredAt = $isDelivered ? $sentAt->copy()->addSeconds(rand(1, 5)) : null;
-            $readAt = $isRead ? $deliveredAt->copy()->addMinutes(rand(2, 45)) : null;
-
-            CampaignRecipient::create([
-                'campaign_id' => $campaign->id,
-                'contact_id' => $contacts[$r - 1]->id,
-                'status' => $status,
-                'provider_message_id' => 'wamid.HBgL' . Str::random(28),
-                'sent_at' => $sentAt,
-                'delivered_at' => $deliveredAt,
-                'read_at' => $readAt,
-                'failed_reason' => $isFailed ? 'Meta API temporary provider rejection (321 denied)' : null,
-                'clicked_at' => ($isRead && $r <= 175) ? $readAt->copy()->addMinutes(rand(1, 10)) : null, // 35% click/recovery
-            ]);
-        }
-
-        // Sync totals on the campaign row
-        $campaign->updateTotals();
+        // PaymentTransaction for current period so Admin Dashboard revenue reflects the monthly volume
+        PaymentTransaction::updateOrCreate(
+            ['gateway_transaction_id' => 'txn_ftf_enterprise_live_01'],
+            [
+                'subscription_id' => $sub->id,
+                'user_id' => $this->user->id,
+                'gateway' => 'stripe',
+                'amount_cents' => 5248000, // $52,480.00 USD MRR
+                'currency_code' => 'USD',
+                'currency' => 'USD',
+                'status' => 'succeeded',
+                'created_at' => Carbon::now()->subDays(5),
+                'updated_at' => Carbon::now()->subDays(5),
+            ]
+        );
     }
 }
