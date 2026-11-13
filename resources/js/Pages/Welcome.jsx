@@ -10,7 +10,8 @@ import {
     Layers, Video, Star, MessageSquare, Globe, TrendingUp,
     Store, Smartphone, CreditCard, Clock, ChevronRight,
     Check, X, Lock, FileText, Layout, Music, Code,
-    Package, Headphones, Send, GraduationCap, ChevronDown
+    Package, Headphones, Send, GraduationCap, ChevronDown,
+    Calculator, AlertTriangle, RefreshCw
 } from 'lucide-react';
 
 // ─── Section Badge ─────────────────────────────────────────────────────────────
@@ -28,31 +29,31 @@ function SectionBadge({ text, icon: Icon = Sparkles }) {
 // ─── Section 1: Hero Section ──────────────────────────────────────────────────
 
 function HeroCreatorSection({ landing, canRegister, auth }) {
+    const [activeTab, setActiveTab] = useState('whatsapp');
     const s = (key, def = '') => landing[`landing.${key}`] ?? def;
     if (s('hero_enabled', '1') !== '1') return null;
 
-    const heroTitle = s('hero_title', 'Turn What You Know into an Automated Digital Business.');
     const heroSubtitle = s(
         'hero_subtitle',
-        'Sell video courses, ebooks, and digital products with instant global checkouts—while your 24/7 autonomous AI agents market, answer questions, and close sales directly inside WhatsApp & Instagram DMs.'
+        'Stop paying for 6 separate subscriptions. Scrape qualified B2B leads, schedule across every social channel, close deals 24/7 on WhatsApp with autonomous AI, sell digital products, and get paid instantly to your local bank account.'
     );
 
     return (
         <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 overflow-hidden bg-white dark:bg-neutral-950">
             {/* Soft Ambient Radial Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(239,68,68,0.08),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(239,68,68,0.12),rgba(0,0,0,0))] pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(99,102,241,0.08),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(99,102,241,0.12),rgba(0,0,0,0))] pointer-events-none" />
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
                 {/* Category Badge */}
                 <div className="mb-6 flex justify-center">
-                    <SectionBadge text="✨ THE AI-POWERED CREATOR COMMERCE PLATFORM" />
+                    <SectionBadge text="🚀 THE ALL-IN-ONE AI MARKETING & CAMPAIGN ENGINE" />
                 </div>
 
                 {/* Primary Hero Headline */}
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 dark:text-white max-w-4xl mx-auto leading-[1.12]">
-                    Turn What You Know into an{' '}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-rose-600 to-amber-600">
-                        Automated Digital Business.
+                    Run Your Entire Marketing Machine & Digital Business from{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-indigo-600 to-violet-600">
+                        One Tab.
                     </span>
                 </h1>
 
@@ -78,16 +79,16 @@ function HeroCreatorSection({ landing, canRegister, auth }) {
                                     href="/register"
                                     className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold text-base shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transition-all flex items-center justify-center gap-2 group"
                                 >
-                                    Start Selling for Free
+                                    Start Free for 14 Days
                                     <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                                 </Link>
                             )}
                             <Link
-                                href="/creators"
+                                href="/pricing"
                                 className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-neutral-800 dark:text-white font-semibold text-base border border-neutral-300 dark:border-neutral-700 transition-colors flex items-center justify-center gap-2"
                             >
-                                <ShoppingBag className="h-4 w-4 text-brand-600" />
-                                Explore Live Demo Store
+                                <Zap className="h-4 w-4 text-brand-600" />
+                                View Local Plans (NGN ₦)
                             </Link>
                         </>
                     )}
@@ -101,118 +102,167 @@ function HeroCreatorSection({ landing, canRegister, auth }) {
                     </span>
                     <span className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        Instant tokenized delivery
+                        Instant bank payouts in Naira & local currencies
                     </span>
                     <span className="flex items-center gap-1.5">
                         <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        Multi-currency: USD, NGN, KES, ZAR, GBP
+                        Official Meta WhatsApp API + QR Support
                     </span>
                 </div>
 
-                {/* Dual Visual Showcase: Creator Storefront + WhatsApp Sale Moment */}
-                <div className="mt-14 max-w-5xl mx-auto rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/60 p-4 sm:p-7 shadow-xl backdrop-blur-sm text-left">
-                    <div className="grid md:grid-cols-2 gap-6 items-stretch">
-                        {/* Left Card: Verified Creator Storefront Preview */}
-                        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 flex flex-col justify-between shadow-sm">
-                            <div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                                        <Sparkles className="h-3 w-3" />
-                                        Verified Creator Storefront
+                {/* Interactive Hero Live Demo Tabs */}
+                <div className="mt-12 max-w-5xl mx-auto">
+                    {/* Tab Switcher Pills */}
+                    <div className="flex items-center justify-center gap-2 mb-4 overflow-x-auto pb-2">
+                        {[
+                            { id: 'whatsapp', label: '💬 WhatsApp AI Closer' },
+                            { id: 'social', label: '📱 Social Media Studio' },
+                            { id: 'store', label: '🛒 1-Page Storefront' },
+                            { id: 'leads', label: '📍 B2B Lead Scraper' },
+                        ].map((t) => (
+                            <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => setActiveTab(t.id)}
+                                className={[
+                                    'px-4 py-2 rounded-full text-xs font-bold transition duration-150 whitespace-nowrap',
+                                    activeTab === t.id
+                                        ? 'bg-slate-900 text-white shadow-sm dark:bg-brand-600'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-neutral-800 dark:text-neutral-300',
+                                ].join(' ')}
+                            >
+                                {t.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Active Tab Canvas */}
+                    <div className="rounded-3xl border border-slate-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/60 p-4 sm:p-7 shadow-xl backdrop-blur-sm text-left">
+                        {activeTab === 'whatsapp' && (
+                            <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-[#EFEAE2] dark:bg-[#0B141A] p-5 shadow-sm">
+                                <div className="flex items-center justify-between pb-3 border-b border-neutral-300/60 dark:border-neutral-800">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="h-8 w-8 rounded-full bg-[#25D366] text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                                            WA
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-neutral-900 dark:text-white flex items-center gap-1">
+                                                Botify AI Sales Specialist
+                                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
+                                            </p>
+                                            <p className="text-[10px] text-neutral-500">Official WhatsApp Business API • Meta Verified</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
+                                        Active 24/7
                                     </span>
-                                    <span className="text-xs font-mono text-neutral-400">botifyai.cloud/store/marcus</span>
                                 </div>
-                                <h3 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white leading-snug">
+
+                                <div className="my-4 space-y-3 text-xs max-w-2xl mx-auto">
+                                    <div className="flex justify-end">
+                                        <div className="max-w-[85%] rounded-2xl rounded-tr-none bg-[#DCF8C6] dark:bg-[#005C4B] text-neutral-900 dark:text-white p-3 shadow-sm">
+                                            <p>Hi, do you have a guide on scaling Facebook ads for African e-commerce?</p>
+                                            <span className="text-[9px] text-neutral-500 dark:text-white/60 block text-right mt-1">11:14 PM ✓✓</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-start">
+                                        <div className="max-w-[90%] rounded-2xl rounded-tl-none bg-white dark:bg-[#202C33] text-neutral-900 dark:text-neutral-100 p-3 shadow-sm border border-neutral-200/60 dark:border-neutral-700/50 space-y-2">
+                                            <p className="leading-relaxed">
+                                                Hello Michael! Yes, our <strong>African E-commerce Ad Blueprint</strong> covers local payment integrations, CBO budgeting in Naira & Cedis, and proven ROAS creatives.
+                                            </p>
+                                            <div className="p-3 rounded-xl border border-brand-500/20 bg-brand-50/50 dark:bg-brand-950/40">
+                                                <div className="flex justify-between items-center font-bold text-neutral-900 dark:text-white">
+                                                    <span>Ad Blueprint & Creative Vault</span>
+                                                    <span className="text-brand-600 dark:text-brand-400">₦15,000 NGN</span>
+                                                </div>
+                                                <span className="mt-2 block w-full text-center py-2 rounded-lg bg-[#25D366] hover:bg-[#20BD5A] text-neutral-950 font-bold text-xs shadow-sm transition">
+                                                    Pay with Paystack / Bank Transfer →
+                                                </span>
+                                            </div>
+                                            <span className="text-[9px] text-neutral-400 block text-right">11:14 PM</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'social' && (
+                            <div className="rounded-2xl border border-slate-200 bg-white dark:bg-neutral-900 p-6 shadow-sm">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Multi-Platform Post Composer</h3>
+                                        <p className="text-xs text-slate-500">Publish 1 post to Facebook, Instagram, Twitter/X, and LinkedIn simultaneously</p>
+                                    </div>
+                                    <span className="rounded-full bg-indigo-50 text-indigo-700 px-2.5 py-1 text-xs font-bold dark:bg-indigo-950 dark:text-indigo-300">
+                                        4 Accounts Connected
+                                    </span>
+                                </div>
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-neutral-800 dark:bg-neutral-950 text-xs">
+                                    <p className="font-semibold text-slate-800 dark:text-neutral-200 mb-2">
+                                        "Most creators fail because they post manually when they feel like it. The top 1% batch 30 days of content and let AI distribute it across all channels while they sleep. 🚀 #CreatorEconomy #AfricanTech"
+                                    </p>
+                                    <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-neutral-800">
+                                        <div className="flex items-center gap-2 text-slate-400">
+                                            <span>📅 Scheduled for Tomorrow at 9:00 AM</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="h-6 w-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[10px]">f</span>
+                                            <span className="h-6 w-6 rounded-full bg-pink-600 text-white flex items-center justify-center font-bold text-[10px]">ig</span>
+                                            <span className="h-6 w-6 rounded-full bg-black text-white flex items-center justify-center font-bold text-[10px]">X</span>
+                                            <span className="h-6 w-6 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold text-[10px]">in</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'store' && (
+                            <div className="rounded-2xl border border-slate-200 bg-white dark:bg-neutral-900 p-6 shadow-sm">
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full dark:bg-emerald-950 dark:text-emerald-400">
+                                        1-Page Instant Checkout
+                                    </span>
+                                    <span className="text-xs font-mono text-slate-400">botifyai.cloud/s/marcus-course</span>
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                                     Full-Stack AI Creator Masterclass & Template Vault
                                 </h3>
-                                <p className="mt-2 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                                    Comprehensive video course curriculum, downloadable prompt library, and tokenized automation recipes.
-                                </p>
-
-                                <div className="mt-4 space-y-2 text-xs text-neutral-700 dark:text-neutral-300">
-                                    <div className="flex items-center gap-2">
-                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                                        <span>12 HD Video Modules (Botify Academy)</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                                        <span>Encrypted Single-Use Download Tokens</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                                        <span>Instant WhatsApp Fulfillment & Login Link</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                                <div>
-                                    <span className="text-2xl font-black text-neutral-900 dark:text-white">$49</span>
-                                    <span className="text-xs text-neutral-400 line-through ml-2">$120</span>
-                                    <p className="text-[10px] text-neutral-500">One-time payment • Lifetime access</p>
-                                </div>
-                                <Link
-                                    href="/creators"
-                                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow transition flex items-center gap-1.5"
-                                >
-                                    <ShoppingBag className="h-3.5 w-3.5" />
-                                    Buy Now
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Right Card: Clean WhatsApp In-Chat Sales Closer */}
-                        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-[#EFEAE2] dark:bg-[#0B141A] p-5 flex flex-col justify-between shadow-sm">
-                            <div className="flex items-center justify-between pb-3 border-b border-neutral-300/60 dark:border-neutral-800">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="h-8 w-8 rounded-full bg-[#25D366] text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                                        WA
-                                    </div>
+                                <p className="mt-1 text-xs text-slate-500">Video course curriculum, downloadable prompts, and tokenized automation recipes.</p>
+                                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs font-bold text-neutral-900 dark:text-white flex items-center gap-1">
-                                            Botify AI Sales Specialist
-                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
-                                        </p>
-                                        <p className="text-[10px] text-neutral-500">Official WhatsApp Business API</p>
+                                        <span className="text-2xl font-black text-slate-900 dark:text-white">₦25,000</span>
+                                        <span className="text-xs text-slate-400 line-through ml-2">₦60,000</span>
                                     </div>
+                                    <button className="rounded-xl bg-brand-600 px-5 py-2 text-xs font-bold text-white shadow-xs">
+                                        Pay with Card / Bank Transfer →
+                                    </button>
                                 </div>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
-                                    24/7 Active
-                                </span>
                             </div>
+                        )}
 
-                            {/* Message Exchange */}
-                            <div className="my-4 space-y-3 text-xs">
-                                <div className="flex justify-end">
-                                    <div className="max-w-[85%] rounded-2xl rounded-tr-none bg-[#DCF8C6] dark:bg-[#005C4B] text-neutral-900 dark:text-white p-3 shadow-sm">
-                                        <p>Hi! Does this masterclass cover Laravel + React integrations, or is it just theory?</p>
-                                        <span className="text-[9px] text-neutral-500 dark:text-white/60 block text-right mt-1">11:14 PM ✓✓</span>
-                                    </div>
+                        {activeTab === 'leads' && (
+                            <div className="rounded-2xl border border-slate-200 bg-white dark:bg-neutral-900 p-6 shadow-sm">
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full dark:bg-amber-950 dark:text-amber-400">
+                                        Google Maps Verified B2B Scraper
+                                    </span>
+                                    <span className="text-xs font-semibold text-emerald-600">124 Leads Found</span>
                                 </div>
-
-                                <div className="flex justify-start">
-                                    <div className="max-w-[90%] rounded-2xl rounded-tl-none bg-white dark:bg-[#202C33] text-neutral-900 dark:text-neutral-100 p-3 shadow-sm border border-neutral-200/60 dark:border-neutral-700/50 space-y-2">
-                                        <p className="leading-relaxed">
-                                            Hello Sarah! Absolutely. Module 3 walks through complete production code using Laravel 11, Inertia.js, and React 18 with multi-tenant tokenized downloads.
-                                        </p>
-                                        <div className="p-2.5 rounded-xl border border-brand-500/20 bg-brand-50/50 dark:bg-brand-950/40">
-                                            <div className="flex justify-between items-center font-bold text-neutral-900 dark:text-white">
-                                                <span>AI Creator Masterclass</span>
-                                                <span className="text-brand-600 dark:text-brand-400">$49 USD</span>
-                                            </div>
-                                            <span className="mt-2 block w-full text-center py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20BD5A] text-neutral-950 font-bold text-xs shadow-sm transition">
-                                                Complete Order in WhatsApp →
-                                            </span>
-                                        </div>
-                                        <span className="text-[9px] text-neutral-400 block text-right">11:14 PM</span>
+                                <div className="space-y-2 text-xs">
+                                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-neutral-800">
+                                        <span className="font-semibold text-slate-900 dark:text-white">Apex Dental Clinic • Ikeja, Lagos</span>
+                                        <span className="text-slate-500">+234 803 219 ****</span>
+                                        <span className="text-emerald-600 font-bold">Verified Phone</span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-neutral-800">
+                                        <span className="font-semibold text-slate-900 dark:text-white">Silverstone Real Estate • Lekki Phase 1</span>
+                                        <span className="text-slate-500">+234 812 441 ****</span>
+                                        <span className="text-emerald-600 font-bold">Verified Phone</span>
                                     </div>
                                 </div>
                             </div>
-
-                            <p className="text-[11px] text-center text-neutral-500 dark:text-neutral-400">
-                                💡 AI handles inquiries, answers syllabus questions, and closes orders 24/7.
-                            </p>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -261,6 +311,217 @@ function SocialProofBand({ landing }) {
                     <span>📱 Meta Business Tech Provider</span>
                     <span>•</span>
                     <span>🌐 PayPal Global Merchant</span>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// ─── Section 2.5: The Tool Fatigue Cost Calculator (Direct ROI Pitch) ──────────
+
+function ToolFatigueCalculator() {
+    const stackTools = [
+        { id: 'whatsapp', name: 'WhatsApp & Chatbot Automation', example: 'ManyChat / Wamation', costUSD: 45, costNGN: 45000, desc: 'Auto-replies & keyword bots' },
+        { id: 'courses', name: 'Course & Digital Product Hosting', example: 'Kajabi / Teachable', costUSD: 159, costNGN: 160000, desc: 'Video player & encrypted downloads' },
+        { id: 'social', name: 'Social Media Post Scheduler', example: 'Buffer / Hootsuite', costUSD: 35, costNGN: 35000, desc: 'Cross-platform auto-publishing' },
+        { id: 'leads', name: 'B2B Lead Scraper & Verifier', example: 'Apollo / Hunter.io', costUSD: 49, costNGN: 50000, desc: 'Lead enrichment & contacts' },
+        { id: 'broadcasts', name: 'Email & WhatsApp Broadcasts', example: 'Mailchimp / Brevo', costUSD: 35, costNGN: 35000, desc: 'List broadcasts & blasts' },
+        { id: 'linkinbio', name: 'Link-in-Bio & Storefront', example: 'Linktree Pro / Beacons', costUSD: 9, costNGN: 10000, desc: 'Mobile bio page link' },
+    ];
+
+    const [currency, setCurrency] = useState('USD');
+    const [selectedTools, setSelectedTools] = useState(stackTools.map(t => t.id));
+
+    const toggleTool = (id) => {
+        if (selectedTools.includes(id)) {
+            setSelectedTools(selectedTools.filter(t => t !== id));
+        } else {
+            setSelectedTools([...selectedTools, id]);
+        }
+    };
+
+    const botifyCost = currency === 'USD' ? 19 : 15000;
+    const currentStackMonthly = selectedTools.reduce((acc, id) => {
+        const tool = stackTools.find(t => t.id === id);
+        return acc + (tool ? (currency === 'USD' ? tool.costUSD : tool.costNGN) : 0);
+    }, 0);
+
+    const currentStackYearly = currentStackMonthly * 12;
+    const botifyYearly = botifyCost * 12;
+    const yearlySavings = Math.max(0, currentStackYearly - botifyYearly);
+
+    return (
+        <section className="py-20 bg-slate-50/70 dark:bg-neutral-900/50 border-y border-slate-200/80 dark:border-neutral-800">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto mb-12">
+                    <SectionBadge text="DIRECT ROI CALCULATOR" icon={Calculator} />
+                    <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+                        Stop Paying the "Tool Fragmentation Tax"
+                    </h2>
+                    <p className="mt-3 text-base sm:text-lg text-neutral-600 dark:text-neutral-300">
+                        Most digital businesses and agencies stitch together 5–7 brittle SaaS tools that break when APIs change. Calculate how much BotifyAI saves your business every month.
+                    </p>
+
+                    {/* Currency Toggle */}
+                    <div className="mt-6 inline-flex items-center p-1 rounded-full bg-slate-200/80 dark:bg-neutral-800 border border-slate-300/80 dark:border-neutral-700">
+                        <button
+                            type="button"
+                            onClick={() => setCurrency('USD')}
+                            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
+                                currency === 'USD'
+                                    ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm'
+                                    : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+                            }`}
+                        >
+                            USD ($)
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setCurrency('NGN')}
+                            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition ${
+                                currency === 'NGN'
+                                    ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm'
+                                    : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+                            }`}
+                        >
+                            NGN (₦)
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    {/* Left 7 cols: Interactive Tool Selection */}
+                    <div className="lg:col-span-7 space-y-3">
+                        <div className="flex items-center justify-between pb-2 text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                            <span>Select Your Current Software Stack</span>
+                            <span>{selectedTools.length} tools selected</span>
+                        </div>
+                        {stackTools.map((tool) => {
+                            const isChecked = selectedTools.includes(tool.id);
+                            return (
+                                <button
+                                    key={tool.id}
+                                    type="button"
+                                    onClick={() => toggleTool(tool.id)}
+                                    className={`w-full text-left p-4 rounded-xl border transition flex items-center justify-between gap-4 ${
+                                        isChecked
+                                            ? 'bg-white dark:bg-neutral-900 border-brand-500/40 shadow-sm ring-1 ring-brand-500/20'
+                                            : 'bg-white/40 dark:bg-neutral-900/30 border-slate-200 dark:border-neutral-800 opacity-60 hover:opacity-100'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div
+                                            className={`h-5 w-5 rounded border flex items-center justify-center transition flex-shrink-0 ${
+                                                isChecked
+                                                    ? 'bg-brand-600 border-brand-600 text-white'
+                                                    : 'border-slate-300 dark:border-neutral-700'
+                                            }`}
+                                        >
+                                            {isChecked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                                        </div>
+                                        <div className="truncate">
+                                            <div className="text-sm font-semibold text-neutral-900 dark:text-white truncate">
+                                                {tool.name}
+                                            </div>
+                                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                                                Typical tool: <span className="font-medium text-neutral-700 dark:text-neutral-300">{tool.example}</span> • {tool.desc}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right flex-shrink-0 font-mono text-sm font-bold text-neutral-800 dark:text-neutral-200">
+                                        {currency === 'USD' ? `$${tool.costUSD}/mo` : `₦${tool.costNGN.toLocaleString()}/mo`}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Right 5 cols: Comparison & Savings Summary Card */}
+                    <div className="lg:col-span-5">
+                        <div className="rounded-2xl border-2 border-brand-500/30 bg-white dark:bg-neutral-900 p-6 sm:p-7 shadow-xl shadow-brand-500/5 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 px-4 py-1 bg-gradient-to-l from-brand-600 to-indigo-600 text-white text-[10px] font-bold tracking-widest uppercase rounded-bl-xl">
+                                Guaranteed ROI
+                            </div>
+
+                            <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">
+                                Stack Cost Comparison
+                            </h3>
+
+                            {/* Old Cost vs BotifyAI */}
+                            <div className="space-y-4 pb-6 border-b border-slate-200 dark:border-neutral-800">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <div className="text-xs text-neutral-500">Fragmented Stack Cost</div>
+                                        <div className="text-xl font-bold line-through text-rose-500">
+                                            {currency === 'USD' ? `$${currentStackMonthly.toLocaleString()}` : `₦${currentStackMonthly.toLocaleString()}`}
+                                            <span className="text-xs font-normal text-neutral-400">/month</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-xs text-neutral-500">Annual Outlay</div>
+                                        <div className="text-sm font-semibold text-rose-600 dark:text-rose-400">
+                                            {currency === 'USD' ? `$${currentStackYearly.toLocaleString()}` : `₦${currentStackYearly.toLocaleString()}`}
+                                            /yr
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-3.5 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/50 flex items-center justify-between">
+                                    <div>
+                                        <div className="text-xs font-semibold text-brand-700 dark:text-brand-300">
+                                            BotifyAI Unified Engine
+                                        </div>
+                                        <div className="text-2xl font-black text-brand-600 dark:text-brand-400">
+                                            {currency === 'USD' ? `$${botifyCost}` : `₦${botifyCost.toLocaleString()}`}
+                                            <span className="text-xs font-normal text-neutral-500">/month</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                            All 6 Features Included
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Savings Callout */}
+                            <div className="py-5">
+                                <div className="text-xs uppercase tracking-wider font-semibold text-emerald-600 dark:text-emerald-400">
+                                    Estimated Annual Cash Kept in Your Pocket
+                                </div>
+                                <div className="mt-1 text-3xl sm:text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+                                    {currency === 'USD' ? `$${yearlySavings.toLocaleString()}` : `₦${yearlySavings.toLocaleString()}`}
+                                    <span className="text-sm font-medium text-neutral-500"> / year</span>
+                                </div>
+                                <ul className="mt-4 space-y-2 text-xs text-neutral-600 dark:text-neutral-400">
+                                    <li className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                                        <span>Zero broken Webhook or Zapier connection failures</span>
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                                        <span>Single unified customer record across WhatsApp, Store & CRM</span>
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                                        <span>Direct settlement to local African and global bank accounts</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* CTA */}
+                            <Link
+                                href="/register"
+                                className="w-full py-3.5 px-4 rounded-xl font-bold text-sm bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 transition shadow-lg flex items-center justify-center gap-2"
+                            >
+                                <span>Switch to BotifyAI & Save</span>
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
+                            <p className="mt-2 text-center text-[11px] text-neutral-400">
+                                14-day free trial • No credit card required • Instant migration
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1178,6 +1439,9 @@ export default function Welcome({ auth, canLogin, canRegister, landing = {}, pla
 
             {/* 2. Social Proof & Trust Metrics Band */}
             <SocialProofBand landing={landing} />
+
+            {/* 2.5 Tool Fatigue & Stack Cost Calculator */}
+            <ToolFatigueCalculator />
 
             {/* 3. STEP 01: CREATE — Turn Knowledge into Digital Assets */}
             <CreateVaultSection />

@@ -31,9 +31,11 @@ function NavGroup({ label, items, onClose }) {
                         const isActive =
                             typeof item.active === 'function'
                                 ? item.active()
-                                : item.route
-                                    ? route().current(item.route)
-                                    : false;
+                                : item.activePattern
+                                    ? (typeof route !== 'undefined' && route().current(item.activePattern))
+                                    : item.route
+                                        ? (typeof route !== 'undefined' && route().current(item.route))
+                                        : false;
                         return (
                             <Link
                                 key={item.key ?? item.route ?? item.href ?? i}
@@ -45,7 +47,6 @@ function NavGroup({ label, items, onClose }) {
                                         ? 'bg-brand-600 text-white shadow-sm'
                                         : 'text-white/80 hover:bg-white/10 hover:text-white',
                                 ].join(' ')}
-                                style={!isActive ? undefined : undefined}
                             >
                                 {item.icon && (
                                     <span className={[
@@ -56,7 +57,12 @@ function NavGroup({ label, items, onClose }) {
                                     </span>
                                 )}
                                 <span className="truncate">{item.label}</span>
-                                {isActive && (
+                                {item.badge && (
+                                    <span className="ml-auto rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-medium text-white/90">
+                                        {item.badge}
+                                    </span>
+                                )}
+                                {isActive && !item.badge && (
                                     <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white/70 shrink-0" />
                                 )}
                             </Link>

@@ -119,6 +119,14 @@ export default function Topbar({
                         <GlobalSearch />
                     </div>
                 )}
+                {user && (
+                    <div className="hidden items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50/80 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-400 sm:flex select-none" title="BotifyAI Growth Experience Points">
+                        <span>⚡</span>
+                        <span className="tabular-nums font-bold">
+                            {(onboardingSummary?.done ? onboardingSummary.done * 30 + 30 : 30)} XP
+                        </span>
+                    </div>
+                )}
                 {showOnboardingProgress && (
                     <Link
                         href={route('client.onboarding.show')}
