@@ -517,6 +517,21 @@ class SeoService
         $type = $data['type'] ?? 'website';
         $robots = $data['robots'] ?? 'index, follow';
         $jsonLd = $data['json_ld'] ?? [];
+        if (! empty($jsonLd)) {
+            if (is_array($jsonLd) && ! array_is_list($jsonLd)) {
+                $jsonLd = [$jsonLd];
+            } elseif (is_string($jsonLd)) {
+                $trimmed = trim($jsonLd);
+                if (str_starts_with($trimmed, '{') || str_starts_with($trimmed, '[')) {
+                    $decoded = json_decode($trimmed, true);
+                    $jsonLd = is_array($decoded) ? (array_is_list($decoded) ? $decoded : [$decoded]) : [];
+                } else {
+                    $jsonLd = [];
+                }
+            }
+        } else {
+            $jsonLd = [];
+        }
 
         return [
             'title' => $title,
@@ -591,11 +606,26 @@ class SeoService
             }
         }
 
-        // Schema.org JSON-LD structured data
+        // Schema.org JSON-LD structured data (strictly validate top-level elements to prevent Google Search Console "Invalid top level element 'string'" errors)
         if (! empty($meta['json_ld'])) {
-            foreach ($meta['json_ld'] as $schema) {
-                if (! empty($schema)) {
+            $schemas = $meta['json_ld'];
+            if (is_array($schemas) && ! array_is_list($schemas)) {
+                $schemas = [$schemas];
+            } elseif (! is_array($schemas)) {
+                $schemas = [];
+            }
+
+            foreach ($schemas as $schema) {
+                if (is_array($schema) && ! empty($schema)) {
                     $html[] = '<script type="application/ld+json">'.json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).'</script>';
+                } elseif (is_string($schema)) {
+                    $trimmed = trim($schema);
+                    if (str_starts_with($trimmed, '{') || str_starts_with($trimmed, '[')) {
+                        $decoded = json_decode($trimmed, true);
+                        if (is_array($decoded) && ! empty($decoded)) {
+                            $html[] = '<script type="application/ld+json">'.$trimmed.'</script>';
+                        }
+                    }
                 }
             }
         }

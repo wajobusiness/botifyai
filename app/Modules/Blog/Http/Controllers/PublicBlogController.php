@@ -141,30 +141,32 @@ class PublicBlogController extends Controller
                 'image' => $post->og_image ?: $post->featured_image,
             ],
             'json_ld' => [
-                '@context' => 'https://schema.org',
-                '@type' => 'BlogPosting',
-                'headline' => $post->title,
-                'description' => $post->meta_description ?: $post->excerpt,
-                'datePublished' => $post->published_at?->toIso8601String() ?? now()->toIso8601String(),
-                'dateModified' => $post->updated_at->toIso8601String(),
-                'mainEntityOfPage' => [
-                    '@type' => 'WebPage',
-                    '@id' => route('blog.show', ['slug' => $post->slug]),
-                ],
-                'author' => [
-                    '@type' => 'Person',
-                    'name' => $post->author?->name ?? 'BotifyAI Team',
-                    'url' => $post->author ? route('blog.author', ['slug' => $post->author->slug]) : url('/blog'),
-                ],
-                'publisher' => [
-                    '@type' => 'Organization',
-                    'name' => config('app.name', 'BotifyAI'),
-                    'logo' => [
-                        '@type' => 'ImageObject',
-                        'url' => url('/storage/branding/logo.png'),
+                [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'BlogPosting',
+                    'headline' => $post->title,
+                    'description' => $post->meta_description ?: $post->excerpt,
+                    'datePublished' => $post->published_at?->toIso8601String() ?? now()->toIso8601String(),
+                    'dateModified' => $post->updated_at->toIso8601String(),
+                    'mainEntityOfPage' => [
+                        '@type' => 'WebPage',
+                        '@id' => route('blog.show', ['slug' => $post->slug]),
                     ],
+                    'author' => [
+                        '@type' => 'Person',
+                        'name' => $post->author?->name ?? 'BotifyAI Team',
+                        'url' => $post->author ? route('blog.author', ['slug' => $post->author->slug]) : url('/blog'),
+                    ],
+                    'publisher' => [
+                        '@type' => 'Organization',
+                        'name' => config('app.name', 'BotifyAI'),
+                        'logo' => [
+                            '@type' => 'ImageObject',
+                            'url' => url('/storage/branding/logo.png'),
+                        ],
+                    ],
+                    'image' => $post->featured_image ? url($post->featured_image) : url('/storage/branding/logo.png'),
                 ],
-                'image' => $post->featured_image ?: url('/storage/branding/logo.png'),
             ],
         ]);
 

@@ -30,7 +30,28 @@ export default function SeoHead({ title, description, keywords, image, canonical
     const ogImage = image || logoUrl || faviconUrl || (origin ? `${origin}/apple-touch-icon.png` : undefined);
     const twitterCard = image ? 'summary_large_image' : 'summary';
 
-    const graphs = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+    const rawGraphs = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+    const graphs = rawGraphs
+        .map((graph) => {
+            if (!graph) return null;
+            if (typeof graph === 'string') {
+                const trimmed = graph.trim();
+                if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        return typeof parsed === 'object' && parsed !== null ? parsed : null;
+                    } catch {
+                        return null;
+                    }
+                }
+                return null;
+            }
+            if (typeof graph === 'object' && graph !== null) {
+                return graph;
+            }
+            return null;
+        })
+        .filter(Boolean);
 
     return (
         <Head>
