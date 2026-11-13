@@ -122,8 +122,8 @@ export default function NewConversationModal({ onClose }) {
             body: message.trim() || undefined,
         })
             .then(r => {
-                // Follow the redirect returned from the server
-                router.visit(r.request?.responseURL ?? route('client.inbox.index'));
+                const target = r.data?.redirect_url ?? r.request?.responseURL ?? route('client.inbox.index');
+                router.visit(target);
             })
             .catch(err => {
                 setError(err.response?.data?.message ?? t('inbox.something_went_wrong'));
@@ -236,23 +236,38 @@ export default function NewConversationModal({ onClose }) {
                             ) : (
                                 <div className="space-y-2">
                                     <p className="text-xs text-neutral-400 mb-3">{t('inbox.select_channel')}</p>
-                                    {channelAccounts.map(acc => (
-                                        <button
-                                            key={acc.id}
-                                            type="button"
-                                            onClick={() => selectAccount(acc)}
-                                            className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 dark:hover:border-brand-600 transition group"
-                                        >
-                                            <div className="h-10 w-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shrink-0 group-hover:bg-brand-100 dark:group-hover:bg-brand-900/30 transition">
-                                                <ChannelBrandIcon channel={acc.channel} className="h-5 w-5" />
-                                            </div>
-                                            <div className="flex-1 text-left min-w-0">
-                                                <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">{acc.display_name || (CHANNEL_LABELS[acc.channel] ?? acc.channel)}</p>
-                                                <p className="text-xs text-neutral-400">{acc.phone_number_id ?? CHANNEL_LABELS[acc.channel]}</p>
-                                            </div>
-                                            <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition shrink-0" />
-                                        </button>
-                                    ))}
+                                    {channelAccounts.map(acc => {
+                                        const isMessenger = acc.channel === 'messenger';
+                                        const isInstagram = acc.channel === 'instagram';
+                                        const hasMessengerPsid = !!selectedContact?.custom_fields?.messenger_psid;
+                                        const hasInstagramPsid = !!(selectedContact?.custom_fields?.instagram_psid || selectedContact?.custom_fields?.instagram_id);
+                                        const needsInbound = (isMessenger && !hasMessengerPsid) || (isInstagram && !hasInstagramPsid);
+
+                                        return (
+                                            <button
+                                                key={acc.id}
+                                                type="button"
+                                                onClick={() => selectAccount(acc)}
+                                                className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/20 dark:hover:border-brand-600 transition group"
+                                            >
+                                                <div className="h-10 w-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shrink-0 group-hover:bg-brand-100 dark:group-hover:bg-brand-900/30 transition">
+                                                    <ChannelBrandIcon channel={acc.channel} className="h-5 w-5" />
+                                                </div>
+                                                <div className="flex-1 text-left min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 truncate">{acc.display_name || (CHANNEL_LABELS[acc.channel] ?? acc.channel)}</p>
+                                                        {needsInbound && (
+                                                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200/60 dark:border-amber-800/60 shrink-0">
+                                                                Inbound only
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs text-neutral-400">{acc.phone_number_id ?? CHANNEL_LABELS[acc.channel]}</p>
+                                                </div>
+                                                <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition shrink-0" />
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -312,6 +327,22 @@ export default function NewConversationModal({ onClose }) {
                                     <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1.5 flex items-start gap-1">
                                         <span className="shrink-0 mt-0.5">⚠️</span>
                                         {t('inbox.whatsapp_freeform_warning')}
+                                    </p>
+                                )}
+                                {selectedAccount?.channel === 'messenger' && !selectedContact?.custom_fields?.messenger_psid && (
+                                    <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-2 flex items-start gap-1.5 bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-800/60">
+                                        <span className="shrink-0 mt-0.5 text-xs">ℹ️</span>
+                                        <span>
+                                            <strong>Meta Privacy Policy:</strong> This contact has not messaged your Facebook Page yet. You can open a thread record, but Meta will not allow outbound messages until the customer sends the first message to your Page.
+                                        </span>
+                                    </p>
+                                )}
+                                {selectedAccount?.channel === 'instagram' && !selectedContact?.custom_fields?.instagram_psid && !selectedContact?.custom_fields?.instagram_id && (
+                                    <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-2 flex items-start gap-1.5 bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-800/60">
+                                        <span className="shrink-0 mt-0.5 text-xs">ℹ️</span>
+                                        <span>
+                                            <strong>Meta Privacy Policy:</strong> This contact has not messaged your Instagram account yet. You can open a thread record, but Meta will not allow outbound DMs until the customer initiates contact first.
+                                        </span>
                                     </p>
                                 )}
                             </div>

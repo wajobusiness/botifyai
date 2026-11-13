@@ -28,10 +28,21 @@ class InstagramDriver implements ChannelDriverInterface
         $creds = $channelAcct?->credentials ?? [];
         $accessToken = $creds['access_token'] ?? '';
         $igAccountId = $creds['instagram_account_id'] ?? '';
-        $recipientId = $conv->external_thread_id;
+        $recipientId = $conv->external_thread_id ?: ($conv->contact?->custom_fields['instagram_psid'] ?? $conv->contact?->custom_fields['instagram_id'] ?? null);
 
         if (! $accessToken || ! $igAccountId) {
             throw new \RuntimeException('Instagram credentials not configured.');
+        }
+
+        if (! $recipientId) {
+            throw new \RuntimeException(
+                'Instagram send failed: No Instagram-Scoped ID is associated with this conversation. '
+                .'Instagram Direct requires the user to message your Instagram professional account first before you can send messages to them.'
+            );
+        }
+
+        if (empty($conv->external_thread_id)) {
+            $conv->update(['external_thread_id' => $recipientId]);
         }
 
         $payload = $message->payload ?? [];
@@ -130,6 +141,16 @@ class InstagramDriver implements ChannelDriverInterface
         if ((int) $errCode === 10 || (int) $fbCode === 10 || str_contains($errMsg, 'outside the allowed window') || str_contains($fbMsg, 'outside the allowed window')) {
             throw new \RuntimeException(
                 'Meta 24-Hour Policy Window Expired: Instagram Messaging requires the customer to message your account first before you can reply (more than 24 hours have passed since their last message).'
+            );
+        }
+
+        if (((int) $errCode === 100 || (int) $fbCode === 100) && (str_contains($errMsg, 'You cannot send messages to this id') || str_contains($fbMsg, 'You cannot send messages to this id'))) {
+            throw new \RuntimeException(
+                'Meta Instagram Error (#100): "You cannot send messages to this id". '
+                .'This occurs when: '
+                .'(1) Your Meta App is in Development Mode (only App Testers or Admins can receive DMs until the app is switched to Live mode); '
+                .'(2) The user has never sent a DM to your Instagram professional account first; '
+                .'(3) The recipient has message requests disabled in their Instagram privacy settings.'
             );
         }
 

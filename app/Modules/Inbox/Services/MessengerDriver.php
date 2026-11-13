@@ -32,7 +32,22 @@ class MessengerDriver implements ChannelDriverInterface
             throw new \RuntimeException('Messenger page access token not configured.');
         }
 
-        $recipient = ['id' => $conv->external_thread_id];
+        // Resolve the recipient PSID: from conversation external_thread_id, or fallback to contact custom_fields
+        $recipientId = $conv->external_thread_id ?: ($conv->contact?->custom_fields['messenger_psid'] ?? null);
+
+        if (! $recipientId) {
+            throw new \RuntimeException(
+                'Messenger send failed: No valid Facebook Page-Scoped ID (PSID) found for this conversation. '
+                .'Facebook Messenger requires the customer to message your Facebook Page first to establish a thread before you can reply.'
+            );
+        }
+
+        // If the conversation was missing the external_thread_id, persist it now
+        if (empty($conv->external_thread_id)) {
+            $conv->update(['external_thread_id' => $recipientId]);
+        }
+
+        $recipient = ['id' => $recipientId];
         $payload = $message->payload ?? [];
         $imageUrl = $payload['link'] ?? $payload['preview_url'] ?? null;
         $isHuman = ($message->sent_by ?? 'human') === 'human';
@@ -75,6 +90,7 @@ class MessengerDriver implements ChannelDriverInterface
 
         $errSubcode = (int) $resp->json('error.error_subcode');
         $errCode = (int) $resp->json('error.code');
+        $errMsg = (string) ($resp->json('error.message') ?? '');
         $rawBody = $resp->body();
 
         // If outside the 24-hour window (code 10, subcode 2018278), attempt HUMAN_AGENT tag fallback
@@ -100,6 +116,16 @@ class MessengerDriver implements ChannelDriverInterface
         if ($errSubcode === 2018278 || str_contains($rawBody, 'outside the allowed window')) {
             throw new \RuntimeException(
                 'Meta 24-Hour Policy Window Expired: Facebook Messenger requires the customer to message your page first before you can reply (more than 24 hours have passed since their last message).'
+            );
+        }
+
+        if ($errCode === 100 && (str_contains($rawBody, 'You cannot send messages to this id') || str_contains($errMsg, 'You cannot send messages to this id'))) {
+            throw new \RuntimeException(
+                'Meta Messenger Error (#100): "You cannot send messages to this id". '
+                .'This occurs when: '
+                .'(1) Your Meta App is in Development Mode — in Dev mode, Meta only allows sending messages to registered App Admins, Developers, or Testers (add this Facebook user under App Roles > Roles > Testers in developers.facebook.com or switch the app to Live mode); '
+                .'(2) The user has not sent a message to this specific Facebook Page yet (Meta does not allow unsolicited cold messages); '
+                .'(3) The Facebook Page currently connected does not match the Page where the conversation originated.'
             );
         }
 

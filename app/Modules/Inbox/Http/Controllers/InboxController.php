@@ -604,7 +604,7 @@ class InboxController extends Controller
             }))
             ->latest()
             ->limit(30)
-            ->get(['id', 'first_name', 'last_name', 'phone_e164', 'email', 'country', 'avatar']);
+            ->get(['id', 'first_name', 'last_name', 'phone_e164', 'email', 'country', 'avatar', 'custom_fields']);
 
         return response()->json($contacts->map(fn ($c) => array_merge($c->toArray(), [
             'avatar_url' => Demo::active() ? null : $c->avatar_url,
@@ -637,6 +637,49 @@ class InboxController extends Controller
         $contact = Contact::where('workspace_id', $workspaceId)->findOrFail($validated['contact_id']);
         $channelAccount = ChannelAccount::where('workspace_id', $workspaceId)->findOrFail($validated['channel_account_id']);
 
+        // Check channel requirements and resolve thread identifiers
+        $externalThreadId = null;
+        if ($channelAccount->channel === 'whatsapp') {
+            if (empty($contact->phone_e164)) {
+                return response()->json([
+                    'message' => 'This contact does not have an E.164 phone number required for WhatsApp.',
+                ], 422);
+            }
+            $externalThreadId = $contact->phone_e164;
+        } elseif ($channelAccount->channel === 'messenger') {
+            $psid = $contact->custom_fields['messenger_psid'] ?? null;
+            if (! $psid) {
+                $existing = Conversation::where('workspace_id', $workspaceId)
+                    ->where('contact_id', $contact->id)
+                    ->where('channel_account_id', $channelAccount->id)
+                    ->whereNotNull('external_thread_id')
+                    ->first();
+                $psid = $existing?->external_thread_id;
+            }
+            if (! $psid && ! empty($validated['body'])) {
+                return response()->json([
+                    'message' => 'Cannot start a Messenger conversation: This contact has never sent a message to your Facebook Page. Under Meta policy, customers must initiate the first message to your Page before you can message them.',
+                ], 422);
+            }
+            $externalThreadId = $psid;
+        } elseif ($channelAccount->channel === 'instagram') {
+            $igsid = $contact->custom_fields['instagram_psid'] ?? $contact->custom_fields['instagram_id'] ?? null;
+            if (! $igsid) {
+                $existing = Conversation::where('workspace_id', $workspaceId)
+                    ->where('contact_id', $contact->id)
+                    ->where('channel_account_id', $channelAccount->id)
+                    ->whereNotNull('external_thread_id')
+                    ->first();
+                $igsid = $existing?->external_thread_id;
+            }
+            if (! $igsid && ! empty($validated['body'])) {
+                return response()->json([
+                    'message' => 'Cannot start an Instagram conversation: This contact has never messaged your Instagram account. Under Meta policy, customers must initiate the first message before you can reply.',
+                ], 422);
+            }
+            $externalThreadId = $igsid;
+        }
+
         // Reuse the most recent open conversation for this contact + channel, or create a new one
         $conversation = Conversation::where('workspace_id', $workspaceId)
             ->where('contact_id', $contact->id)
@@ -654,7 +697,10 @@ class InboxController extends Controller
                 'assigned_to' => 'human',
                 'assigned_user_id' => $request->user()->id,
                 'last_message_at' => now(),
+                'external_thread_id' => $externalThreadId,
             ]);
+        } elseif ($externalThreadId && empty($conversation->external_thread_id)) {
+            $conversation->update(['external_thread_id' => $externalThreadId]);
         }
 
         // Send the opening message if provided
@@ -676,17 +722,33 @@ class InboxController extends Controller
                 $messageId = $driver->send($message);
                 $message->update(['status' => 'sent', 'provider_message_id' => $messageId]);
             } catch (\Throwable $e) {
+                $sendError = $e->getMessage();
                 Log::error('startConversation send failed', [
                     'conversation_id' => $conversation->id,
                     'channel' => $channelAccount->channel,
-                    'error' => $e->getMessage(),
+                    'error' => $sendError,
                 ]);
-                $message->update(['status' => 'failed', 'error_json' => ['message' => $e->getMessage()]]);
+                $message->update(['status' => 'failed', 'error_json' => ['message' => $sendError]]);
+
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'message' => $sendError,
+                        'conversation_id' => $conversation->id,
+                    ], 422);
+                }
             }
 
             $conversation->update(['last_message_at' => now()]);
             $message->load('conversation');
             MessageSent::dispatch($message);
+        }
+
+        if ($request->wantsJson() && ! $request->header('X-Inertia')) {
+            return response()->json([
+                'success' => true,
+                'conversation_id' => $conversation->id,
+                'redirect_url' => route('client.inbox.show', $conversation),
+            ]);
         }
 
         return redirect()->route('client.inbox.show', $conversation);
