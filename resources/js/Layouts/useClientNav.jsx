@@ -5,7 +5,7 @@ import {
     LayoutDashboard, CreditCard, Package, FileText, Users, Settings,
     Layers, Webhook, Radio, Inbox, Bot, Zap, Share2, MapPin, Tag,
     LifeBuoy, ExternalLink, ShoppingBag, KanbanSquare, Wallet, Store,
-    Sparkles, GraduationCap, Palette, BarChart3, ShieldCheck
+    Sparkles, GraduationCap, Palette, BarChart3, ShieldCheck, PlugZap
 } from 'lucide-react';
 
 const iconClass = 'h-4 w-4';
@@ -102,7 +102,13 @@ export default function useClientNav() {
             label: t('nav.inbox', 'Team Unified Inbox'),
             href: safeRoute('client.inbox.index'),
             icon: <Inbox className={iconClass} />,
-            activePattern: 'client.inbox.*'
+            activePattern: 'client.inbox.index'
+        },
+        {
+            label: t('nav.channel_setup', 'Connected Channels'),
+            href: safeRoute('client.inbox.setup'),
+            icon: <PlugZap className={iconClass} />,
+            activePattern: 'client.inbox.setup*'
         },
         {
             label: t('nav.templates', 'Message Templates'),

@@ -550,7 +550,7 @@ function WabaCard({ waba, webhookGlobalUrl, webhookBaseUrl, webhookToken, channe
     );
 }
 
-function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookTokensByWaba, channelAccountsByWaba, chatbots, showForm, setShowForm, metaConfigIdWhatsapp, metaAppId }) {
+function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookTokensByWaba, channelAccountsByWaba, chatbots, showForm, setShowForm, metaConfigIdWhatsapp, metaAppId, onConnectClick }) {
     const { t } = useTranslation();
     const [waApiError, setWaApiError] = useState(null);
     const [waSubmitting, setWaSubmitting] = useState(false);
@@ -618,7 +618,14 @@ function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookToken
                     <div className="mx-auto mb-3 rounded-2xl w-12 h-12 flex items-center justify-center bg-green-100 dark:bg-green-900/30 opacity-60">
                         <WhatsAppLogo className="h-6 w-6" />
                     </div>
-                    <p className="text-sm text-neutral-400 dark:text-neutral-500">{t('inbox.no_whatsapp_accounts')}</p>
+                    <p className="text-sm text-neutral-400 dark:text-neutral-500 mb-3">{t('inbox.no_whatsapp_accounts')}</p>
+                    <button
+                        type="button"
+                        onClick={onConnectClick ?? (() => setShowForm(true))}
+                        className="text-xs font-semibold text-green-600 dark:text-green-400 hover:underline"
+                    >
+                        + {t('inbox.connect_whatsapp', 'Connect WhatsApp Business')}
+                    </button>
                 </div>
             )}
 
@@ -1535,6 +1542,7 @@ export default function ChannelSetup({
                     setShowForm={() => {}}
                     metaConfigIdWhatsapp={metaConfigIdWhatsapp}
                     metaAppId={metaAppId}
+                    onConnectClick={() => openDrawer('whatsapp')}
                 />
 
                 {/* Instagram */}

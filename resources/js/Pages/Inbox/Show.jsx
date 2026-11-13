@@ -8,6 +8,7 @@ import {
     Paperclip, Image as ImageIcon, ChevronDown, UserCheck,
     LayoutTemplate, Plus, Loader2, Bot, Calendar, BarChart2, PhoneMissed,
     Volume2, VolumeX, ShoppingBag, History, Tag, ArrowRightLeft, UserMinus,
+    PlugZap
 } from 'lucide-react';
 import { ChannelBrandIcon, CHANNEL_LABELS } from '@/Components/BrandIcons';
 import { formatTimeTz, formatInTz } from '@/Utils/datetime';
@@ -944,7 +945,17 @@ function FilterSidebar({ filters, labels, channelAccounts = [], onFolder, onChan
                 ))}
             </div>
             <div className="p-2 border-b border-neutral-100 dark:border-neutral-800">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 px-2 py-1.5">{t('inbox.channels')}</p>
+                <div className="flex items-center justify-between px-2 py-1.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 px-2 py-1.5">{t('inbox.channels')}</p>
+                    <Link
+                        href={route('client.inbox.setup')}
+                        className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 flex items-center gap-0.5"
+                        title="Add WhatsApp, Messenger, or Instagram"
+                    >
+                        <Plus className="h-3 w-3" />
+                        <span>Add</span>
+                    </Link>
+                </div>
                 {ALL_CHANNELS.map(ch => (
                     <button key={ch} onClick={() => onChannel(ch)}
                         className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition ${
@@ -957,10 +968,19 @@ function FilterSidebar({ filters, labels, channelAccounts = [], onFolder, onChan
                     </button>
                 ))}
             </div>
-            {channelAccounts.length > 0 && (
-                <div className="p-2 border-b border-neutral-100 dark:border-neutral-800">
+            <div className="p-2 border-b border-neutral-100 dark:border-neutral-800">
+                <div className="flex items-center justify-between px-2 py-1.5">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 px-2 py-1.5">{t('inbox.numbers')}</p>
-                    {channelAccounts.map(account => (
+                    <Link
+                        href={route('client.inbox.setup')}
+                        className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700"
+                        title="Manage Connected Channels"
+                    >
+                        Manage
+                    </Link>
+                </div>
+                {channelAccounts.length > 0 ? (
+                    channelAccounts.map(account => (
                         <button key={account.id} onClick={() => onAccount(account.id)}
                             className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm transition ${
                                 String(filters.account_id) === String(account.id)
@@ -970,9 +990,20 @@ function FilterSidebar({ filters, labels, channelAccounts = [], onFolder, onChan
                             <ChannelBrandIcon channel={account.channel} className="h-4 w-4 shrink-0" />
                             <span className="truncate">{account.display_name || account.phone_number_id || account.channel}</span>
                         </button>
-                    ))}
-                </div>
-            )}
+                    ))
+                ) : (
+                    <div className="px-2 py-2 text-center">
+                        <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-2">No channels connected</p>
+                        <Link
+                            href={route('client.inbox.setup')}
+                            className="inline-flex items-center justify-center gap-1.5 w-full py-1.5 px-2 rounded-lg bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-900/50 text-xs font-semibold hover:bg-brand-100 transition"
+                        >
+                            <Plus className="h-3.5 w-3.5" />
+                            Connect Channel
+                        </Link>
+                    </div>
+                )}
+            </div>
             {labels.length > 0 && (
                 <div className="p-2">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 px-2 py-1.5">{t('inbox.labels')}</p>
@@ -1776,13 +1807,22 @@ export default function InboxShow({
                         <Link href={route('client.inbox.index')} className="text-sm font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-2 hover:text-brand-600 transition">
                             <Inbox className="h-4 w-4 text-brand-600" />{t('inbox.title')}
                         </Link>
-                        <button
-                            onClick={() => setShowNewModal(true)}
-                            title={t('inbox.new_conversation')}
-                            className="h-7 w-7 rounded-lg bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center transition shrink-0"
-                        >
-                            <Plus className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                            <Link
+                                href={route('client.inbox.setup')}
+                                title="Connect Channels (WhatsApp, Messenger, Instagram)"
+                                className="h-7 w-7 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 flex items-center justify-center transition shrink-0"
+                            >
+                                <PlugZap className="h-3.5 w-3.5 text-brand-600 dark:text-brand-400" />
+                            </Link>
+                            <button
+                                onClick={() => setShowNewModal(true)}
+                                title={t('inbox.new_conversation')}
+                                className="h-7 w-7 rounded-lg bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center transition shrink-0"
+                            >
+                                <Plus className="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
                     <FilterSidebar
                         filters={filters}
