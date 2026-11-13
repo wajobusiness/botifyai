@@ -127,6 +127,12 @@ class InstagramDriver implements ChannelDriverInterface
             );
         }
 
+        if ((int) $errCode === 10 || (int) $fbCode === 10 || str_contains($errMsg, 'outside the allowed window') || str_contains($fbMsg, 'outside the allowed window')) {
+            throw new \RuntimeException(
+                'Meta 24-Hour Policy Window Expired: Instagram Messaging requires the customer to message your account first before you can reply (more than 24 hours have passed since their last message).'
+            );
+        }
+
         throw new \RuntimeException('Instagram send failed: '.$fbMsg);
     }
 

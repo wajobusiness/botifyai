@@ -35,21 +35,22 @@ class MessengerDriver implements ChannelDriverInterface
         $recipient = ['id' => $conv->external_thread_id];
         $payload = $message->payload ?? [];
         $imageUrl = $payload['link'] ?? $payload['preview_url'] ?? null;
+        $isHuman = ($message->sent_by ?? 'human') === 'human';
 
         // Image messages (e.g. shared products): send the photo as an attachment,
         // then the caption as a follow-up — a Messenger attachment carries no text.
         if ($message->type === 'image' && $imageUrl) {
             $messageId = $this->postMessage($accessToken, $recipient, [
                 'attachment' => ['type' => 'image', 'payload' => ['url' => $imageUrl, 'is_reusable' => true]],
-            ]);
+            ], $isHuman);
             if (! empty($message->body)) {
-                $this->postMessage($accessToken, $recipient, ['text' => $message->body]);
+                $this->postMessage($accessToken, $recipient, ['text' => $message->body], $isHuman);
             }
 
             return $messageId;
         }
 
-        return $this->postMessage($accessToken, $recipient, ['text' => $message->body]);
+        return $this->postMessage($accessToken, $recipient, ['text' => $message->body], $isHuman);
     }
 
     /**
@@ -58,7 +59,7 @@ class MessengerDriver implements ChannelDriverInterface
      * @param  array<string, mixed>  $recipient
      * @param  array<string, mixed>  $message
      */
-    private function postMessage(string $accessToken, array $recipient, array $message): string
+    private function postMessage(string $accessToken, array $recipient, array $message, bool $isHuman = false): string
     {
         $resp = Http::withToken($accessToken)
             ->timeout(15)
@@ -68,11 +69,41 @@ class MessengerDriver implements ChannelDriverInterface
                 'messaging_type' => 'RESPONSE',
             ]);
 
-        if (! $resp->successful()) {
-            throw new \RuntimeException('Messenger send failed: '.$resp->body());
+        if ($resp->successful()) {
+            return $resp->json('message_id', '');
         }
 
-        return $resp->json('message_id', '');
+        $errSubcode = (int) $resp->json('error.error_subcode');
+        $errCode = (int) $resp->json('error.code');
+        $rawBody = $resp->body();
+
+        // If outside the 24-hour window (code 10, subcode 2018278), attempt HUMAN_AGENT tag fallback
+        if (($errSubcode === 2018278 || $errCode === 10) && $isHuman) {
+            $tagResp = Http::withToken($accessToken)
+                ->timeout(15)
+                ->post(self::BASE.'/me/messages', [
+                    'recipient' => $recipient,
+                    'message' => $message,
+                    'messaging_type' => 'MESSAGE_TAG',
+                    'tag' => 'HUMAN_AGENT',
+                ]);
+
+            if ($tagResp->successful()) {
+                Log::info('Messenger send: succeeded via HUMAN_AGENT tag fallback', [
+                    'recipient' => $recipient['id'] ?? '',
+                ]);
+
+                return $tagResp->json('message_id', '');
+            }
+        }
+
+        if ($errSubcode === 2018278 || str_contains($rawBody, 'outside the allowed window')) {
+            throw new \RuntimeException(
+                'Meta 24-Hour Policy Window Expired: Facebook Messenger requires the customer to message your page first before you can reply (more than 24 hours have passed since their last message).'
+            );
+        }
+
+        throw new \RuntimeException('Messenger send failed: '.$rawBody);
     }
 
     public function receiveWebhook(Request $request): array
