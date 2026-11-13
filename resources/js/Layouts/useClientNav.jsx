@@ -5,7 +5,8 @@ import {
     LayoutDashboard, CreditCard, Package, FileText, Users, Settings,
     Layers, Webhook, Radio, Inbox, Bot, Zap, Share2, MapPin, Tag,
     LifeBuoy, ExternalLink, ShoppingBag, KanbanSquare, Wallet, Store,
-    Sparkles, GraduationCap, Palette, BarChart3, ShieldCheck, PlugZap
+    Sparkles, GraduationCap, Palette, BarChart3, ShieldCheck, PlugZap,
+    MessageSquare, Mail
 } from 'lucide-react';
 
 const iconClass = 'h-4 w-4';
@@ -109,6 +110,18 @@ export default function useClientNav() {
             href: safeRoute('client.inbox.setup'),
             icon: <PlugZap className={iconClass} />,
             activePattern: 'client.inbox.setup*'
+        },
+        {
+            label: t('nav.sms_gateways', 'SMS Gateways'),
+            href: safeRoute('client.sms-gateways.index'),
+            icon: <MessageSquare className={iconClass} />,
+            activePattern: 'client.sms-gateways.*'
+        },
+        {
+            label: t('nav.email_server', 'Email Server (SMTP)'),
+            href: safeRoute('client.email-server.index'),
+            icon: <Mail className={iconClass} />,
+            activePattern: 'client.email-server.*'
         },
         {
             label: t('nav.templates', 'Message Templates'),

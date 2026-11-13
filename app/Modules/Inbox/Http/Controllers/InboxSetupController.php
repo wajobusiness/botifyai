@@ -70,6 +70,20 @@ class InboxSetupController extends Controller
 
         $metaCreds = CredentialResolver::system()->meta();
 
+        $smsConfiguredCount = 0;
+        if (\Illuminate\Support\Facades\Schema::hasTable('sms_provider_configs')) {
+            $smsConfiguredCount = \App\Modules\Broadcasting\Models\SmsProviderConfig::where('workspace_id', $workspaceId)
+                ->whereNotNull('credentials')
+                ->count();
+        }
+
+        $smtpConfig = null;
+        if (\Illuminate\Support\Facades\Schema::hasTable('workspace_smtp_configs')) {
+            $smtpConfig = \App\Modules\Broadcasting\Models\WorkspaceSmtpConfig::where('workspace_id', $workspaceId)
+                ->where('is_active', true)
+                ->first();
+        }
+
         return Inertia::render('Inbox/Setup', [
             'wabas' => $wabas,
             'whatsappWebhookUrl' => url('/webhooks/whatsapp'),
@@ -84,6 +98,10 @@ class InboxSetupController extends Controller
             'metaAppId' => $metaCreds?->appId() ?: null,
             'metaConfigIdWhatsapp' => $metaCreds?->configIdWhatsapp() ?: null,
             'metaConfigIdSocial' => $metaCreds?->configIdSocial() ?: null,
+            'smsConfiguredCount' => $smsConfiguredCount,
+            'smtpConfigured' => (bool) $smtpConfig,
+            'smtpFromEmail' => $smtpConfig?->from_email,
+            'smtpHost' => $smtpConfig?->host,
         ]);
     }
 

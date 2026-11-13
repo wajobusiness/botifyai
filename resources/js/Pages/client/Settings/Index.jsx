@@ -2,7 +2,7 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import { Button } from '@/Components/ui';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import { Settings as SettingsIcon, Bell, Download } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, Download, PlugZap, MessageSquare, Mail, ExternalLink } from 'lucide-react';
 import { browserTz } from '@/Utils/datetime';
 import TimezonePicker from '@/Components/TimezonePicker';
 
@@ -191,6 +191,66 @@ export default function ClientSettingsIndex({
                         </Button>
                     )}
                 </form>
+
+                {/* Delivery Channels & Integrations */}
+                <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/50 p-6 space-y-4">
+                    <h2 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
+                        <PlugZap className="h-5 w-5 text-brand-600 dark:text-brand-400" />
+                        Channels & Message Delivery
+                    </h2>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                        Connect and configure your outbound communication channels for WhatsApp, Facebook, Instagram, SMS, and Email broadcasts.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                        <Link
+                            href={route('client.inbox.setup')}
+                            className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-brand-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition flex items-center justify-between group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-lg bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400 flex items-center justify-center font-bold">
+                                    <PlugZap className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">Social & Chat</p>
+                                    <p className="text-[11px] text-neutral-400">WhatsApp, Messenger, IG</p>
+                                </div>
+                            </div>
+                            <ExternalLink className="h-3.5 w-3.5 text-neutral-300 group-hover:text-brand-600 transition" />
+                        </Link>
+
+                        <Link
+                            href={route('client.sms-gateways.index')}
+                            className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-brand-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition flex items-center justify-between group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-lg bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 flex items-center justify-center font-bold">
+                                    <MessageSquare className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">SMS Gateways</p>
+                                    <p className="text-[11px] text-neutral-400">Twilio, Termii, Vonage</p>
+                                </div>
+                            </div>
+                            <ExternalLink className="h-3.5 w-3.5 text-neutral-300 group-hover:text-brand-600 transition" />
+                        </Link>
+
+                        <Link
+                            href={route('client.email-server.index')}
+                            className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-brand-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition flex items-center justify-between group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-lg bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold">
+                                    <Mail className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">Email Server</p>
+                                    <p className="text-[11px] text-neutral-400">SMTP, Gmail, SendGrid</p>
+                                </div>
+                            </div>
+                            <ExternalLink className="h-3.5 w-3.5 text-neutral-300 group-hover:text-brand-600 transition" />
+                        </Link>
+                    </div>
+                </div>
 
                 <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700 space-y-3">
                     <Link

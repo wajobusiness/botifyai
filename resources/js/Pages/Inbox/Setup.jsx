@@ -5,6 +5,7 @@ import {
     Phone, Inbox, Webhook, FileText,
     Trash2, RefreshCw, Bot, ChevronDown, ExternalLink,
     Edit3, Clock, ShieldCheck, ShieldAlert, Wifi, WifiOff, X,
+    MessageSquare, Mail, ArrowRight,
 } from 'lucide-react';
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -1464,6 +1465,10 @@ export default function ChannelSetup({
     channelAccountsByWaba, instagramAccounts, messengerAccounts, metaWebhookUrl,
     metaAppId = null, metaConfigIdWhatsapp = null, metaConfigIdSocial = null,
     chatbots = [],
+    smsConfiguredCount = 0,
+    smtpConfigured = false,
+    smtpFromEmail = null,
+    smtpHost = null,
 }) {
     const { t } = useTranslation();
     const { props } = usePage();
@@ -1507,6 +1512,14 @@ export default function ChannelSetup({
                             className="flex items-center gap-1.5 rounded-lg border border-pink-200 dark:border-pink-800 bg-pink-50 dark:bg-pink-950/30 px-3 py-1.5 text-xs font-medium text-pink-700 dark:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-950/50 transition shadow-sm whitespace-nowrap">
                             <InstagramLogo className="h-3.5 w-3.5" /> {t('inbox.connect_instagram')}
                         </button>
+                        <Link href={route('client.sms-gateways.index')}
+                            className="flex items-center gap-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/30 px-3 py-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-950/50 transition shadow-sm whitespace-nowrap">
+                            <MessageSquare className="h-3.5 w-3.5" /> {t('nav.sms_gateways', 'SMS Gateways')}
+                        </Link>
+                        <Link href={route('client.email-server.index')}
+                            className="flex items-center gap-1.5 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition shadow-sm whitespace-nowrap">
+                            <Mail className="h-3.5 w-3.5" /> {t('nav.email_server', 'Email Server (SMTP)')}
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -1594,6 +1607,83 @@ export default function ChannelSetup({
                         </div>
                     )}
                 </ChannelCard>
+            </div>
+
+            {/* Campaign & Broadcast Delivery Channels (SMS & Email) */}
+            <div className="mb-6">
+                <div className="mb-3">
+                    <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+                        Campaign & Broadcast Delivery Channels
+                    </h3>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                        Configure your outbound SMS Gateways and Email Server (SMTP) to power mass broadcasts, customer notifications, and automated workflows.
+                    </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* SMS Gateways Card */}
+                    <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                                        <MessageSquare className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">SMS Gateways</h4>
+                                        <p className="text-xs text-neutral-400">Twilio, Termii, Vonage, Plivo, MessageBird & more</p>
+                                    </div>
+                                </div>
+                                <StatusBadge status={smsConfiguredCount > 0 ? 'active' : 'inactive'} />
+                            </div>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">
+                                {smsConfiguredCount > 0
+                                    ? `You have ${smsConfiguredCount} SMS gateway provider(s) active for high-speed broadcast and transactional delivery.`
+                                    : 'Connect your SMS provider credentials to send bulk marketing messages and automated SMS campaigns.'}
+                            </p>
+                        </div>
+                        <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                            <span className="text-xs text-neutral-400">15+ global & regional SMS drivers supported</span>
+                            <Link
+                                href={route('client.sms-gateways.index')}
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition"
+                            >
+                                {smsConfiguredCount > 0 ? 'Manage SMS Gateways' : 'Configure SMS Gateways'} <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Email Server Card */}
+                    <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                                        <Mail className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">Email Server (SMTP)</h4>
+                                        <p className="text-xs text-neutral-400">Gmail, SendGrid, Amazon SES, Mailgun, Custom SMTP</p>
+                                    </div>
+                                </div>
+                                <StatusBadge status={smtpConfigured ? 'active' : 'inactive'} />
+                            </div>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">
+                                {smtpConfigured
+                                    ? `Outbound SMTP configured. Sending as ${smtpFromEmail || smtpHost}.`
+                                    : 'Set up your SMTP credentials to send branded HTML emails, broadcast campaigns, and automated newsletters.'}
+                            </p>
+                        </div>
+                        <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                            <span className="text-xs text-neutral-400">Includes live connection & test email sender</span>
+                            <Link
+                                href={route('client.email-server.index')}
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 transition"
+                            >
+                                {smtpConfigured ? 'Manage Email Server' : 'Configure Email Server'} <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Row 2 — guide + resources (only shown when no channels connected) */}

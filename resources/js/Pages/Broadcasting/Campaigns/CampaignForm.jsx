@@ -16,6 +16,9 @@ import {
     Save,
     Upload,
     Link as LinkIcon,
+    ExternalLink,
+    MessageSquare,
+    Mail,
 } from 'lucide-react';
 import { browserTz, formatInTz, tzLocalToUtcIso, utcToTzLocal } from '@/Utils/datetime';
 import { ChannelBrandIcon } from '@/Components/BrandIcons';
@@ -728,6 +731,48 @@ function ChannelStep({ data, setData, errors, whatsappPhoneNumbers = [] }) {
                 </div>
                 <FieldError message={errors.channel} />
             </div>
+
+            {data.channel === 'sms' && (
+                <div className="rounded-xl border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/60 dark:bg-indigo-950/30 p-4 text-xs flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                        <p className="font-semibold flex items-center gap-1.5 text-indigo-900 dark:text-indigo-200">
+                            <MessageSquare className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /> SMS Gateway Configuration
+                        </p>
+                        <p className="text-indigo-700 dark:text-indigo-300">
+                            SMS campaigns are delivered via your configured SMS gateway (Twilio, Termii, Vonage, Plivo, etc.). Ensure your credentials are active before launching.
+                        </p>
+                    </div>
+                    <a
+                        href={route('client.sms-gateways.index')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-3 py-1.5 transition text-xs flex items-center gap-1"
+                    >
+                        Configure SMS Gateways <ExternalLink className="h-3 w-3" />
+                    </a>
+                </div>
+            )}
+
+            {data.channel === 'email' && (
+                <div className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/30 p-4 text-xs flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                        <p className="font-semibold flex items-center gap-1.5 text-amber-900 dark:text-amber-200">
+                            <Mail className="h-4 w-4 text-amber-600 dark:text-amber-400" /> Email Server (SMTP) Configuration
+                        </p>
+                        <p className="text-amber-700 dark:text-amber-300">
+                            Email campaigns require an active SMTP server (Gmail, SendGrid, Mailgun, Amazon SES). Make sure your SMTP server is active and verified before launching.
+                        </p>
+                    </div>
+                    <a
+                        href={route('client.email-server.index')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium px-3 py-1.5 transition text-xs flex items-center gap-1"
+                    >
+                        Configure Email Server <ExternalLink className="h-3 w-3" />
+                    </a>
+                </div>
+            )}
 
             {data.channel === 'whatsapp' && whatsappPhoneNumbers.length > 0 && (
                 <div>
