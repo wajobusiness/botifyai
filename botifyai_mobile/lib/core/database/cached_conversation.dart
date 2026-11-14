@@ -88,7 +88,7 @@ class CachedConversation {
       'assigned_user_name': assignedToName,
       'is_whatsapp_window_open': isWhatsappWindowOpen,
       'last_customer_message_at': lastCustomerMessageAt,
-      'labels': tags.map((t) => {'id': 0, 'name': t, 'color': '#467235'}).toList(),
+      'labels': tags.map((t) => {'id': 0, 'name': t, 'color': '#4F46E5'}).toList(),
     });
   }
 

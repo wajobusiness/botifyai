@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Primary Brand Colors (Olive Ramp)
-  static const Color brandPrimary = Color(0xFF467235); // Anchor brand color
-  static const Color brandPrimaryLight = Color(0xFF5E9B48);
-  static const Color brandPrimaryDark = Color(0xFF283F24);
-  static const Color brandPrimarySubtle = Color(0xFFEBF5E7);
+  // Primary Brand Colors (BotifyAI Electric Indigo)
+  static const Color brandPrimary = Color(0xFF4F46E5); // Indigo 600
+  static const Color brandPrimaryLight = Color(0xFF6366F1); // Indigo 500
+  static const Color brandPrimaryDark = Color(0xFF3730A3); // Indigo 800
+  static const Color brandPrimarySubtle = Color(0xFFEEF2FF); // Indigo 50
 
   // Aliases for component convenience
   static const Color primary = brandPrimary;
@@ -16,10 +16,10 @@ class AppColors {
   static const Color primaryLight = brandPrimaryLight;
   static const Color primarySubtle = brandPrimarySubtle;
 
-  // AI High-Tech Accent (Electric Lime)
-  static const Color aiAccent = Color(0xFFACE601);
-  static const Color aiAccentDark = Color(0xFF88B800);
-  static const Color aiAccentSubtle = Color(0xFFF6FDE6);
+  // AI Copilot High-Tech Accent (Violet / Neon Purple)
+  static const Color aiAccent = Color(0xFF8B5CF6); // Violet 500
+  static const Color aiAccentDark = Color(0xFF6D28D9); // Violet 700
+  static const Color aiAccentSubtle = Color(0xFFF5F3FF); // Violet 50
 
   // Light Mode Surfaces
   static const Color backgroundLight = Color(0xFFFFFFFF);
@@ -69,7 +69,9 @@ class AppColors {
   static const Color channelInstagram = Color(0xFFE1306C);
   static const Color channelMessenger = Color(0xFF0084FF);
   static const Color channelTelegram = Color(0xFF229ED9);
-  static const Color channelWebchat = Color(0xFF467235);
+  static const Color channelWebchat = Color(0xFF4F46E5);
+  static const Color channelSms = Color(0xFF0284C7);
+  static const Color channelEmail = Color(0xFFF59E0B);
 
   // Semantic Status Colors
   static const Color success = Color(0xFF10B981);

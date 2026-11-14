@@ -11,7 +11,7 @@ class ConversationLabelModel extends ConversationLabel {
     return ConversationLabelModel(
       id: json['id'] is int ? json['id'] as int : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       name: json['name']?.toString() ?? '',
-      color: json['color']?.toString() ?? '#467235',
+      color: json['color']?.toString() ?? '#4F46E5',
     );
   }
 

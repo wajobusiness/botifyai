@@ -32,22 +32,22 @@ class MainShellScreen extends StatelessWidget {
           items: const [
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.messageSquare),
-              activeIcon: Icon(LucideIcons.messageSquare, color: AppColors.brandPrimary),
+              activeIcon: Icon(LucideIcons.messageSquare),
               label: 'Inbox',
             ),
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.users),
-              activeIcon: Icon(LucideIcons.users, color: AppColors.brandPrimary),
+              activeIcon: Icon(LucideIcons.users),
               label: 'CRM',
             ),
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.shoppingBag),
-              activeIcon: Icon(LucideIcons.shoppingBag, color: AppColors.brandPrimary),
+              activeIcon: Icon(LucideIcons.shoppingBag),
               label: 'Orders',
             ),
             BottomNavigationBarItem(
               icon: Icon(LucideIcons.layoutGrid),
-              activeIcon: Icon(LucideIcons.layoutGrid, color: AppColors.brandPrimary),
+              activeIcon: Icon(LucideIcons.layoutGrid),
               label: 'Hub',
             ),
           ],

@@ -310,7 +310,7 @@ class _InboxViewState extends State<_InboxView> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(LucideIcons.messageCircle, color: Color(0xFF25D366)),
+                  leading: const Icon(LucideIcons.messageCircle, color: AppColors.channelWhatsApp),
                   title: const Text('WhatsApp'),
                   onTap: () {
                     Navigator.pop(sheetContext);
@@ -318,7 +318,7 @@ class _InboxViewState extends State<_InboxView> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(LucideIcons.instagram, color: Color(0xFFE1306C)),
+                  leading: const Icon(LucideIcons.instagram, color: AppColors.channelInstagram),
                   title: const Text('Instagram Direct'),
                   onTap: () {
                     Navigator.pop(sheetContext);
@@ -326,11 +326,43 @@ class _InboxViewState extends State<_InboxView> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(LucideIcons.messageSquare, color: Color(0xFF0084FF)),
+                  leading: const Icon(LucideIcons.messageSquare, color: AppColors.channelMessenger),
                   title: const Text('Facebook Messenger'),
                   onTap: () {
                     Navigator.pop(sheetContext);
                     context.read<InboxBloc>().add(const ChangeChannelFilterEvent('messenger'));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(LucideIcons.send, color: AppColors.channelTelegram),
+                  title: const Text('Telegram'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    context.read<InboxBloc>().add(const ChangeChannelFilterEvent('telegram'));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(LucideIcons.phoneCall, color: AppColors.channelSms),
+                  title: const Text('SMS'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    context.read<InboxBloc>().add(const ChangeChannelFilterEvent('sms'));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(LucideIcons.mail, color: AppColors.channelEmail),
+                  title: const Text('Email'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    context.read<InboxBloc>().add(const ChangeChannelFilterEvent('email'));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(LucideIcons.globe, color: AppColors.channelWebchat),
+                  title: const Text('Live Webchat'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    context.read<InboxBloc>().add(const ChangeChannelFilterEvent('webchat'));
                   },
                 ),
               ],

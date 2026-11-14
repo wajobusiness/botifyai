@@ -40,15 +40,20 @@ class ConversationTile extends StatelessWidget {
   Color _getChannelColor(String channel) {
     switch (channel.toLowerCase()) {
       case 'whatsapp':
-        return const Color(0xFF25D366);
+        return AppColors.channelWhatsApp;
       case 'instagram':
-        return const Color(0xFFE1306C);
+        return AppColors.channelInstagram;
       case 'messenger':
-        return const Color(0xFF0084FF);
+        return AppColors.channelMessenger;
       case 'telegram':
-        return const Color(0xFF229ED9);
+        return AppColors.channelTelegram;
+      case 'sms':
+        return AppColors.channelSms;
+      case 'email':
+        return AppColors.channelEmail;
+      case 'webchat':
       default:
-        return AppColors.primary;
+        return AppColors.channelWebchat;
     }
   }
 
@@ -60,8 +65,15 @@ class ConversationTile extends StatelessWidget {
         return LucideIcons.instagram;
       case 'messenger':
         return LucideIcons.messageSquare;
+      case 'telegram':
+        return LucideIcons.send;
+      case 'sms':
+        return LucideIcons.phoneCall;
+      case 'email':
+        return LucideIcons.mail;
+      case 'webchat':
       default:
-        return LucideIcons.messageSquare;
+        return LucideIcons.globe;
     }
   }
 
