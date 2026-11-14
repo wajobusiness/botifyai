@@ -434,9 +434,16 @@ class SendCampaignMessageJob implements ShouldQueue
             $extraHeaders['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
         }
 
-        $smtp = WorkspaceSmtpConfig::forWorkspace($campaign->workspace_id)
-            ?? SmtpConfiguration::getActiveFor('marketing')
-            ?? SmtpConfiguration::getActive();
+        $smtp = null;
+        if (! empty($payload['smtp_configuration_id'])) {
+            $smtp = SmtpConfiguration::find((int) $payload['smtp_configuration_id']);
+        }
+
+        if (! $smtp) {
+            $smtp = WorkspaceSmtpConfig::forWorkspace($campaign->workspace_id)
+                ?? SmtpConfiguration::getActiveFor('marketing')
+                ?? SmtpConfiguration::getActive();
+        }
 
         $fromEmail = filled($payload['from_email'] ?? '') ? $payload['from_email'] : null;
         $fromName  = filled($payload['from_name']  ?? '') ? $payload['from_name']  : null;

@@ -33,6 +33,16 @@ import {
     DollarSign,
     Calendar,
     ChevronRight,
+    Server,
+    Check,
+    FileText,
+    Settings,
+    Edit3,
+    X,
+    ChevronDown,
+    Download,
+    BookOpen,
+    Compass,
 } from 'lucide-react';
 
 const CAMPAIGN_TYPE_OPTIONS = [
@@ -132,6 +142,7 @@ export default function AdminMarketingIndex({
         subject: '',
         preheader: '',
         body: '',
+        smtp_configuration_id: '',
         from_name: '',
         from_email: '',
         reply_to: '',
@@ -155,9 +166,30 @@ export default function AdminMarketingIndex({
     const [aiSubjectSuggestions, setAiSubjectSuggestions] = useState([]);
     const [aiRecommendation, setAiRecommendation] = useState(null);
 
-    // Test Send state
+    // Test Send state & SMTP Verification
     const [testEmail, setTestEmail] = useState('');
     const [testingCampaignId, setTestingCampaignId] = useState(null);
+    const [testingSmtp, setTestingSmtp] = useState(false);
+    const [smtpTestResult, setSmtpTestResult] = useState(null);
+
+    // 30-Day Sequence Generator state
+    const [sequenceTheme, setSequenceTheme] = useState('platform_mastery');
+    const [sequenceAudience, setSequenceAudience] = useState('all_users');
+    const [sequenceSmtpId, setSequenceSmtpId] = useState('');
+    const [sequenceStartDate, setSequenceStartDate] = useState(
+        new Date(Date.now() + 86400000).toISOString().split('T')[0]
+    );
+    const [sequenceSendTime, setSequenceSendTime] = useState('09:00');
+    const [sequenceCadence, setSequenceCadence] = useState('daily');
+    const [sequenceCustomPrompt, setSequenceCustomPrompt] = useState('');
+    const [generatingSequence, setGeneratingSequence] = useState(false);
+    const [savingSequence, setSavingSequence] = useState(false);
+    const [sequenceData, setSequenceData] = useState(null);
+
+    // Day editor modal state
+    const [editingDay, setEditingDay] = useState(null);
+    const [dayModalTab, setDayModalTab] = useState('preview'); // 'preview' | 'html'
+    const [testingDayIndex, setTestingDayIndex] = useState(null);
 
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
@@ -324,6 +356,7 @@ export default function AdminMarketingIndex({
                 subject: campaignForm.subject.trim(),
                 preheader: campaignForm.preheader,
                 body: campaignForm.body,
+                smtp_configuration_id: campaignForm.smtp_configuration_id ? Number(campaignForm.smtp_configuration_id) : null,
                 from_name: campaignForm.from_name.trim() || null,
                 from_email: campaignForm.from_email.trim() || null,
                 reply_to: campaignForm.reply_to.trim() || null,
@@ -347,7 +380,7 @@ export default function AdminMarketingIndex({
         );
     };
 
-    const handleTestSend = async (campaignId) => {
+    const handleTestSend = async (campaignId, customSmtpId = null) => {
         if (!testEmail.trim()) {
             toast.error('Enter an email address to receive the test send.');
             return;
@@ -355,7 +388,8 @@ export default function AdminMarketingIndex({
         setTestingCampaignId(campaignId);
         try {
             const { data } = await window.axios.post(`${basePath}/campaigns/${campaignId}/test-send`, {
-                email: testEmail,
+                email: testEmail.trim(),
+                smtp_configuration_id: customSmtpId || (campaignForm.smtp_configuration_id ? Number(campaignForm.smtp_configuration_id) : undefined),
             });
             if (data.ok) {
                 toast.success(data.message || 'Test email sent!');
@@ -366,6 +400,147 @@ export default function AdminMarketingIndex({
             toast.error(err?.response?.data?.error || 'Test send failed.');
         } finally {
             setTestingCampaignId(null);
+        }
+    };
+
+    const handleTestSmtpConnection = async (smtpId = null) => {
+        if (!testEmail.trim()) {
+            toast.error('Please enter an email address in the test input to receive the verification email.');
+            return;
+        }
+        setTestingSmtp(true);
+        setSmtpTestResult(null);
+        try {
+            const chosenId = smtpId || (campaignForm.smtp_configuration_id ? Number(campaignForm.smtp_configuration_id) : undefined);
+            const { data } = await window.axios.post(`${basePath}/test-smtp`, {
+                email: testEmail.trim(),
+                smtp_configuration_id: chosenId,
+            });
+            if (data.ok) {
+                toast.success(data.message || 'SMTP verified successfully!');
+                setSmtpTestResult({ ok: true, message: data.message, smtp: data.smtp });
+            } else {
+                toast.error(data.error || 'SMTP test delivery failed.');
+                setSmtpTestResult({ ok: false, error: data.error });
+            }
+        } catch (err) {
+            const msg = err?.response?.data?.error || err?.message || 'SMTP test failed.';
+            toast.error(msg);
+            setSmtpTestResult({ ok: false, error: msg });
+        } finally {
+            setTestingSmtp(false);
+        }
+    };
+
+    const handleGenerateSequence = async () => {
+        setGeneratingSequence(true);
+        try {
+            const { data } = await window.axios.post(`${basePath}/generate-sequence`, {
+                theme: sequenceTheme,
+                start_date: sequenceStartDate,
+                send_time: sequenceSendTime,
+                cadence: sequenceCadence,
+                custom_prompt: sequenceTheme === 'custom_ai' ? sequenceCustomPrompt : undefined,
+                target_audience: sequenceAudience,
+            });
+
+            if (data.ok && data.sequence) {
+                setSequenceData(data.sequence);
+                toast.success(`Generated complete 30-day sequence: ${data.sequence.theme_name}!`);
+            } else {
+                toast.error('Could not generate 30-day curriculum.');
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.message || 'Failed to generate 30-day sequence.');
+        } finally {
+            setGeneratingSequence(false);
+        }
+    };
+
+    const handleStoreSequence = async (status = 'queued') => {
+        if (!sequenceData || !sequenceData.days || sequenceData.days.length === 0) {
+            toast.error('Generate a 30-day sequence first.');
+            return;
+        }
+
+        const enabledDays = sequenceData.days.filter((d) => d.enabled !== false);
+        if (enabledDays.length === 0) {
+            toast.error('At least one day in the sequence must be enabled.');
+            return;
+        }
+
+        setSavingSequence(true);
+        try {
+            const selectedSmtp = smtpConfigs.find((s) => String(s.id) === String(sequenceSmtpId));
+            const { data } = await window.axios.post(`${basePath}/store-sequence`, {
+                theme: sequenceData.theme,
+                sequence_name: sequenceData.sequence_name,
+                audience_type: sequenceAudience,
+                smtp_configuration_id: sequenceSmtpId ? Number(sequenceSmtpId) : null,
+                from_name: selectedSmtp?.from_name || null,
+                from_email: selectedSmtp?.from_email || null,
+                status: status, // 'queued' (scheduled) or 'draft'
+                days: sequenceData.days,
+            });
+
+            if (data.ok) {
+                toast.success(data.message || '30-day sequence processed!');
+                router.reload({ only: ['campaigns'] });
+                setActiveTab('campaigns');
+            } else {
+                toast.error(data.error || 'Failed to save sequence.');
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Failed to save sequence.');
+        } finally {
+            setSavingSequence(false);
+        }
+    };
+
+    const toggleDayEnabled = (dayIndex) => {
+        if (!sequenceData || !sequenceData.days) return;
+        setSequenceData((prev) => {
+            const nextDays = [...prev.days];
+            const current = nextDays[dayIndex];
+            nextDays[dayIndex] = {
+                ...current,
+                enabled: current.enabled === false ? true : false,
+            };
+            return { ...prev, days: nextDays };
+        });
+    };
+
+    const handleUpdateDay = (updatedDay) => {
+        if (!sequenceData || !sequenceData.days) return;
+        setSequenceData((prev) => {
+            const nextDays = prev.days.map((d) => (d.day === updatedDay.day ? updatedDay : d));
+            return { ...prev, days: nextDays };
+        });
+        setEditingDay(null);
+        toast.success(`Updated Day ${updatedDay.day} content.`);
+    };
+
+    const handleTestSendDay = async (dayItem, index) => {
+        if (!testEmail.trim()) {
+            toast.error('Enter an email address to receive the test send.');
+            return;
+        }
+        setTestingDayIndex(index);
+        try {
+            const selectedSmtpId = sequenceSmtpId || campaignForm.smtp_configuration_id || undefined;
+            const { data } = await window.axios.post(`${basePath}/test-smtp`, {
+                email: testEmail.trim(),
+                smtp_configuration_id: selectedSmtpId ? Number(selectedSmtpId) : undefined,
+            });
+            if (data.ok) {
+                toast.success(`Test preview for Day ${dayItem.day} sent to ${testEmail}!`);
+            } else {
+                toast.error(data.error || 'Test send failed.');
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.error || 'Test send failed.');
+        } finally {
+            setTestingDayIndex(null);
         }
     };
 
@@ -435,6 +610,14 @@ export default function AdminMarketingIndex({
                                 <Plus className="h-4 w-4" />
                                 Create Campaign
                             </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('sequences')}
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2.5 text-xs font-bold text-indigo-950 shadow hover:from-amber-300 hover:to-amber-400 transition"
+                            >
+                                <Calendar className="h-4 w-4" />
+                                30-Day Newsletters
+                            </button>
                         </div>
                     </div>
 
@@ -445,6 +628,7 @@ export default function AdminMarketingIndex({
                             { id: 'audience', label: `Audience & Buyers (${kpis.total_contacts ?? 0})`, icon: Users },
                             { id: 'segments', label: `Segments (${segments.length})`, icon: Layers },
                             { id: 'campaigns', label: `Campaign Builder & AI Studio (${campaigns.length})`, icon: Send },
+                            { id: 'sequences', label: '30-Day Newsletters (Sequences)', icon: Calendar },
                         ].map((t) => {
                             const Icon = t.icon;
                             const isActive = activeTab === t.id;
@@ -1523,6 +1707,102 @@ export default function AdminMarketingIndex({
                                     </div>
                                 </div>
 
+                                {/* SMTP Delivery Server Selection & Sender Controls */}
+                                <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900/50 dark:bg-indigo-950/20 space-y-3">
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Server className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                                            <label className="text-xs font-bold text-neutral-900 dark:text-white">
+                                                SMTP Delivery Server (Email Stream)
+                                            </label>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleTestSmtpConnection()}
+                                                disabled={testingSmtp}
+                                                className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50 disabled:opacity-50 dark:border-indigo-800 dark:bg-neutral-800 dark:text-indigo-300"
+                                            >
+                                                <RefreshCw className={`h-3 w-3 ${testingSmtp ? 'animate-spin' : ''}`} />
+                                                {testingSmtp ? 'Sending Test...' : 'Test SMTP Server'}
+                                            </button>
+                                            <Link
+                                                href={isAppRoute ? '/app/email-server' : '/admin/email-system'}
+                                                className="text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+                                            >
+                                                Manage SMTPs →
+                                            </Link>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                        <div>
+                                            <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+                                                Select Active SMTP Server
+                                            </label>
+                                            <select
+                                                value={campaignForm.smtp_configuration_id || ''}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    const selected = smtpConfigs.find((s) => String(s.id) === String(val));
+                                                    setCampaignForm((prev) => ({
+                                                        ...prev,
+                                                        smtp_configuration_id: val,
+                                                        from_name: selected?.from_name || prev.from_name,
+                                                        from_email: selected?.from_email || prev.from_email,
+                                                    }));
+                                                }}
+                                                className="mt-1 w-full rounded-xl border-neutral-300 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                            >
+                                                <option value="">Default Active Marketing SMTP (Automated Stream)</option>
+                                                {smtpConfigs.map((s) => (
+                                                    <option key={s.id} value={String(s.id)}>
+                                                        {s.name || `${s.host}:${s.port}`} {s.is_active ? '★ (Active)' : ''} ({s.from_email || s.host})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+                                                Sender Name Override (Optional)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={campaignForm.from_name}
+                                                onChange={(e) => setCampaignForm({ ...campaignForm, from_name: e.target.value })}
+                                                placeholder={isAppRoute ? 'Workspace Team' : 'Botify AI'}
+                                                className="mt-1 w-full rounded-xl border-neutral-300 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+                                                From Email Address (Optional)
+                                            </label>
+                                            <input
+                                                type="email"
+                                                value={campaignForm.from_email}
+                                                onChange={(e) => setCampaignForm({ ...campaignForm, from_email: e.target.value })}
+                                                placeholder="e.g. broadcast@botifyai.cloud"
+                                                className="mt-1 w-full rounded-xl border-neutral-300 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {smtpTestResult && (
+                                        <div
+                                            className={`rounded-lg p-2.5 text-xs ${
+                                                smtpTestResult.ok
+                                                    ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                                    : 'bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300'
+                                            }`}
+                                        >
+                                            {smtpTestResult.ok ? `✅ ${smtpTestResult.message}` : `❌ ${smtpTestResult.error}`}
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* Subject & Preheader */}
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
@@ -1897,6 +2177,17 @@ export default function AdminMarketingIndex({
                                                             <div className="text-neutral-500">
                                                                 {c.payload_json?.subject || 'No subject'}
                                                             </div>
+                                                            {c.payload_json?.smtp_configuration_id && (
+                                                                <div className="mt-1 flex items-center gap-1 text-[10px] text-indigo-600 dark:text-indigo-400">
+                                                                    <Server className="h-3 w-3" />
+                                                                    <span>
+                                                                        SMTP #{c.payload_json.smtp_configuration_id}
+                                                                        {smtpConfigs.find((s) => String(s.id) === String(c.payload_json.smtp_configuration_id))?.name
+                                                                            ? ` (${smtpConfigs.find((s) => String(s.id) === String(c.payload_json.smtp_configuration_id)).name})`
+                                                                            : ''}
+                                                                    </span>
+                                                                </div>
+                                                            )}
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
@@ -1949,6 +2240,7 @@ export default function AdminMarketingIndex({
                                                                                 subject: c.payload_json?.subject || '',
                                                                                 preheader: c.payload_json?.preheader || '',
                                                                                 body: c.payload_json?.body || '',
+                                                                                smtp_configuration_id: c.payload_json?.smtp_configuration_id ? String(c.payload_json.smtp_configuration_id) : '',
                                                                                 from_name: c.payload_json?.from_name || '',
                                                                                 from_email: c.payload_json?.from_email || '',
                                                                                 reply_to: c.payload_json?.reply_to || '',
@@ -2012,6 +2304,508 @@ export default function AdminMarketingIndex({
                                         )}
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* =========================================================
+                    TAB 5: 30-DAY NEWSLETTERS & DRIP SEQUENCES
+                   ========================================================= */}
+                {activeTab === 'sequences' && (
+                    <div className="space-y-6">
+                        {/* Theme Selection Section */}
+                        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 space-y-4">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
+                                        <Sparkles className="h-3.5 w-3.5" />
+                                        AUTOMATED 30-DAY MARKETING CURRICULUMS
+                                    </div>
+                                    <h2 className="mt-2 text-lg font-bold text-neutral-900 dark:text-white">
+                                        Choose Your 30-Day Sequence Blueprint
+                                    </h2>
+                                    <p className="text-xs text-neutral-500">
+                                        Deploy an automated 30-day email newsletter series. Pick a curated blueprint or generate custom AI copy, configure your outbound SMTP server, and schedule or draft all 30 campaigns in 1 click.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Theme Cards Grid */}
+                            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                                {[
+                                    {
+                                        id: 'platform_mastery',
+                                        title: 'Platform Mastery & Automation',
+                                        subtitle: 'WhatsApp, Instagram, Flows & AI',
+                                        description: 'Guides users step-by-step from channel connection to AI bot setup, omni-inbox mastery, and broadcast scaling.',
+                                        audience: 'all_users',
+                                        icon: Megaphone,
+                                        badge: 'Most Popular',
+                                        color: 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20',
+                                    },
+                                    {
+                                        id: 'saas_onboarding',
+                                        title: 'SaaS Onboarding & Activation',
+                                        subtitle: 'Trial to Paid Customer Conversion',
+                                        description: 'Strategic daily value touches highlighting ROI, team collaboration, advanced triggers, and premium plan upgrades.',
+                                        audience: 'only_registered_users',
+                                        icon: Award,
+                                        badge: 'High Conversion',
+                                        color: 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20',
+                                    },
+                                    {
+                                        id: 'ecommerce_growth',
+                                        title: 'E-Commerce & Social Selling',
+                                        subtitle: 'Catalog Sales, Carts & VIP Perks',
+                                        description: 'Focuses on product checkouts, abandoned cart recovery, flash weekend offers, and repeat customer retention.',
+                                        audience: 'only_buyers',
+                                        icon: ShoppingBag,
+                                        badge: 'Revenue Driver',
+                                        color: 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20',
+                                    },
+                                    {
+                                        id: 'agency_leadgen',
+                                        title: 'Agency & Consultant Playbook',
+                                        subtitle: 'Client Acquisition & Appointments',
+                                        description: 'High-ticket inbound qualification, automated calendar bookings, case studies, and retainer selling strategies.',
+                                        audience: 'all_users',
+                                        icon: DollarSign,
+                                        badge: 'High-Ticket',
+                                        color: 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/20',
+                                    },
+                                    {
+                                        id: 'custom_ai',
+                                        title: 'Custom AI-Generated Sequence',
+                                        subtitle: 'Tailored to Your Specific Goal',
+                                        description: 'Describe your exact product, industry, or launch goal and our AI assistant will design a 30-day custom curriculum.',
+                                        audience: 'all_users',
+                                        icon: Sparkles,
+                                        badge: 'AI Powered',
+                                        color: 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/20',
+                                    },
+                                ].map((t) => {
+                                    const Icon = t.icon;
+                                    const isSelected = sequenceTheme === t.id;
+                                    return (
+                                        <button
+                                            key={t.id}
+                                            type="button"
+                                            onClick={() => {
+                                                setSequenceTheme(t.id);
+                                                setSequenceAudience(t.audience);
+                                            }}
+                                            className={`relative flex flex-col text-left rounded-2xl border-2 p-4 transition ${
+                                                isSelected
+                                                    ? `${t.color} border-indigo-600 shadow-md ring-2 ring-indigo-500/30 dark:border-indigo-400`
+                                                    : 'border-neutral-200 bg-white hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between w-full">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`rounded-xl p-2 ${isSelected ? 'bg-indigo-600 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'}`}>
+                                                        <Icon className="h-4 w-4" />
+                                                    </div>
+                                                    <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+                                                        {t.badge}
+                                                    </span>
+                                                </div>
+                                                {isSelected && (
+                                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white">
+                                                        <Check className="h-3 w-3" />
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="mt-3 font-bold text-sm text-neutral-900 dark:text-white">
+                                                {t.title}
+                                            </div>
+                                            <div className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                                                {t.subtitle}
+                                            </div>
+                                            <div className="mt-1 text-xs text-neutral-500 line-clamp-2">
+                                                {t.description}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Custom AI Goal input if selected */}
+                            {sequenceTheme === 'custom_ai' && (
+                                <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-4 dark:border-purple-900 dark:bg-purple-950/20 space-y-2">
+                                    <label className="block text-xs font-bold text-purple-900 dark:text-purple-200">
+                                        Describe Your 30-Day Marketing Goal & Brand Niche
+                                    </label>
+                                    <textarea
+                                        rows={3}
+                                        value={sequenceCustomPrompt}
+                                        onChange={(e) => setSequenceCustomPrompt(e.target.value)}
+                                        placeholder="e.g. 30-day email newsletter for a real estate automation agency targeting property managers with lead conversion case studies and weekly free checklists..."
+                                        className="w-full rounded-xl border-purple-200 text-xs dark:border-purple-800 dark:bg-neutral-800 dark:text-white"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Sequence Orchestration Controls */}
+                            <div className="rounded-xl border border-neutral-200 bg-neutral-50/80 p-4 dark:border-neutral-800 dark:bg-neutral-800/40">
+                                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-5">
+                                    {/* 1. Target Audience */}
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+                                            Target Audience Cohort
+                                        </label>
+                                        <select
+                                            value={sequenceAudience}
+                                            onChange={(e) => setSequenceAudience(e.target.value)}
+                                            className="mt-1 w-full rounded-xl border-neutral-300 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                        >
+                                            {AUDIENCE_COHORT_OPTIONS.map((c) => (
+                                                <option key={c.value} value={c.value}>
+                                                    {c.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* 2. SMTP Delivery Server */}
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+                                            SMTP Delivery Server
+                                        </label>
+                                        <select
+                                            value={sequenceSmtpId}
+                                            onChange={(e) => setSequenceSmtpId(e.target.value)}
+                                            className="mt-1 w-full rounded-xl border-neutral-300 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                        >
+                                            <option value="">Default Active SMTP (Marketing)</option>
+                                            {smtpConfigs.map((s) => (
+                                                <option key={s.id} value={String(s.id)}>
+                                                    {s.name || `${s.host}:${s.port}`} {s.is_active ? '★' : ''} ({s.from_email || s.host})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* 3. Start Date */}
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+                                            Sequence Start Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={sequenceStartDate}
+                                            onChange={(e) => setSequenceStartDate(e.target.value)}
+                                            className="mt-1 w-full rounded-xl border-neutral-300 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                        />
+                                    </div>
+
+                                    {/* 4. Daily Send Time */}
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+                                            Daily Send Time
+                                        </label>
+                                        <input
+                                            type="time"
+                                            value={sequenceSendTime}
+                                            onChange={(e) => setSequenceSendTime(e.target.value)}
+                                            className="mt-1 w-full rounded-xl border-neutral-300 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                        />
+                                    </div>
+
+                                    {/* 5. Cadence */}
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+                                            Cadence Spacing
+                                        </label>
+                                        <select
+                                            value={sequenceCadence}
+                                            onChange={(e) => setSequenceCadence(e.target.value)}
+                                            className="mt-1 w-full rounded-xl border-neutral-300 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                        >
+                                            <option value="daily">Daily (30 Days Total)</option>
+                                            <option value="every_2_days">Every 2 Days (60 Days Total)</option>
+                                            <option value="weekdays">Weekdays Only (Mon–Fri)</option>
+                                            <option value="weekly">Weekly (30 Weeks Total)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-neutral-200 pt-3 dark:border-neutral-700">
+                                    <div className="flex items-center gap-2 text-xs text-neutral-500">
+                                        <Clock className="h-4 w-4 text-indigo-600" />
+                                        <span>
+                                            Generates 30 structured, responsive HTML newsletters staggered across your schedule.
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        disabled={generatingSequence}
+                                        onClick={handleGenerateSequence}
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-indigo-700 disabled:opacity-50"
+                                    >
+                                        <Sparkles className={`h-4 w-4 ${generatingSequence ? 'animate-spin' : ''}`} />
+                                        {generatingSequence ? 'Generating 30 Days...' : 'Generate 30-Day Sequence Curriculum'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Generated Sequence Preview & Batch Actions */}
+                        {sequenceData && sequenceData.days && (
+                            <div className="space-y-4">
+                                {/* Master Control Bar */}
+                                <div className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-900 to-purple-900 p-5 text-white shadow-md">
+                                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                        <div>
+                                            <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-indigo-100">
+                                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                                                CURRICULUM READY FOR LAUNCH
+                                            </div>
+                                            <h3 className="mt-2 text-lg font-bold sm:text-xl">
+                                                {sequenceData.sequence_name}
+                                            </h3>
+                                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-indigo-200">
+                                                <span>📅 Start: {new Date(sequenceData.start_date).toLocaleDateString()}</span>
+                                                <span>⏰ Daily Time: {sequenceData.send_time}</span>
+                                                <span>🔁 Cadence: {sequenceData.cadence.replace(/_/g, ' ')}</span>
+                                                <span>👥 Audience: {sequenceAudience}</span>
+                                                <span>
+                                                    📧 SMTP:{' '}
+                                                    {sequenceSmtpId
+                                                        ? smtpConfigs.find((s) => String(s.id) === String(sequenceSmtpId))?.name || `Server #${sequenceSmtpId}`
+                                                        : 'Default Active SMTP'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-2.5">
+                                            <button
+                                                type="button"
+                                                disabled={savingSequence}
+                                                onClick={() => handleStoreSequence('draft')}
+                                                className="rounded-xl bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20 disabled:opacity-50 transition"
+                                            >
+                                                Save All 30 as Drafts
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={savingSequence}
+                                                onClick={() => handleStoreSequence('queued')}
+                                                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-xs font-bold text-white shadow-lg hover:bg-emerald-600 disabled:opacity-50 transition"
+                                            >
+                                                <Send className="h-4 w-4" />
+                                                {savingSequence ? 'Scheduling Campaigns...' : 'Schedule All 30 Newsletters'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 30-Day Cards Grid */}
+                                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                                    {sequenceData.days.map((d, idx) => {
+                                        const isEnabled = d.enabled !== false;
+                                        return (
+                                            <div
+                                                key={d.day}
+                                                className={`flex flex-col justify-between rounded-2xl border p-4.5 shadow-sm transition ${
+                                                    isEnabled
+                                                        ? 'border-neutral-200 bg-white hover:border-indigo-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-indigo-700'
+                                                        : 'border-neutral-200 bg-neutral-100/70 opacity-60 dark:border-neutral-800 dark:bg-neutral-800/40'
+                                                }`}
+                                            >
+                                                <div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-0.5 text-[11px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                                                            Day {d.day} of 30
+                                                        </span>
+                                                        <label className="inline-flex items-center gap-1.5 text-[11px] font-medium text-neutral-500 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isEnabled}
+                                                                onChange={() => toggleDayEnabled(idx)}
+                                                                className="rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500"
+                                                            />
+                                                            {isEnabled ? 'Active' : 'Skipped'}
+                                                        </label>
+                                                    </div>
+
+                                                    <h4 className="mt-2.5 font-bold text-sm text-neutral-900 dark:text-white line-clamp-1">
+                                                        {d.title}
+                                                    </h4>
+
+                                                    <div className="mt-1 text-xs text-neutral-600 dark:text-neutral-300 font-medium line-clamp-1">
+                                                        ✉️ {d.subject}
+                                                    </div>
+
+                                                    <div className="mt-1 text-[11px] text-neutral-500 line-clamp-2">
+                                                        {d.preheader || 'Includes action plan, pro tip, and dashboard CTA.'}
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-4 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+                                                    <div className="flex items-center justify-between text-[11px] text-neutral-500 mb-2.5">
+                                                        <span className="flex items-center gap-1">
+                                                            <Calendar className="h-3 w-3 text-indigo-500" />
+                                                            {d.scheduled_formatted || new Date(d.scheduled_at).toLocaleDateString()}
+                                                        </span>
+                                                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                                            Ready
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setEditingDay(d);
+                                                                setDayModalTab('preview');
+                                                            }}
+                                                            className="flex-1 rounded-xl border border-neutral-200 bg-neutral-50 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                                                        >
+                                                            Preview & Edit
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            disabled={testingDayIndex === idx}
+                                                            onClick={() => handleTestSendDay(d, idx)}
+                                                            className="rounded-xl border border-indigo-200 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 dark:border-indigo-800 dark:text-indigo-300"
+                                                        >
+                                                            {testingDayIndex === idx ? 'Sending...' : 'Test Send'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* =========================================================
+                    DAY PREVIEW & EDIT MODAL
+                   ========================================================= */}
+                {editingDay && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto">
+                        <div className="relative w-full max-w-3xl rounded-2xl border border-neutral-200 bg-white p-6 shadow-2xl dark:border-neutral-800 dark:bg-neutral-900 my-8">
+                            <div className="flex items-center justify-between border-b border-neutral-200 pb-3 dark:border-neutral-800">
+                                <div className="flex items-center gap-2">
+                                    <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                                        Day {editingDay.day}
+                                    </span>
+                                    <h3 className="text-base font-bold text-neutral-900 dark:text-white">
+                                        {editingDay.title}
+                                    </h3>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingDay(null)}
+                                    className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            <div className="mt-4 flex items-center gap-2 border-b border-neutral-200 pb-2 dark:border-neutral-800">
+                                <button
+                                    type="button"
+                                    onClick={() => setDayModalTab('preview')}
+                                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                                        dayModalTab === 'preview'
+                                            ? 'bg-indigo-600 text-white'
+                                            : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
+                                    }`}
+                                >
+                                    <Eye className="inline h-3.5 w-3.5 mr-1" />
+                                    Rendered Email Preview
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setDayModalTab('html')}
+                                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                                        dayModalTab === 'html'
+                                            ? 'bg-indigo-600 text-white'
+                                            : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
+                                    }`}
+                                >
+                                    <Edit3 className="inline h-3.5 w-3.5 mr-1" />
+                                    Edit Copy & HTML
+                                </button>
+                            </div>
+
+                            <div className="mt-4 space-y-4">
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                                            Subject Line
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={editingDay.subject}
+                                            onChange={(e) =>
+                                                setEditingDay({ ...editingDay, subject: e.target.value })
+                                            }
+                                            className="mt-1 w-full rounded-xl border-neutral-300 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                                            Preheader (Preview Text)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={editingDay.preheader || ''}
+                                            onChange={(e) =>
+                                                setEditingDay({ ...editingDay, preheader: e.target.value })
+                                            }
+                                            className="mt-1 w-full rounded-xl border-neutral-300 text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+
+                                {dayModalTab === 'preview' ? (
+                                    <div
+                                        className="max-h-[420px] rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950 overflow-y-auto"
+                                        dangerouslySetInnerHTML={{ __html: editingDay.body }}
+                                    />
+                                ) : (
+                                    <div>
+                                        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                            Email HTML Source
+                                        </label>
+                                        <textarea
+                                            rows={14}
+                                            value={editingDay.body}
+                                            onChange={(e) =>
+                                                setEditingDay({ ...editingDay, body: e.target.value })
+                                            }
+                                            className="w-full rounded-xl border-neutral-300 font-mono text-xs dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+                                <div className="text-xs text-neutral-500">
+                                    Scheduled for: {editingDay.scheduled_formatted || editingDay.scheduled_at}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingDay(null)}
+                                        className="rounded-xl border border-neutral-300 px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleUpdateDay(editingDay)}
+                                        className="rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white shadow hover:bg-indigo-700"
+                                    >
+                                        Save Day Changes
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -188,6 +188,9 @@ Route::delete('/marketing/campaigns/{campaign}', [\App\Http\Controllers\Admin\Ad
 Route::post('/marketing/campaigns/{campaign}/test-send', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'testSendCampaign'])->name('marketing.campaigns.test-send');
 Route::post('/marketing/contacts/{contact}/toggle-opt-in', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'toggleContactOptIn'])->name('marketing.contacts.toggle-opt-in');
 Route::post('/marketing/ai-assist', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'aiAssist'])->name('marketing.ai-assist');
+Route::post('/marketing/test-smtp', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'testSmtpConnection'])->name('marketing.test-smtp');
+Route::post('/marketing/generate-sequence', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'generateSequence'])->name('marketing.generate-sequence');
+Route::post('/marketing/store-sequence', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'storeSequence'])->name('marketing.store-sequence');
 
 // Email System (SMTP + Email Templates)
 Route::get('/email-system', [EmailSystemController::class, 'index'])->name('email-system.index')->middleware('permission:view_email_settings');

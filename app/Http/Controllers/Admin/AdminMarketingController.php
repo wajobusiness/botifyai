@@ -21,6 +21,7 @@ use App\Modules\Shared\Models\ContactTag;
 use App\Modules\Shared\Models\Segment;
 use App\Modules\Shared\Services\SegmentResolver;
 use App\Services\Mail\MailService;
+use App\Services\Marketing\NewsletterSequenceService;
 use App\Services\Marketing\PlatformAudienceSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -609,6 +610,7 @@ class AdminMarketingController extends Controller
             'subject' => ['required', 'string', 'max:255'],
             'preheader' => ['nullable', 'string', 'max:255'],
             'body' => ['required', 'string'],
+            'smtp_configuration_id' => ['nullable', 'integer'],
             'from_name' => ['nullable', 'string', 'max:128'],
             'from_email' => ['nullable', 'email', 'max:191'],
             'reply_to' => ['nullable', 'email', 'max:191'],
@@ -623,6 +625,7 @@ class AdminMarketingController extends Controller
             'subject' => $validated['subject'],
             'preheader' => $validated['preheader'] ?? '',
             'body' => $validated['body'],
+            'smtp_configuration_id' => ! empty($validated['smtp_configuration_id']) ? (int) $validated['smtp_configuration_id'] : null,
             'from_name' => $validated['from_name'] ?? config('app.name'),
             'from_email' => $validated['from_email'] ?? null,
             'reply_to' => $validated['reply_to'] ?? null,
@@ -819,9 +822,16 @@ class AdminMarketingController extends Controller
             $fromName = filled($payload['from_name'] ?? '') ? $payload['from_name'] : null;
             $replyTo = filled($payload['reply_to'] ?? '') ? $payload['reply_to'] : null;
 
-            $smtp = SmtpConfiguration::getActiveFor('marketing')
-                ?? SmtpConfiguration::getActive()
-                ?? \App\Modules\Broadcasting\Models\WorkspaceSmtpConfig::forWorkspace($workspaceId);
+            $smtp = null;
+            $requestedSmtpId = $request->input('smtp_configuration_id') ?? ($payload['smtp_configuration_id'] ?? null);
+            if (! empty($requestedSmtpId)) {
+                $smtp = SmtpConfiguration::find((int) $requestedSmtpId);
+            }
+            if (! $smtp) {
+                $smtp = SmtpConfiguration::getActiveFor('marketing')
+                    ?? SmtpConfiguration::getActive()
+                    ?? \App\Modules\Broadcasting\Models\WorkspaceSmtpConfig::forWorkspace($workspaceId);
+            }
 
             if ($smtp) {
                 app(MailService::class)->sendRaw($smtp, $contact->email, $subject, $body, [], $fromEmail, $fromName, $replyTo);
@@ -1085,6 +1095,150 @@ HTML;
             'recommended_send_time' => 'Tuesday or Thursday at 10:00 AM recipient local time',
             'body' => $html,
         ];
+    }
+
+    /**
+     * POST /admin/marketing/test-smtp
+     * Verify SMTP connectivity and send an immediate verification test email.
+     */
+    public function testSmtpConnection(Request $request): JsonResponse
+    {
+        $this->assertPlatformAdmin($request);
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+            'smtp_configuration_id' => ['nullable', 'integer'],
+        ]);
+
+        $smtp = null;
+        if (! empty($validated['smtp_configuration_id'])) {
+            $smtp = SmtpConfiguration::find($validated['smtp_configuration_id']);
+        }
+        if (! $smtp) {
+            $smtp = SmtpConfiguration::getActiveFor('marketing') ?? SmtpConfiguration::getActive();
+        }
+
+        if (! $smtp) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'No active SMTP server found. Please add or enable an SMTP server in Email System.',
+            ], 422);
+        }
+
+        try {
+            $appName = config('app.name', 'Botify AI');
+            $subject = "[{$appName}] SMTP Delivery Test: Connection Verified";
+            $fromEmail = $smtp->from_email ?: (filter_var((string) $smtp->username, FILTER_VALIDATE_EMAIL) ? $smtp->username : config('mail.from.address'));
+            $fromName = $smtp->from_name ?: $appName;
+
+            $body = '<div style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;max-width:580px;margin:0 auto;padding:28px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;color:#0f172a;">'
+                . '<div style="display:inline-block;background:#ecfdf5;color:#047857;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.05em;margin-bottom:12px;">✅ SMTP VERIFIED</div>'
+                . '<h2 style="color:#1e1b4b;margin:0 0 12px;font-size:20px;">SMTP Delivery Server is Working!</h2>'
+                . '<p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 16px;">This test message confirms that your SMTP delivery server <strong>' . e($smtp->name ?: $smtp->host) . '</strong> (' . e($smtp->host . ':' . $smtp->port) . ') is configured properly and successfully transmitting marketing & broadcast emails for ' . e($appName) . '.</p>'
+                . '<table style="width:100%;font-size:12px;color:#64748b;border-top:1px solid #e2e8f0;margin-top:16px;padding-top:12px;">'
+                . '<tr><td><strong>Host / Port:</strong></td><td>' . e($smtp->host . ':' . $smtp->port) . '</td></tr>'
+                . '<tr><td><strong>From:</strong></td><td>' . e("{$fromName} <{$fromEmail}>") . '</td></tr>'
+                . '<tr><td><strong>Sent At:</strong></td><td>' . now()->toRfc2822String() . '</td></tr>'
+                . '</table>'
+                . '</div>';
+
+            app(MailService::class)->sendRaw($smtp, $validated['email'], $subject, $body, [], $fromEmail, $fromName);
+
+            return response()->json([
+                'ok' => true,
+                'message' => "Test email successfully delivered to {$validated['email']} via {$smtp->host}:{$smtp->port}!",
+                'smtp' => [
+                    'id' => $smtp->id,
+                    'name' => $smtp->name ?: $smtp->host,
+                    'host' => $smtp->host,
+                    'port' => $smtp->port,
+                    'from_email' => $fromEmail,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('AdminMarketingController::testSmtpConnection failed', [
+                'smtp_id' => $smtp->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'ok' => false,
+                'error' => 'SMTP Test Failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * POST /admin/marketing/generate-sequence
+     * Generate the complete 30-day curriculum with daily schedule and responsive HTML templates.
+     */
+    public function generateSequence(Request $request, NewsletterSequenceService $sequenceService): JsonResponse
+    {
+        $this->assertPlatformAdmin($request);
+        $validated = $request->validate([
+            'theme' => ['required', 'string'],
+            'start_date' => ['nullable', 'date'],
+            'send_time' => ['nullable', 'string'],
+            'cadence' => ['nullable', 'string', 'in:daily,every_2_days,weekdays,weekly'],
+            'custom_prompt' => ['nullable', 'string', 'max:2000'],
+            'target_audience' => ['nullable', 'string', 'max:64'],
+        ]);
+
+        $workspaceId = $this->syncService->platformWorkspaceId();
+        $sequence = $sequenceService->generateCurriculum(
+            theme: $validated['theme'],
+            startDate: $validated['start_date'] ?? today()->addDay()->toDateString(),
+            sendTime: $validated['send_time'] ?? '09:00',
+            cadence: $validated['cadence'] ?? 'daily',
+            customPrompt: $validated['custom_prompt'] ?? null,
+            targetAudience: $validated['target_audience'] ?? 'all_users',
+            workspaceId: $workspaceId,
+        );
+
+        return response()->json([
+            'ok' => true,
+            'sequence' => $sequence,
+        ]);
+    }
+
+    /**
+     * POST /admin/marketing/store-sequence
+     * Batch create or schedule the 30 campaigns into the platform database.
+     */
+    public function storeSequence(Request $request, NewsletterSequenceService $sequenceService): JsonResponse
+    {
+        $this->assertPlatformAdmin($request);
+        $validated = $request->validate([
+            'theme' => ['required', 'string'],
+            'sequence_name' => ['required', 'string', 'max:128'],
+            'audience_type' => ['required', 'string', 'in:' . implode(',', self::AUDIENCE_TYPES)],
+            'audience_ref' => ['nullable', 'string', 'max:2000'],
+            'smtp_configuration_id' => ['nullable', 'integer'],
+            'from_name' => ['nullable', 'string', 'max:128'],
+            'from_email' => ['nullable', 'email', 'max:191'],
+            'reply_to' => ['nullable', 'email', 'max:191'],
+            'status' => ['required', 'in:draft,queued'],
+            'days' => ['required', 'array', 'min:1'],
+            'days.*.day' => ['required', 'integer'],
+            'days.*.title' => ['required', 'string', 'max:255'],
+            'days.*.subject' => ['required', 'string', 'max:255'],
+            'days.*.preheader' => ['nullable', 'string', 'max:255'],
+            'days.*.body' => ['required', 'string'],
+            'days.*.scheduled_at' => ['required', 'date'],
+            'days.*.enabled' => ['nullable', 'boolean'],
+        ]);
+
+        $workspaceId = $this->syncService->platformWorkspaceId();
+        $result = $sequenceService->createSequenceCampaigns(
+            config: $validated,
+            workspaceId: $workspaceId,
+            createdBy: $request->user()?->id,
+        );
+
+        return response()->json([
+            'ok' => true,
+            'message' => "Successfully processed 30-day sequence: {$result['count']} campaign(s) " . ($validated['status'] === 'queued' ? 'scheduled.' : 'saved as drafts.'),
+            'summary' => $result,
+        ]);
     }
 }
 

@@ -45,6 +45,9 @@ Route::middleware(['verified'])->group(function () {
     Route::post('/marketing/campaigns/{campaign}/test-send', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'testSendCampaign'])->name('marketing.campaigns.test-send');
     Route::post('/marketing/contacts/{contact}/toggle-opt-in', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'toggleContactOptIn'])->name('marketing.contacts.toggle-opt-in');
     Route::post('/marketing/ai-assist', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'aiAssist'])->name('marketing.ai-assist');
+    Route::post('/marketing/test-smtp', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'testSmtpConnection'])->name('marketing.test-smtp');
+    Route::post('/marketing/generate-sequence', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'generateSequence'])->name('marketing.generate-sequence');
+    Route::post('/marketing/store-sequence', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'storeSequence'])->name('marketing.store-sequence');
 
     // Botify Academy (Free Learning Hub)
     Route::get('/academy', [ClientAcademyController::class, 'index'])->name('academy.index');
