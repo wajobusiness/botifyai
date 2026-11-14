@@ -185,6 +185,8 @@ Route::post('/marketing/campaigns', [\App\Http\Controllers\Admin\AdminMarketingC
 Route::post('/marketing/campaigns/{campaign}/launch', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'launchCampaign'])->name('marketing.campaigns.launch');
 Route::post('/marketing/campaigns/{campaign}/pause', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'pauseCampaign'])->name('marketing.campaigns.pause');
 Route::delete('/marketing/campaigns/{campaign}', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'destroyCampaign'])->name('marketing.campaigns.destroy');
+Route::get('/marketing/campaigns/{campaign}/recipients', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'campaignRecipients'])->name('marketing.campaigns.recipients');
+Route::post('/marketing/campaigns/{campaign}/retry-failed', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'retryFailedRecipients'])->name('marketing.campaigns.retry-failed');
 Route::post('/marketing/campaigns/{campaign}/test-send', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'testSendCampaign'])->name('marketing.campaigns.test-send');
 Route::post('/marketing/contacts/{contact}/toggle-opt-in', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'toggleContactOptIn'])->name('marketing.contacts.toggle-opt-in');
 Route::post('/marketing/ai-assist', [\App\Http\Controllers\Admin\AdminMarketingController::class, 'aiAssist'])->name('marketing.ai-assist');

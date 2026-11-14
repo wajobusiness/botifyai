@@ -76,11 +76,19 @@ class FinalizeCampaignJob implements ShouldQueue
 
         $newStatus = ($total === 0 || ($failed > 0 && $sent === 0)) ? 'failed' : 'completed';
 
+        $firstFail = CampaignRecipient::where('campaign_id', $campaign->id)
+            ->where('status', 'failed')
+            ->whereNotNull('failed_reason')
+            ->value('failed_reason');
+
         // Atomic guard: only one concurrent worker may finalize the campaign.
         // If another worker already set the status, affected=0 and we skip the event.
         $affected = Campaign::where('id', $campaign->id)
             ->whereNotIn('status', ['completed', 'failed', 'draft'])
-            ->update(['status' => $newStatus]);
+            ->update([
+                'status' => $newStatus,
+                'totals_json' => array_merge($campaign->totals_json ?? [], array_filter(['failed_reason' => $firstFail])),
+            ]);
 
         if ($affected === 0) {
             return;

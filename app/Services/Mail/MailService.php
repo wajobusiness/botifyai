@@ -129,7 +129,9 @@ class MailService
                 'error' => $e->getMessage(),
                 'smtp_id' => $smtp->id,
             ]);
-            throw $e;
+            $host = $smtp->host ?? 'unknown-host';
+            $port = $smtp->port ?? 'unknown-port';
+            throw new \RuntimeException("SMTP ({$host}:{$port}) error: " . $e->getMessage(), (int) $e->getCode(), $e);
         }
     }
 
@@ -171,7 +173,7 @@ class MailService
             $encryption = null;
         }
 
-        $port = (int) $smtp->port;
+        $port = (int) ($smtp->port ?: 587);
         $scheme = ($encryption === 'ssl' || $port === 465) ? 'smtps' : 'smtp';
 
         $manager = app('mail.manager');
@@ -180,29 +182,43 @@ class MailService
             $manager->purge('smtp');
         }
 
+        $host = trim((string) $smtp->host);
+        $username = trim((string) $smtp->username);
+        $fromEmail = ! empty($smtp->from_email)
+            ? trim((string) $smtp->from_email)
+            : (filter_var($username, FILTER_VALIDATE_EMAIL) ? $username : config('mail.from.address', 'noreply@botifyai.cloud'));
+        $fromName = ! empty($smtp->from_name) ? trim((string) $smtp->from_name) : config('mail.from.name', config('app.name'));
+
         $mailerConfig = [
             'transport' => 'smtp',
             'scheme' => $scheme,
-            'host' => $smtp->host,
+            'host' => $host,
             'port' => $port,
-            'username' => $smtp->username,
+            'username' => $username,
             'password' => $smtp->getDecryptedPassword(),
             'encryption' => $encryption,
-            'timeout' => null,
+            'timeout' => 20,
+            'stream' => [
+                'ssl' => [
+                    'allow_self_signed' => true,
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                ],
+            ],
             'from' => [
-                'address' => $smtp->from_email,
-                'name' => $smtp->from_name,
+                'address' => $fromEmail,
+                'name' => $fromName,
             ],
         ];
 
         Config::set('mail.mailers.dynamic_smtp', $mailerConfig);
         Config::set('mail.mailers.smtp', $mailerConfig);
 
-        if (! empty($smtp->from_email)) {
-            Config::set('mail.from.address', $smtp->from_email);
+        if (! empty($fromEmail)) {
+            Config::set('mail.from.address', $fromEmail);
         }
-        if (! empty($smtp->from_name)) {
-            Config::set('mail.from.name', $smtp->from_name);
+        if (! empty($fromName)) {
+            Config::set('mail.from.name', $fromName);
         }
     }
 

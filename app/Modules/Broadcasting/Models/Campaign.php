@@ -88,8 +88,13 @@ class Campaign extends Model
             ->whereNotNull('opted_out_at')
             ->count();
 
+        $firstFail = $this->recipients()
+            ->where('status', 'failed')
+            ->whereNotNull('failed_reason')
+            ->value('failed_reason') ?? ($this->totals_json['failed_reason'] ?? null);
+
         $this->update([
-            'totals_json' => [
+            'totals_json' => array_filter([
                 'total'        => array_sum($counts),
                 'queued'       => $counts['queued'] ?? 0,
                 'sent'         => $counts['sent'] ?? 0,
@@ -98,7 +103,8 @@ class Campaign extends Model
                 'failed'       => $counts['failed'] ?? 0,
                 'clicked'      => $clicked,
                 'unsubscribed' => $unsubscribed,
-            ],
+                'failed_reason' => $firstFail,
+            ], fn ($v) => $v !== null),
         ]);
     }
 }

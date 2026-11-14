@@ -42,6 +42,8 @@ Route::middleware(['verified'])->group(function () {
     Route::post('/marketing/campaigns/{campaign}/launch', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'launchCampaign'])->name('marketing.campaigns.launch');
     Route::post('/marketing/campaigns/{campaign}/pause', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'pauseCampaign'])->name('marketing.campaigns.pause');
     Route::delete('/marketing/campaigns/{campaign}', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'destroyCampaign'])->name('marketing.campaigns.destroy');
+    Route::get('/marketing/campaigns/{campaign}/recipients', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'campaignRecipients'])->name('marketing.campaigns.recipients');
+    Route::post('/marketing/campaigns/{campaign}/retry-failed', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'retryFailedRecipients'])->name('marketing.campaigns.retry-failed');
     Route::post('/marketing/campaigns/{campaign}/test-send', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'testSendCampaign'])->name('marketing.campaigns.test-send');
     Route::post('/marketing/contacts/{contact}/toggle-opt-in', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'toggleContactOptIn'])->name('marketing.contacts.toggle-opt-in');
     Route::post('/marketing/ai-assist', [\App\Http\Controllers\Client\WorkspaceMarketingController::class, 'aiAssist'])->name('marketing.ai-assist');

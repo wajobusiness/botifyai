@@ -338,10 +338,50 @@ class AdminMarketingController extends Controller
                 if (in_array($c->status, ['queued', 'sending', 'paused'], true)) {
                     $c->updateTotals();
                     $c->refresh();
+
+                    $queuedCount = CampaignRecipient::where('campaign_id', $c->id)->where('status', 'queued')->count();
+                    if ($queuedCount === 0 && $c->status === 'sending') {
+                        $totals = $c->totals_json ?? [];
+                        $sent = (int) ($totals['sent'] ?? 0) + (int) ($totals['delivered'] ?? 0) + (int) ($totals['read'] ?? 0);
+                        $failed = (int) ($totals['failed'] ?? 0);
+                        $total = (int) ($totals['total'] ?? 0);
+                        $firstFail = CampaignRecipient::where('campaign_id', $c->id)->where('status', 'failed')->whereNotNull('failed_reason')->value('failed_reason');
+                        $newStatus = ($total === 0 || ($failed > 0 && $sent === 0)) ? 'failed' : 'completed';
+                        $c->update([
+                            'status' => $newStatus,
+                            'totals_json' => array_merge($c->totals_json ?? [], array_filter(['failed_reason' => $firstFail])),
+                        ]);
+                        $c->refresh();
+                    } elseif ($queuedCount > 0 && $c->status === 'sending') {
+                        try {
+                            $personalizer = app(\App\Modules\Broadcasting\Services\CampaignPersonalizer::class);
+                            $pendingIds = CampaignRecipient::where('campaign_id', $c->id)->where('status', 'queued')->limit(25)->pluck('contact_id');
+                            foreach ($pendingIds as $cid) {
+                                (new \App\Modules\Broadcasting\Jobs\SendCampaignMessageJob($c->id, (int) $cid))->handle($personalizer);
+                            }
+                            $c->updateTotals();
+                            $remQueued = CampaignRecipient::where('campaign_id', $c->id)->where('status', 'queued')->count();
+                            if ($remQueued === 0) {
+                                $totals = $c->totals_json ?? [];
+                                $sent = (int) ($totals['sent'] ?? 0) + (int) ($totals['delivered'] ?? 0) + (int) ($totals['read'] ?? 0);
+                                $failed = (int) ($totals['failed'] ?? 0);
+                                $firstFail = CampaignRecipient::where('campaign_id', $c->id)->where('status', 'failed')->whereNotNull('failed_reason')->value('failed_reason');
+                                $newStatus = ($failed > 0 && $sent === 0) ? 'failed' : 'completed';
+                                $c->update([
+                                    'status' => $newStatus,
+                                    'totals_json' => array_merge($c->totals_json ?? [], array_filter(['failed_reason' => $firstFail])),
+                                ]);
+                            }
+                            $c->refresh();
+                        } catch (\Throwable) {
+                        }
+                    }
                 }
 
                 $clicked = CampaignRecipient::where('campaign_id', $c->id)->whereNotNull('clicked_at')->count();
                 $unsub = CampaignRecipient::where('campaign_id', $c->id)->whereNotNull('opted_out_at')->count();
+                $firstFailReason = $c->totals_json['failed_reason']
+                    ?? CampaignRecipient::where('campaign_id', $c->id)->where('status', 'failed')->whereNotNull('failed_reason')->value('failed_reason');
 
                 return [
                     'id' => $c->id,
@@ -355,10 +395,11 @@ class AdminMarketingController extends Controller
                     'schedule_at' => $c->schedule_at?->toIso8601String(),
                     'recurrence_rule' => $c->recurrence_rule ?? null,
                     'status' => $c->status,
-                    'totals_json' => array_merge($c->totals_json ?? [], [
+                    'totals_json' => array_merge($c->totals_json ?? [], array_filter([
                         'clicked' => $clicked,
                         'unsubscribed' => $unsub,
-                    ]),
+                        'failed_reason' => $firstFailReason,
+                    ])),
                     'created_at' => $c->created_at?->toIso8601String(),
                 ];
             });
@@ -780,6 +821,63 @@ class AdminMarketingController extends Controller
         $model->delete();
 
         return back()->with('success', 'Campaign deleted.');
+    }
+
+    /**
+     * GET /admin/marketing/campaigns/{campaign}/recipients
+     * View delivery status and error diagnostics for each recipient.
+     */
+    public function campaignRecipients(string|int $campaign): JsonResponse
+    {
+        $model = $this->resolvePlatformCampaign($campaign);
+        $recipients = CampaignRecipient::where('campaign_id', $model->id)
+            ->with(['contact:id,first_name,last_name,email'])
+            ->latest('id')
+            ->limit(100)
+            ->get()
+            ->map(fn ($r) => [
+                'id' => $r->id,
+                'email' => $r->contact?->email ?? 'Unknown',
+                'name' => $r->contact?->full_name ?? 'Contact',
+                'status' => $r->status,
+                'failed_reason' => $r->failed_reason,
+                'sent_at' => $r->sent_at?->toIso8601String(),
+                'opened_at' => $r->opened_at?->toIso8601String(),
+                'clicked_at' => $r->clicked_at?->toIso8601String(),
+            ]);
+
+        return response()->json([
+            'campaign' => [
+                'id' => $model->id,
+                'name' => $model->name,
+                'status' => $model->status,
+                'totals' => $model->totals_json,
+            ],
+            'recipients' => $recipients,
+        ]);
+    }
+
+    /**
+     * POST /admin/marketing/campaigns/{campaign}/retry-failed
+     * Reset non-opted-out failed recipients and re-launch campaign delivery.
+     */
+    public function retryFailedRecipients(string|int $campaign): RedirectResponse
+    {
+        $model = $this->resolvePlatformCampaign($campaign);
+        CampaignRecipient::where('campaign_id', $model->id)
+            ->where('status', 'failed')
+            ->where(function ($q) {
+                $q->whereNull('failed_reason')->orWhere('failed_reason', '!=', 'opted_out');
+            })
+            ->update([
+                'status' => 'queued',
+                'failed_reason' => null,
+                'updated_at' => now(),
+            ]);
+
+        $model->update(['status' => 'queued']);
+
+        return $this->executeCampaignLaunch($model);
     }
 
     /**

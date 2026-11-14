@@ -36,11 +36,12 @@ class LaunchCampaignJob implements ShouldQueue
         $contactIds = $this->resolveAudience($campaign);
 
         if (empty($contactIds)) {
+            $audienceLabel = (string) ($campaign->payload_json['audience_type'] ?? $campaign->audience_type);
             $campaign->update([
                 'status' => 'failed',
                 'totals_json' => array_merge($campaign->totals_json ?? [], [
                     'total' => 0,
-                    'failed_reason' => 'No matching contacts for audience.',
+                    'failed_reason' => 'No deliverable recipients matched cohort "' . $audienceLabel . '".',
                 ]),
             ]);
 
@@ -59,7 +60,7 @@ class LaunchCampaignJob implements ShouldQueue
         $totalChunks = 0;
         $totalNewContacts = 0;
 
-        collect($contactIds)->chunk(1000)->each(function ($chunk, $i) use ($campaign, $now, &$totalChunks, &$totalNewContacts) {
+        collect($contactIds)->chunk(1000)->each(function ($chunk, $i) use ($campaign, $now, &$totalChunks, &$totalNewContacts, $contactIds) {
             $rows = $chunk->map(fn ($contactId) => [
                 'campaign_id' => $campaign->id,
                 'contact_id' => $contactId,
@@ -97,12 +98,17 @@ class LaunchCampaignJob implements ShouldQueue
             $totalNewContacts += count($queuedContactIds);
             $totalChunks++;
 
-            if (! app()->runningUnitTests() && count($contactIds) <= 100) {
+            if (! app()->runningUnitTests() && count($contactIds) <= 250) {
                 $personalizer = app(\App\Modules\Broadcasting\Services\CampaignPersonalizer::class);
                 foreach ($queuedContactIds as $cid) {
                     try {
                         (new SendCampaignMessageJob($campaign->id, (int) $cid))->handle($personalizer);
-                    } catch (\Throwable) {
+                    } catch (\Throwable $e) {
+                        Log::warning('SendCampaignMessageJob inline exception', [
+                            'campaign_id' => $campaign->id,
+                            'contact_id' => $cid,
+                            'error' => $e->getMessage(),
+                        ]);
                     }
                 }
             } else {
@@ -112,8 +118,40 @@ class LaunchCampaignJob implements ShouldQueue
             }
         });
 
-        if ($totalNewContacts === 0 || (! app()->runningUnitTests() && count($contactIds) <= 100)) {
+        if ($totalNewContacts === 0 || (! app()->runningUnitTests() && count($contactIds) <= 250)) {
             $campaign->updateTotals();
+
+            $totals = CampaignRecipient::where('campaign_id', $campaign->id)
+                ->selectRaw('status, count(*) as cnt')
+                ->groupBy('status')
+                ->pluck('cnt', 'status')
+                ->toArray();
+
+            $sent = (int) ($totals['sent'] ?? 0)
+                + (int) ($totals['delivered'] ?? 0)
+                + (int) ($totals['read'] ?? 0);
+            $failed = (int) ($totals['failed'] ?? 0);
+            $queued = (int) ($totals['queued'] ?? 0);
+            $total = $sent + $failed + $queued;
+
+            $firstFail = CampaignRecipient::where('campaign_id', $campaign->id)
+                ->where('status', 'failed')
+                ->whereNotNull('failed_reason')
+                ->value('failed_reason');
+
+            if ($queued === 0) {
+                $newStatus = ($total === 0 || ($failed > 0 && $sent === 0)) ? 'failed' : 'completed';
+                $campaign->update([
+                    'status' => $newStatus,
+                    'totals_json' => array_merge($campaign->totals_json ?? [], array_filter([
+                        'failed_reason' => $firstFail,
+                    ])),
+                ]);
+
+                if ($newStatus === 'completed') {
+                    \App\Events\CampaignCompleted::dispatch($campaign->fresh());
+                }
+            }
 
             return;
         }
