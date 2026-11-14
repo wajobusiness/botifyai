@@ -180,9 +180,9 @@ jobs:
 
   publish-github-release:
     name: Publish GitHub Release
-    needs: [build-android-release, build-ios-release]
+    needs: [build-android-release]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') && !cancelled()
     permissions:
       contents: write
 
