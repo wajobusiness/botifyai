@@ -62,6 +62,16 @@ jobs:
         working-directory: botifyai_mobile
         run: flutter build apk --release
 
+      - name: Upload to Google Play Store (Internal Testing Track)
+        if: ${{ env.PLAY_STORE_JSON_KEY != '' && env.ANDROID_KEYSTORE_BASE64 != '' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_JSON_KEY }}
+          packageName: cloud.botifyai.companion
+          releaseFiles: botifyai_mobile/build/app/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
+
       - name: Upload Android AAB Artifact
         uses: actions/upload-artifact@v4
         with:
