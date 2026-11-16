@@ -14,6 +14,7 @@ class Message extends Model
         'conversation_id', 'direction', 'channel', 'type', 'payload', 'body',
         'media_id', 'status', 'provider_message_id', 'error_json',
         'sent_by', 'user_id', 'sent_at',
+        'sender_type', 'action_type', 'action_data',
     ];
 
     /**
@@ -32,6 +33,7 @@ class Message extends Model
         return [
             'payload' => 'array',
             'error_json' => 'array',
+            'action_data' => 'array',
             'sent_at' => 'datetime',
         ];
     }

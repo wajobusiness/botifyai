@@ -84,6 +84,7 @@ class Conversation extends Model
         'status', 'assigned_user_id', 'assigned_to', 'handover_at',
         'last_message_at', 'unread_count',
         'first_response_at', 'resolved_at', 'last_inbound_at',
+        'source', 'mode', 'metadata',
     ];
 
     protected function casts(): array
@@ -95,6 +96,7 @@ class Conversation extends Model
             'last_inbound_at' => 'datetime',
             'handover_at' => 'datetime',
             'unread_count' => 'integer',
+            'metadata' => 'array',
         ];
     }
 

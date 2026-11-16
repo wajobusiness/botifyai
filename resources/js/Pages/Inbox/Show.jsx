@@ -26,13 +26,16 @@ const FOLDERS = [
     { key: 'resolved',   labelKey: 'inbox.folder_resolved',   icon: CheckCircle },
     { key: 'snoozed',    labelKey: 'inbox.folder_snoozed',    icon: Clock },
 ];
-const ALL_CHANNELS = ['whatsapp', 'instagram', 'messenger', 'sms', 'email'];
+const ALL_CHANNELS = ['whatsapp', 'instagram', 'messenger', 'sms', 'email', 'chatbot'];
 
 const STATUS_COLORS = {
-    open:     'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    pending:  'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    resolved: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400',
-    snoozed:  'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+    open:             'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    pending:          'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    resolved:         'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400',
+    snoozed:          'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+    ai_handling:      'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300',
+    human_handling:   'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    waiting_response: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
 };
 
 // Conversation activity log — icon + accent colour per event type
@@ -728,14 +731,23 @@ function MessageBubble({ msg, conversationId }) {
     const sticker  = mediaType === 'sticker';
     const caption  = p.caption ?? p[mediaType]?.caption ?? (msg.body && msg.body !== '(media)' ? msg.body : '');
 
-    const bubbleBase = `max-w-[70%] rounded-2xl overflow-hidden text-sm ${isOut
-        ? 'bg-brand-600 text-white rounded-br-sm'
-        : 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-bl-sm border border-neutral-200 dark:border-neutral-700'}`;
+    const isAi = msg.sender_type === 'ai' || (isOut && msg.sent_by === 'bot');
+    const isHumanAgent = isOut && !isAi;
+    const isCustomer = !isOut;
+
+    let bubbleBase = 'max-w-[75%] rounded-2xl overflow-hidden text-sm ';
+    if (isAi) {
+        bubbleBase += 'bg-teal-50 dark:bg-teal-950/40 text-neutral-900 dark:text-neutral-100 rounded-bl-sm border border-teal-200 dark:border-teal-800 shadow-xs';
+    } else if (isHumanAgent) {
+        bubbleBase += 'bg-brand-600 text-white rounded-br-sm shadow-xs';
+    } else {
+        bubbleBase += 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-bl-sm border border-neutral-200 dark:border-neutral-700 shadow-xs';
+    }
 
     // Reaction: no bubble, just float
     if (mediaType === 'reaction' || reaction) {
         return (
-            <div className={`flex ${isOut ? 'justify-end' : 'justify-start'} mb-1`}>
+            <div className={`flex ${isHumanAgent ? 'justify-end' : 'justify-start'} mb-1`}>
                 <ReactionBubble reaction={reaction ?? p} />
             </div>
         );
@@ -744,7 +756,7 @@ function MessageBubble({ msg, conversationId }) {
     // Sticker: transparent background
     if (sticker) {
         return (
-            <div className={`flex ${isOut ? 'justify-end' : 'justify-start'} mb-2`}>
+            <div className={`flex ${isHumanAgent ? 'justify-end' : 'justify-start'} mb-2`}>
                 <StickerBubble src={mediaSrc} conversationId={conversationId} messageId={msg.id} />
             </div>
         );
@@ -760,7 +772,7 @@ function MessageBubble({ msg, conversationId }) {
                       : '';
 
     const timeRow = (
-        <div className={`flex items-center gap-1 text-[10px] mt-1 ${isOut ? 'text-white/60 justify-end' : 'text-neutral-400'}`}>
+        <div className={`flex items-center gap-1 text-[10px] mt-1 ${isHumanAgent ? 'text-white/60 justify-end' : 'text-neutral-400'}`}>
             {msg.sent_at ? formatTimeTz(msg.sent_at, bubbleTz) : ''}
             {isOut && (
                 <span title={msg.status} className={statusClass}>{statusGlyph}</span>
@@ -769,8 +781,22 @@ function MessageBubble({ msg, conversationId }) {
     );
 
     return (
-        <div className={`flex ${isOut ? 'justify-end' : 'justify-start'} mb-2`}>
+        <div className={`flex ${isHumanAgent ? 'justify-end' : 'justify-start'} mb-2`}>
             <div className={bubbleBase}>
+                {/* Sender ownership badge */}
+                {isAi && (
+                    <div className="px-3 pt-2 pb-1 border-b border-teal-200/60 dark:border-teal-800/60 flex items-center gap-1 text-[10px] font-bold text-teal-700 dark:text-teal-300 uppercase tracking-wider">
+                        <span>🤖</span>
+                        <span>Botify AI</span>
+                    </div>
+                )}
+                {isHumanAgent && (
+                    <div className="px-3 pt-2 pb-1 border-b border-white/20 flex items-center gap-1 text-[10px] font-bold text-white/80 uppercase tracking-wider">
+                        <span>🧑‍💼</span>
+                        <span>Human Agent</span>
+                    </div>
+                )}
+
                 {/* Template header image/video/doc */}
                 {templateComponents && (
                     <TemplateHeaderMedia components={templateComponents} conversationId={conversationId} messageId={msg.id} />
@@ -853,6 +879,23 @@ function MessageBubble({ msg, conversationId }) {
                         <p className="text-xs mt-1 opacity-90"><WaText text={caption} /></p>
                     )}
 
+                    {/* AI Action Card */}
+                    {msg.action_type && (
+                        <div className="mt-2.5 p-2.5 rounded-lg bg-white/90 dark:bg-neutral-900/90 border border-teal-300 dark:border-teal-700 text-xs text-neutral-800 dark:text-neutral-200 shadow-xs">
+                            <div className="flex items-center gap-1.5 font-bold text-teal-600 dark:text-teal-400 text-[11px] mb-1">
+                                <span>⚡ AI Action:</span>
+                                <span className="capitalize">{msg.action_type.replace('_', ' ')}</span>
+                            </div>
+                            {msg.action_data && typeof msg.action_data === 'object' && (
+                                <div className="space-y-0.5 text-[11px] font-mono text-neutral-600 dark:text-neutral-400">
+                                    {Object.entries(msg.action_data).map(([k, v]) => (
+                                        <div key={k}><span className="font-semibold text-neutral-500">{k}:</span> {String(v)}</div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {timeRow}
                 </div>
             </div>
@@ -862,7 +905,7 @@ function MessageBubble({ msg, conversationId }) {
 
 function ConversationCard({ conv, isActive, userTz }) {
     const { t } = useTranslation();
-    const channel = conv.channel_account?.channel ?? 'whatsapp';
+    const channel = (conv.source === 'chatbot' || !conv.channel_account) ? 'chatbot' : (conv.channel_account?.channel ?? 'whatsapp');
     const name = conv.contact?.first_name || conv.contact?.last_name
         ? `${conv.contact.first_name ?? ''} ${conv.contact.last_name ?? ''}`.trim()
         : conv.contact?.phone_e164 ?? 'Unknown';
@@ -1932,12 +1975,60 @@ export default function InboxShow({
                             onChange={e => handleStatus(e.target.value)}
                             className={`rounded-full border-0 px-3 py-1 text-xs font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500 ${STATUS_COLORS[conversation.status] ?? 'bg-neutral-100 text-neutral-600'}`}
                         >
-                            {['open','pending','resolved','snoozed'].map(s => (
-                                <option key={s} value={s} className="bg-white dark:bg-neutral-800 text-neutral-900">
-                                    {t(`inbox.status_${s}`)}
+                            {[
+                                { value: 'open', label: 'Open' },
+                                { value: 'ai_handling', label: 'AI Handling' },
+                                { value: 'human_handling', label: 'Human Handling' },
+                                { value: 'waiting_response', label: 'Waiting For Response' },
+                                { value: 'pending', label: 'Pending' },
+                                { value: 'resolved', label: 'Resolved' },
+                                { value: 'snoozed', label: 'Snoozed' },
+                            ].map(s => (
+                                <option key={s.value} value={s.value} className="bg-white dark:bg-neutral-800 text-neutral-900">
+                                    {s.label}
                                 </option>
                             ))}
                         </select>
+                    </div>
+
+                    {/* AI Takeover Banner */}
+                    <div className={`px-4 py-2.5 text-xs flex items-center justify-between border-b ${
+                        assignedTo === 'human'
+                            ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-200 dark:border-amber-800'
+                            : 'bg-teal-50 dark:bg-teal-950/40 text-teal-900 dark:text-teal-200 border-teal-200 dark:border-teal-800'
+                    }`}>
+                        <div className="flex items-center gap-2">
+                            {assignedTo === 'human' ? (
+                                <>
+                                    <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                                    <span className="font-bold">Human Active:</span>
+                                    <span>AI is paused. You are currently handling responses to this customer.</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="h-2 w-2 rounded-full bg-teal-500 animate-pulse" />
+                                    <span className="font-bold">AI Handling:</span>
+                                    <span>Botify AI is actively responding with full knowledge base memory.</span>
+                                </>
+                            )}
+                        </div>
+                        {assignedTo === 'human' ? (
+                            <button
+                                type="button"
+                                onClick={() => switchHandover('bot')}
+                                className="px-3 py-1 rounded-md bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs shadow-xs transition"
+                            >
+                                Return To AI
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => switchHandover('human')}
+                                className="px-3 py-1 rounded-md bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow-xs transition"
+                            >
+                                Take Over Conversation
+                            </button>
+                        )}
                     </div>
 
                     {/* Tab bar */}

@@ -44,9 +44,17 @@ class InboxController extends Controller
             ->with(['contact', 'channelAccount', 'lastMessage', 'labels'])
             ->when($request->folder === 'mine', fn ($q) => $q->where('assigned_user_id', $userId))
             ->when($request->folder === 'unassigned', fn ($q) => $q->whereNull('assigned_user_id'))
-            ->when($request->channel, fn ($q) => $q->whereHas('channelAccount', fn ($q) => $q->where('channel', $request->channel)))
+            ->when($request->channel, function ($q, $ch) {
+                if ($ch === 'chatbot') {
+                    $q->where(fn ($sub) => $sub->where('source', 'chatbot')->orWhereNull('channel_account_id'));
+                } else {
+                    $q->whereHas('channelAccount', fn ($q) => $q->where('channel', $ch));
+                }
+            })
+            ->when($request->chat_type === 'human', fn ($q) => $q->where('assigned_to', 'human'))
+            ->when($request->chat_type === 'ai_chatbot', fn ($q) => $q->where(fn ($sub) => $sub->where('assigned_to', 'bot')->orWhere('source', 'chatbot')))
             ->when($request->account_id, fn ($q) => $q->where('channel_account_id', $request->account_id))
-            ->when(! in_array($request->folder, ['resolved', 'snoozed'], true), fn ($q) => $q->where('status', 'open'))
+            ->when(! in_array($request->folder, ['resolved', 'snoozed'], true), fn ($q) => $q->where('status', '!=', 'resolved'))
             ->when($request->folder === 'resolved', fn ($q) => $q->where('status', 'resolved'))
             ->when($request->folder === 'snoozed', fn ($q) => $q->where('status', 'snoozed'))
             ->when($request->label, fn ($q) => $q->whereHas('labels', fn ($q) => $q->where('inbox_labels.id', $request->label)))
@@ -63,7 +71,7 @@ class InboxController extends Controller
 
         return Inertia::render('Inbox/Index', [
             'conversations' => $conversations,
-            'filters' => $request->only('folder', 'channel', 'label', 'account_id'),
+            'filters' => $request->only('folder', 'channel', 'label', 'account_id', 'chat_type'),
             'labels' => $labels,
             'channelAccounts' => $channelAccounts,
         ]);
@@ -104,14 +112,22 @@ class InboxController extends Controller
             : collect();
 
         // Pass conversation list so the left panel stays populated on the show page
-        $filters = $request->only('folder', 'channel', 'label', 'account_id');
+        $filters = $request->only('folder', 'channel', 'label', 'account_id', 'chat_type');
         $conversations = Conversation::where('workspace_id', $workspaceId)
             ->with(['contact', 'channelAccount', 'lastMessage', 'labels'])
             ->when(($filters['folder'] ?? null) === 'mine', fn ($q) => $q->where('assigned_user_id', $userId))
             ->when(($filters['folder'] ?? null) === 'unassigned', fn ($q) => $q->whereNull('assigned_user_id'))
-            ->when($filters['channel'] ?? null, fn ($q, $ch) => $q->whereHas('channelAccount', fn ($q) => $q->where('channel', $ch)))
+            ->when($filters['channel'] ?? null, function ($q, $ch) {
+                if ($ch === 'chatbot') {
+                    $q->where(fn ($sub) => $sub->where('source', 'chatbot')->orWhereNull('channel_account_id'));
+                } else {
+                    $q->whereHas('channelAccount', fn ($q) => $q->where('channel', $ch));
+                }
+            })
+            ->when(($filters['chat_type'] ?? null) === 'human', fn ($q) => $q->where('assigned_to', 'human'))
+            ->when(($filters['chat_type'] ?? null) === 'ai_chatbot', fn ($q) => $q->where(fn ($sub) => $sub->where('assigned_to', 'bot')->orWhere('source', 'chatbot')))
             ->when($filters['account_id'] ?? null, fn ($q, $aid) => $q->where('channel_account_id', $aid))
-            ->when(! in_array($filters['folder'] ?? null, ['resolved', 'snoozed'], true), fn ($q) => $q->where('status', 'open'))
+            ->when(! in_array($filters['folder'] ?? null, ['resolved', 'snoozed'], true), fn ($q) => $q->where('status', '!=', 'resolved'))
             ->when(($filters['folder'] ?? null) === 'resolved', fn ($q) => $q->where('status', 'resolved'))
             ->when(($filters['folder'] ?? null) === 'snoozed', fn ($q) => $q->where('status', 'snoozed'))
             ->when($filters['label'] ?? null, fn ($q, $lid) => $q->whereHas('labels', fn ($q) => $q->where('inbox_labels.id', $lid)))
@@ -450,7 +466,7 @@ class InboxController extends Controller
     public function updateStatus(Request $request, Conversation $conversation): RedirectResponse
     {
         $this->authorise($request, $conversation);
-        $request->validate(['status' => ['required', 'in:open,pending,resolved,snoozed']]);
+        $request->validate(['status' => ['required', 'in:open,pending,resolved,snoozed,ai_handling,human_handling,waiting_response']]);
 
         $updates = ['status' => $request->status];
         if ($request->status === 'resolved' && ! $conversation->resolved_at) {
@@ -466,10 +482,24 @@ class InboxController extends Controller
         $this->authorise($request, $conversation);
         $mode = $request->input('mode', 'human'); // 'human' or 'bot'
 
-        $updates = ['assigned_to' => $mode];
-        if ($mode === 'human' && ! $conversation->handover_at) {
-            $updates['handover_at'] = now();
+        if ($mode === 'human') {
+            $updates = [
+                'assigned_to' => 'human',
+                'mode' => 'human_handling',
+                'status' => 'human_handling',
+                'assigned_user_id' => $request->user()->id,
+            ];
+            if (! $conversation->handover_at) {
+                $updates['handover_at'] = now();
+            }
+        } else {
+            $updates = [
+                'assigned_to' => 'bot',
+                'mode' => 'ai_handling',
+                'status' => 'ai_handling',
+            ];
         }
+
         $conversation->update($updates);
 
         if ($mode === 'human') {
@@ -479,7 +509,7 @@ class InboxController extends Controller
             }
         }
 
-        return response()->json(['ok' => true, 'assigned_to' => $mode]);
+        return response()->json(['ok' => true, 'assigned_to' => $mode, 'status' => $conversation->status]);
     }
 
     /**

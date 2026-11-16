@@ -11,6 +11,7 @@ export const CHANNEL_LABELS = {
     messenger: 'Messenger',
     sms: 'SMS',
     email: 'Email',
+    chatbot: 'AI Chatbot',
 };
 
 function SvgBrand({ name, className }) {
@@ -38,6 +39,26 @@ function SvgBrand({ name, className }) {
 
 /** WhatsApp, Instagram, Messenger, SMS (Twilio mark), Email (envelope icon) */
 export function ChannelBrandIcon({ channel, className }) {
+    if (channel === 'chatbot') {
+        return (
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={className ?? 'h-4 w-4 text-teal-600 dark:text-teal-400'}
+                aria-hidden
+            >
+                <rect width="18" height="12" x="3" y="6" rx="2" />
+                <path d="M9 14h.01" />
+                <path d="M15 14h.01" />
+                <path d="M12 2v4" />
+                <path d="M12 18v4" />
+            </svg>
+        );
+    }
     const key =
         channel === 'whatsapp'
             ? 'whatsapp'

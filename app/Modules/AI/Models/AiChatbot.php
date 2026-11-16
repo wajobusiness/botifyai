@@ -68,6 +68,11 @@ class AiChatbot extends Model
         ];
     }
 
+    public function widget(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ChatbotWidget::class, 'chatbot_id');
+    }
+
     public function workspace(): BelongsTo
     {
         return $this->belongsTo(Workspace::class);

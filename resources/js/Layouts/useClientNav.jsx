@@ -6,7 +6,7 @@ import {
     Layers, Webhook, Radio, Inbox, Bot, Zap, Share2, MapPin, Tag,
     LifeBuoy, ExternalLink, ShoppingBag, KanbanSquare, Wallet, Store,
     Sparkles, GraduationCap, Palette, BarChart3, ShieldCheck, PlugZap,
-    MessageSquare, Mail
+    MessageSquare, Mail, Code, Database
 } from 'lucide-react';
 
 const iconClass = 'h-4 w-4';
@@ -92,6 +92,18 @@ export default function useClientNav() {
             href: safeRoute('client.ai.chatbots.index'),
             icon: <Bot className={iconClass} />,
             activePattern: 'client.ai.chatbots.*'
+        },
+        {
+            label: 'Website AI Chat Widget',
+            href: safeRoute('client.ai.widgets.index'),
+            icon: <Code className={iconClass} />,
+            activePattern: 'client.ai.widgets.*'
+        },
+        {
+            label: 'AI Knowledge Hub',
+            href: safeRoute('client.ai.knowledge-hub.index'),
+            icon: <Database className={iconClass} />,
+            activePattern: 'client.ai.knowledge-hub.*'
         },
         {
             label: t('nav.campaigns', 'Broadcast & Campaigns'),

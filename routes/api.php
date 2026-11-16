@@ -46,6 +46,15 @@ Route::prefix('v1/public/widget')->middleware(['throttle:60,1'])->group(function
     Route::post('/chat', [\App\Modules\Ecommerce\Http\Controllers\PublicCommerceWidgetController::class, 'chat']);
 });
 
+// ─── Public Embeddable Website AI Chat Widget API (CORS enabled & throttled) ──
+Route::prefix('v1/widget')->middleware(['throttle:120,1'])->group(function () {
+    Route::get('/config', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'config']);
+    Route::get('/history', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'history']);
+    Route::post('/message', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'message']);
+    Route::post('/lead', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'lead']);
+    Route::post('/takeover', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'takeover']);
+});
+
 Route::prefix('v1/auth')->middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::post('/logout', [MobileAuthController::class, 'logout']);
     Route::get('/me', [MobileAuthController::class, 'me']);

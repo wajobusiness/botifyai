@@ -20,7 +20,36 @@ const FOLDERS = [
     { key: 'snoozed',    labelKey: 'inbox.folder_snoozed',    icon: Clock },
 ];
 
-const ALL_CHANNELS = ['whatsapp', 'instagram', 'messenger', 'sms', 'email'];
+const ALL_CHANNELS = ['whatsapp', 'instagram', 'messenger', 'sms', 'email', 'chatbot'];
+
+function StatusBadge({ conv }) {
+    const isBot = conv.assigned_to === 'bot' || conv.mode === 'ai';
+    const isResolved = conv.status === 'resolved';
+
+    if (isResolved) {
+        return (
+            <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+                Resolved
+            </span>
+        );
+    }
+
+    if (isBot) {
+        return (
+            <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                AI Handling
+            </span>
+        );
+    }
+
+    return (
+        <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+            Human Handling
+        </span>
+    );
+}
 
 function StatusDot({ status }) {
     const colors = {
@@ -34,7 +63,7 @@ function StatusDot({ status }) {
 
 function ConversationCard({ conv, isFlashing, isActive, userTz }) {
     const { t } = useTranslation();
-    const channel = conv.channel_account?.channel ?? 'whatsapp';
+    const channel = (conv.source === 'chatbot' || !conv.channel_account) ? 'chatbot' : (conv.channel_account?.channel ?? 'whatsapp');
     const lastMsg = conv.last_message ?? {};
     const name = conv.contact?.first_name || conv.contact?.last_name
         ? `${conv.contact.first_name ?? ''} ${conv.contact.last_name ?? ''}`.trim()
@@ -77,13 +106,16 @@ function ConversationCard({ conv, isFlashing, isActive, userTz }) {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                        <button
-                            onClick={handleContactClick}
-                            className={`text-sm truncate text-left hover:underline ${conv.unread_count > 0 ? 'font-semibold text-neutral-900 dark:text-neutral-100' : 'font-medium text-neutral-700 dark:text-neutral-300'}`}
-                            title={t('inbox.view_contact_profile')}
-                        >
-                            {name}
-                        </button>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <button
+                                onClick={handleContactClick}
+                                className={`text-sm truncate text-left hover:underline ${conv.unread_count > 0 ? 'font-semibold text-neutral-900 dark:text-neutral-100' : 'font-medium text-neutral-700 dark:text-neutral-300'}`}
+                                title={t('inbox.view_contact_profile')}
+                            >
+                                {name}
+                            </button>
+                            <StatusBadge conv={conv} />
+                        </div>
                         <span className="text-[11px] text-neutral-400 shrink-0">
                             {conv.last_message_at ? formatTimeTz(conv.last_message_at, userTz) : ''}
                         </span>
@@ -298,6 +330,7 @@ export default function InboxIndex({ conversations: initialConversations, filter
     const handleChannel = (ch)  => navigate({ channel: filters.channel === ch ? undefined : ch, account_id: undefined });
     const handleAccount = (id)  => navigate({ account_id: String(filters.account_id) === String(id) ? undefined : id, channel: undefined });
     const handleLabel   = (id)  => navigate({ label: String(filters.label) === String(id) ? undefined : id });
+    const handleChatType = (type) => navigate({ chat_type: filters.chat_type === type ? undefined : type });
 
     const filtered = search.trim()
         ? conversations.data.filter(c => {
@@ -383,6 +416,31 @@ export default function InboxIndex({ conversations: initialConversations, filter
                                 placeholder={t('inbox.search_conversations')}
                                 className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-neutral-100 dark:bg-neutral-800 border-0 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-neutral-400"
                             />
+                        </div>
+
+                        {/* Chat Type Filters */}
+                        <div className="flex items-center gap-1 mt-2.5 bg-neutral-100 dark:bg-neutral-800/80 p-0.5 rounded-lg">
+                            <button
+                                type="button"
+                                onClick={() => handleChatType(undefined)}
+                                className={`flex-1 py-1 text-center text-[10px] font-semibold rounded-md transition ${!filters.chat_type ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-xs' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700'}`}
+                            >
+                                All Messages
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleChatType('human')}
+                                className={`flex-1 py-1 text-center text-[10px] font-semibold rounded-md transition ${filters.chat_type === 'human' ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-xs' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700'}`}
+                            >
+                                Human Chats
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleChatType('ai_chatbot')}
+                                className={`flex-1 py-1 text-center text-[10px] font-semibold rounded-md transition ${filters.chat_type === 'ai_chatbot' ? 'bg-white dark:bg-neutral-700 text-teal-600 dark:text-teal-300 shadow-xs' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700'}`}
+                            >
+                                AI Chatbot
+                            </button>
                         </div>
                     </div>
 
