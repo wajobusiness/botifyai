@@ -182,6 +182,11 @@ class InboxController extends Controller
         $msgType = $validated['type'] ?? 'text';
         $msgPayload = $validated['payload'] ?? null;
 
+        $isLiveChat = $conversation->source === 'chatbot'
+            || $conversation->source === 'widget'
+            || empty($conversation->channel_account_id)
+            || str_starts_with($conversation->external_thread_id ?? '', 'widget_');
+
         // Handle direct file attachment (image / document sent from compose bar)
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
@@ -193,16 +198,19 @@ class InboxController extends Controller
                     : (str_starts_with($mimeType, 'video/') ? 'video' : 'document');
             }
 
-            // Upload to WhatsApp so we have a media_id for sending
-            $client = CloudApiClient::forWorkspace($conversation->workspace_id);
-            if (! $client) {
-                return response()->json(['error' => 'No active WhatsApp account.'], 422);
-            }
-
-            $mediaId = $client->uploadMedia($file->getRealPath(), $mimeType);
             $storedPath = $this->storageManager->prefixedPath('message-media/'.$file->hashName());
             $this->storageManager->disk()->putFileAs(dirname($storedPath), $file, basename($storedPath));
             $previewUrl = $this->storageManager->disk()->url($storedPath);
+
+            $mediaId = null;
+            if (! $isLiveChat) {
+                // Upload to WhatsApp so we have a media_id for sending
+                $client = CloudApiClient::forWorkspace($conversation->workspace_id);
+                if (! $client) {
+                    return response()->json(['error' => 'No active WhatsApp account.'], 422);
+                }
+                $mediaId = $client->uploadMedia($file->getRealPath(), $mimeType);
+            }
 
             $msgPayload = array_merge($msgPayload ?? [], [
                 'media_id' => $mediaId,
@@ -221,7 +229,8 @@ class InboxController extends Controller
         }
 
         // Enforce 24h window for WhatsApp — templates bypass the window restriction
-        if ($conversation->channelAccount?->channel === 'whatsapp'
+        if (! $isLiveChat
+            && $conversation->channelAccount?->channel === 'whatsapp'
             && ! $conversation->isWhatsappWindowOpen()
             && $msgType !== 'template') {
             return back()->with('error', 'WhatsApp 24-hour session is closed. Use an approved template to re-engage this contact.');
@@ -230,31 +239,40 @@ class InboxController extends Controller
         $message = Message::create([
             'conversation_id' => $conversation->id,
             'direction' => 'out',
-            'channel' => $conversation->channelAccount?->channel ?? 'whatsapp',
+            'channel' => $isLiveChat ? 'chatbot' : ($conversation->channelAccount?->channel ?? 'whatsapp'),
             'type' => $msgType,
             'body' => $validated['body'],
             'payload' => $msgPayload,
-            'status' => 'queued',
+            'status' => $isLiveChat ? 'sent' : 'queued',
             'sent_by' => 'human',
+            'sender_type' => 'human',
             'user_id' => $request->user()->id,
             'sent_at' => now(),
         ]);
 
-        // Send via the channel driver
-        $channel = $conversation->channelAccount?->channel ?? 'whatsapp';
         $sendError = null;
-        try {
-            $driver = $this->channelManager->driver($channel);
-            $messageId = $driver->send($message);
-            $message->update(['status' => 'sent', 'provider_message_id' => $messageId]);
-        } catch (\Throwable $e) {
-            $sendError = $e->getMessage();
-            Log::error('Inbox reply send failed', [
-                'conversation_id' => $conversation->id,
-                'channel' => $channel,
-                'error' => $sendError,
+        if (! $isLiveChat) {
+            // Send via the channel driver
+            $channel = $conversation->channelAccount?->channel ?? 'whatsapp';
+            try {
+                $driver = $this->channelManager->driver($channel);
+                $messageId = $driver->send($message);
+                $message->update(['status' => 'sent', 'provider_message_id' => $messageId]);
+            } catch (\Throwable $e) {
+                $sendError = $e->getMessage();
+                Log::error('Inbox reply send failed', [
+                    'conversation_id' => $conversation->id,
+                    'channel' => $channel,
+                    'error' => $sendError,
+                ]);
+                $message->update(['status' => 'failed', 'error_json' => ['message' => $sendError]]);
+            }
+        } else {
+            // Live website chat: seamlessly mark conversation as human handled
+            $conversation->update([
+                'assigned_to' => 'human',
+                'mode' => 'human_handling',
             ]);
-            $message->update(['status' => 'failed', 'error_json' => ['message' => $sendError]]);
         }
 
         $conversation->update(['last_message_at' => now()]);
@@ -313,10 +331,15 @@ class InboxController extends Controller
 
         abort_unless($product, 404, 'Product not found.');
 
-        $channel = $conversation->channelAccount?->channel ?? 'whatsapp';
+        $isLiveChat = $conversation->source === 'chatbot'
+            || $conversation->source === 'widget'
+            || empty($conversation->channel_account_id)
+            || str_starts_with($conversation->external_thread_id ?? '', 'widget_');
+
+        $channel = $isLiveChat ? 'chatbot' : ($conversation->channelAccount?->channel ?? 'whatsapp');
 
         // Free-form messages need an open 24h session on WhatsApp.
-        if ($channel === 'whatsapp' && ! $conversation->isWhatsappWindowOpen()) {
+        if (! $isLiveChat && $channel === 'whatsapp' && ! $conversation->isWhatsappWindowOpen()) {
             return response()->json([
                 'error' => 'WhatsApp 24-hour session is closed. Use an approved template to re-engage this contact.',
             ], 422);
@@ -340,24 +363,27 @@ class InboxController extends Controller
             'type' => $useImage ? 'image' : 'text',
             'body' => $caption,
             'payload' => $useImage ? ['link' => $image, 'preview_url' => $image, 'caption' => $caption] : null,
-            'status' => 'queued',
+            'status' => $isLiveChat ? 'sent' : 'queued',
             'sent_by' => 'human',
+            'sender_type' => 'human',
             'user_id' => $request->user()->id,
             'sent_at' => now(),
         ]);
 
         $sendError = null;
-        try {
-            $messageId = $this->channelManager->driver($channel)->send($message);
-            $message->update(['status' => 'sent', 'provider_message_id' => $messageId]);
-        } catch (\Throwable $e) {
-            $sendError = $e->getMessage();
-            Log::error('Inbox shareProduct send failed', [
-                'conversation_id' => $conversation->id,
-                'channel' => $channel,
-                'error' => $sendError,
-            ]);
-            $message->update(['status' => 'failed', 'error_json' => ['message' => $sendError]]);
+        if (! $isLiveChat) {
+            try {
+                $messageId = $this->channelManager->driver($channel)->send($message);
+                $message->update(['status' => 'sent', 'provider_message_id' => $messageId]);
+            } catch (\Throwable $e) {
+                $sendError = $e->getMessage();
+                Log::error('Inbox shareProduct send failed', [
+                    'conversation_id' => $conversation->id,
+                    'channel' => $channel,
+                    'error' => $sendError,
+                ]);
+                $message->update(['status' => 'failed', 'error_json' => ['message' => $sendError]]);
+            }
         }
 
         $conversation->update(['last_message_at' => now()]);

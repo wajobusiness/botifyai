@@ -383,6 +383,62 @@
                 text-decoration: none !important;
                 font-weight: 600 !important;
             }
+            .botify-widget-lead-box {
+                background: #f8fafc !important;
+                border: 1px dashed #cbd5e1 !important;
+                border-radius: 12px !important;
+                padding: 10px 12px !important;
+                margin: 10px 0 !important;
+                font-size: 12px !important;
+            }
+            .botify-widget-lead-header {
+                color: #475569 !important;
+                margin-bottom: 6px !important;
+                font-size: 11px !important;
+                font-weight: 600 !important;
+            }
+            .botify-widget-lead-row {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 6px !important;
+            }
+            .botify-widget-lead-input {
+                border: 1px solid #cbd5e1 !important;
+                border-radius: 8px !important;
+                padding: 6px 10px !important;
+                font-size: 12px !important;
+                outline: none !important;
+                background: #ffffff !important;
+                color: #1e293b !important;
+            }
+            .botify-widget-lead-input:focus {
+                border-color: #0d9488 !important;
+            }
+            .botify-widget-lead-btn {
+                border: none !important;
+                color: #ffffff !important;
+                padding: 7px 12px !important;
+                border-radius: 8px !important;
+                font-size: 11px !important;
+                font-weight: 600 !important;
+                cursor: pointer !important;
+                transition: opacity 0.15s !important;
+            }
+            .botify-widget-lead-btn:hover {
+                opacity: 0.9 !important;
+            }
+            .botify-widget-badge {
+                position: absolute !important;
+                top: -3px !important;
+                right: -3px !important;
+                background: #ef4444 !important;
+                color: #ffffff !important;
+                border-radius: 10px !important;
+                padding: 2px 6px !important;
+                font-size: 10px !important;
+                font-weight: bold !important;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+            }
             @media (max-width: 480px) {
                 .botify-widget-window {
                     width: 100vw !important;
@@ -435,14 +491,35 @@
                 renderWidget();
             });
 
-        function loadHistory() {
+        var pollTimer = null;
+
+        function startPolling() {
+            stopPolling();
+            pollTimer = setInterval(function () {
+                if (state.isOpen && !state.isLoading) {
+                    loadHistory(true);
+                }
+            }, 3000);
+        }
+
+        function stopPolling() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        }
+
+        function loadHistory(silent) {
             fetch(apiOrigin + '/api/v1/widget/history?key=' + encodeURIComponent(botId) + '&session_token=' + encodeURIComponent(sessionToken))
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
                     if (data.success && Array.isArray(data.messages)) {
+                        var prevCount = state.messages.length;
                         state.messages = data.messages;
                         state.mode = data.mode || 'ai';
-                        updateMessageUI();
+                        if (!silent || state.messages.length !== prevCount) {
+                            updateMessageUI();
+                        }
                     }
                 })
                 .catch(function () {});
@@ -528,11 +605,14 @@
                 win.classList.remove('botify-hidden');
                 var input = document.getElementById('botify-chat-input');
                 if (input) input.focus();
+                loadHistory(false);
+                startPolling();
             }
 
             function closeChat() {
                 state.isOpen = false;
                 win.classList.add('botify-hidden');
+                stopPolling();
             }
 
             function toggleChat() {
@@ -642,6 +722,35 @@
                 `;
             });
 
+            // Lead capture box if enabled and not already saved
+            var leadKey = 'botify_lead_' + botId;
+            var leadSaved = false;
+            try { leadSaved = localStorage.getItem(leadKey) === 'true'; } catch(e) {}
+
+            if (w.enable_lead_capture && !leadSaved) {
+                html += `
+                    <div class="botify-widget-lead-box" id="botify-lead-box">
+                        <div class="botify-widget-lead-header">📬 Leave your details for follow-up:</div>
+                        <div class="botify-widget-lead-row">
+                            <input type="text" id="botify-lead-name" placeholder="Your name (optional)" class="botify-widget-lead-input" />
+                            <input type="text" id="botify-lead-contact" placeholder="Email or WhatsApp phone..." class="botify-widget-lead-input" />
+                            <button type="button" id="botify-lead-submit" class="botify-widget-lead-btn" style="background: ${state.primaryColor}">Save Details</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Quick suggestion pills if early in conversation
+            if (state.messages.length <= 1 && (state.widgetData.suggested_prompts || []).length > 0) {
+                html += `
+                    <div class="botify-widget-prompts" id="botify-prompt-pills">
+                        ${(state.widgetData.suggested_prompts || []).map(function (p) {
+                            return '<div class="botify-widget-prompt-pill" data-prompt="' + escapeAttr(p) + '">' + escapeHtml(p) + '</div>';
+                        }).join('')}
+                    </div>
+                `;
+            }
+
             if (state.isLoading) {
                 html += `
                     <div class="botify-widget-msg botify-widget-msg-ai">
@@ -655,6 +764,62 @@
 
             body.innerHTML = html;
             body.scrollTop = body.scrollHeight;
+
+            // Re-bind prompt pills
+            bindPillEvents();
+
+            // Bind lead capture submit button
+            var leadSubmit = document.getElementById('botify-lead-submit');
+            if (leadSubmit) {
+                leadSubmit.onclick = function () {
+                    var nameInput = document.getElementById('botify-lead-name');
+                    var contactInput = document.getElementById('botify-lead-contact');
+                    var nameVal = nameInput ? nameInput.value.trim() : '';
+                    var contactVal = contactInput ? contactInput.value.trim() : '';
+
+                    if (!contactVal) {
+                        alert('Please enter your email or phone number.');
+                        return;
+                    }
+
+                    leadSubmit.innerText = 'Saving...';
+                    leadSubmit.disabled = true;
+
+                    var isEmail = contactVal.indexOf('@') !== -1;
+                    var payload = {
+                        key: botId,
+                        session_token: sessionToken,
+                        name: nameVal,
+                        email: isEmail ? contactVal : null,
+                        phone: !isEmail ? contactVal : null
+                    };
+
+                    fetch(apiOrigin + '/api/v1/widget/lead', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        if (data.success) {
+                            try { localStorage.setItem(leadKey, 'true'); } catch (e) {}
+                            var leadBox = document.getElementById('botify-lead-box');
+                            if (leadBox) {
+                                leadBox.innerHTML = '<div style="color:#059669;font-weight:600;padding:4px 0;">✓ Thank you! Your details have been saved.</div>';
+                            }
+                        } else {
+                            alert(data.error || 'Could not save details.');
+                            leadSubmit.innerText = 'Save Details';
+                            leadSubmit.disabled = false;
+                        }
+                    })
+                    .catch(function () {
+                        alert('Network error. Please try again.');
+                        leadSubmit.innerText = 'Save Details';
+                        leadSubmit.disabled = false;
+                    });
+                };
+            }
         }
 
         function sendMessage(text) {

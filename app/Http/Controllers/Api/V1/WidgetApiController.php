@@ -106,9 +106,9 @@ class WidgetApiController extends Controller
                 'enable_human_takeover' => $widget->enable_human_takeover,
             ],
             'bot' => [
-                'name' => $bot->name,
+                'name' => $widget->agent_name ?: $bot->name,
                 'purpose' => $bot->purpose,
-                'avatar_letter' => strtoupper(substr($bot->name, 0, 1)),
+                'avatar_letter' => strtoupper(substr($widget->agent_name ?: $bot->name, 0, 1)),
             ],
             'business' => [
                 'name' => $workspace?->name ?: 'Botify AI',
@@ -197,53 +197,109 @@ class WidgetApiController extends Controller
         $workspaceId = $widget->workspace_id;
         $sessionToken = $validated['session_token'] ?: ('sess_'.Str::random(40));
 
-        // 1. Resolve or create Contact
+        // 1. Check for email or phone in payload or extracted from message body
+        $rawMessage = $validated['message'];
+        $visitorEmail = ! empty($validated['visitor_email']) ? strtolower(trim($validated['visitor_email'])) : null;
+        $visitorPhone = ! empty($validated['visitor_phone']) ? trim($validated['visitor_phone']) : null;
+        $visitorName = ! empty($validated['visitor_name']) ? trim($validated['visitor_name']) : null;
+
+        if (! $visitorEmail && preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $rawMessage, $mEmail)) {
+            $visitorEmail = strtolower($mEmail[0]);
+        }
+        if (! $visitorPhone && preg_match('/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/', $rawMessage, $mPhone)) {
+            $cleaned = preg_replace('/[^\d+]/', '', $mPhone[0]);
+            if (strlen($cleaned) >= 7) {
+                $visitorPhone = $cleaned;
+            }
+        }
+
+        // Only create or link Contact if real contact info (email or phone) is provided
         $contact = null;
-        if (! empty($validated['visitor_email'])) {
-            $contact = Contact::firstOrCreate(
-                ['workspace_id' => $workspaceId, 'email' => strtolower($validated['visitor_email'])],
-                [
-                    'first_name' => $validated['visitor_name'] ?? 'Guest',
-                    'phone_e164' => $validated['visitor_phone'] ?? null,
-                    'source' => 'website_widget',
-                ]
-            );
+        if ($visitorEmail || $visitorPhone) {
+            $contactQuery = Contact::where('workspace_id', $workspaceId);
+            if ($visitorEmail) {
+                $contactQuery->where('email', $visitorEmail);
+            } else {
+                $contactQuery->where('phone_e164', $visitorPhone);
+            }
+            $contact = $contactQuery->first();
+
+            if (! $contact) {
+                $contact = Contact::create([
+                    'workspace_id' => $workspaceId,
+                    'first_name' => $visitorName ?: 'Website Visitor',
+                    'email' => $visitorEmail,
+                    'phone_e164' => $visitorPhone,
+                    'source' => 'website_widget_lead',
+                ]);
+            } else {
+                $updates = [];
+                if ($visitorEmail && ! $contact->email) {
+                    $updates['email'] = $visitorEmail;
+                }
+                if ($visitorPhone && ! $contact->phone_e164) {
+                    $updates['phone_e164'] = $visitorPhone;
+                }
+                if ($visitorName && $contact->first_name === 'Website Visitor') {
+                    $updates['first_name'] = $visitorName;
+                }
+                if (! empty($updates)) {
+                    $contact->update($updates);
+                }
+            }
         }
 
         // 2. Resolve or create Session and Conversation
         $session = ConversationSession::where('session_token', $sessionToken)->first();
 
         if (! $session) {
-            if (! $contact) {
-                // Anonymous guest contact
-                $guestId = substr($sessionToken, -8);
-                $contact = Contact::create([
+            // Note: If no email/phone provided, contact_id is intentionally null!
+            // Create Conversation in the unified Inbox
+            try {
+                $conversation = Conversation::create([
                     'workspace_id' => $workspaceId,
-                    'first_name' => 'Website Guest',
-                    'last_name' => '#'.$guestId,
-                    'source' => 'website_widget',
+                    'contact_id' => $contact?->id,
+                    'external_thread_id' => 'widget_'.$sessionToken,
+                    'status' => 'open',
+                    'source' => 'chatbot',
+                    'mode' => 'ai',
+                    'assigned_to' => 'bot',
+                    'last_message_at' => now(),
+                    'last_inbound_at' => now(),
+                    'unread_count' => 0,
                 ]);
+            } catch (\Throwable $e) {
+                // If strict DB constraints require a contact_id fallback
+                if (! $contact && str_contains(strtolower($e->getMessage()), 'contact_id')) {
+                    $guestId = substr($sessionToken, -8);
+                    $contact = Contact::create([
+                        'workspace_id' => $workspaceId,
+                        'first_name' => 'Website Guest',
+                        'last_name' => '#'.$guestId,
+                        'source' => 'website_widget_anonymous',
+                    ]);
+                    $conversation = Conversation::create([
+                        'workspace_id' => $workspaceId,
+                        'contact_id' => $contact->id,
+                        'external_thread_id' => 'widget_'.$sessionToken,
+                        'status' => 'open',
+                        'source' => 'chatbot',
+                        'mode' => 'ai',
+                        'assigned_to' => 'bot',
+                        'last_message_at' => now(),
+                        'last_inbound_at' => now(),
+                        'unread_count' => 0,
+                    ]);
+                } else {
+                    throw $e;
+                }
             }
-
-            // Create Conversation in the unified Inbox!
-            $conversation = Conversation::create([
-                'workspace_id' => $workspaceId,
-                'contact_id' => $contact->id,
-                'external_thread_id' => 'widget_'.$sessionToken,
-                'status' => 'open',
-                'source' => 'chatbot',
-                'mode' => 'ai',
-                'assigned_to' => 'bot',
-                'last_message_at' => now(),
-                'last_inbound_at' => now(),
-                'unread_count' => 0,
-            ]);
 
             $session = ConversationSession::create([
                 'uuid' => (string) Str::uuid(),
                 'workspace_id' => $workspaceId,
                 'chatbot_id' => $bot->id,
-                'contact_id' => $contact->id,
+                'contact_id' => $contact?->id,
                 'conversation_id' => $conversation->id,
                 'channel' => 'chatbot',
                 'session_token' => $sessionToken,
@@ -261,7 +317,7 @@ class WidgetApiController extends Controller
             if (! $conversation) {
                 $conversation = Conversation::create([
                     'workspace_id' => $workspaceId,
-                    'contact_id' => $session->contact_id ?: $contact?->id,
+                    'contact_id' => $contact?->id ?: $session->contact_id,
                     'external_thread_id' => 'widget_'.$sessionToken,
                     'status' => 'open',
                     'source' => 'chatbot',
@@ -271,6 +327,12 @@ class WidgetApiController extends Controller
                     'last_inbound_at' => now(),
                 ]);
                 $session->update(['conversation_id' => $conversation->id]);
+            }
+
+            // If we acquired contact info in this turn, associate it with session and conversation
+            if ($contact && ! $conversation->contact_id) {
+                $conversation->update(['contact_id' => $contact->id]);
+                $session->update(['contact_id' => $contact->id]);
             }
         }
 
@@ -387,11 +449,21 @@ class WidgetApiController extends Controller
         $validated = $request->validate([
             'key' => ['required', 'string'],
             'session_token' => ['required', 'string'],
-            'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email', 'max:150'],
+            'name' => ['nullable', 'string', 'max:120'],
+            'email' => ['nullable', 'email', 'max:150'],
             'phone' => ['nullable', 'string', 'max:50'],
             'note' => ['nullable', 'string', 'max:500'],
         ]);
+
+        $email = ! empty($validated['email']) ? strtolower(trim($validated['email'])) : null;
+        $phone = ! empty($validated['phone']) ? trim($validated['phone']) : null;
+
+        if (! $email && ! $phone) {
+            return $this->cors(response()->json([
+                'success' => false,
+                'error' => 'Please provide at least an email address or phone number.'
+            ], 422));
+        }
 
         $widget = $this->resolveWidget($validated['key']);
         if (! $widget) {
@@ -402,16 +474,29 @@ class WidgetApiController extends Controller
             ->where('workspace_id', $widget->workspace_id)
             ->first();
 
-        $names = explode(' ', trim($validated['name']), 2);
-        $firstName = $names[0];
-        $lastName = $names[1] ?? '';
+        $fullName = trim($validated['name'] ?? '');
+        $firstName = 'Website Visitor';
+        $lastName = '';
+        if ($fullName !== '') {
+            $names = explode(' ', $fullName, 2);
+            $firstName = $names[0];
+            $lastName = $names[1] ?? '';
+        }
+
+        $matchAttributes = ['workspace_id' => $widget->workspace_id];
+        if ($email) {
+            $matchAttributes['email'] = $email;
+        } else {
+            $matchAttributes['phone_e164'] = $phone;
+        }
 
         $contact = Contact::updateOrCreate(
-            ['workspace_id' => $widget->workspace_id, 'email' => strtolower($validated['email'])],
+            $matchAttributes,
             [
                 'first_name' => $firstName,
                 'last_name' => $lastName,
-                'phone_e164' => $validated['phone'] ?? null,
+                'email' => $email,
+                'phone_e164' => $phone,
                 'source' => 'website_widget_lead_capture',
             ]
         );
@@ -421,20 +506,21 @@ class WidgetApiController extends Controller
             if ($session->conversation) {
                 $session->conversation->update(['contact_id' => $contact->id]);
 
+                $leadDisplay = $fullName ?: ($email ?: $phone);
                 // Record lead capture action message
                 Message::create([
                     'conversation_id' => $session->conversation->id,
                     'direction' => 'in',
                     'channel' => 'chatbot',
                     'type' => 'text',
-                    'body' => "Lead captured: {$validated['name']} ({$validated['email']})",
+                    'body' => "Lead captured: {$leadDisplay}".($email ? " ({$email})" : '').($phone ? " ({$phone})" : ''),
                     'sent_by' => 'bot',
                     'sender_type' => 'ai',
                     'action_type' => 'lead_captured',
                     'action_data' => [
-                        'name' => $validated['name'],
-                        'email' => $validated['email'],
-                        'phone' => $validated['phone'] ?? null,
+                        'name' => $fullName,
+                        'email' => $email,
+                        'phone' => $phone,
                     ],
                     'status' => 'delivered',
                     'sent_at' => now(),
@@ -444,8 +530,8 @@ class WidgetApiController extends Controller
                 $members = User::where('workspace_id', $widget->workspace_id)->get();
                 foreach ($members as $member) {
                     $member->notify(new ChatbotAlertNotification($session->conversation, 'lead_captured', [
-                        'lead_name' => $validated['name'],
-                        'email' => $validated['email'],
+                        'lead_name' => $leadDisplay,
+                        'email' => $email,
                     ]));
                 }
             }

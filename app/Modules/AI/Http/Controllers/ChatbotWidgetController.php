@@ -45,6 +45,7 @@ class ChatbotWidgetController extends Controller
                     'workspace_id' => $workspaceId,
                     'chatbot_id' => $firstBot->id,
                     'widget_key' => 'bw_'.Str::random(32),
+                    'agent_name' => $firstBot->name,
                     'theme' => 'modern',
                     'position' => 'bottom_right',
                     'primary_color' => '#0D9488',
@@ -78,6 +79,7 @@ class ChatbotWidgetController extends Controller
 
         $validated = $request->validate([
             'chatbot_id' => ['required', 'exists:ai_chatbots,id'],
+            'agent_name' => ['nullable', 'string', 'max:64'],
             'theme' => ['required', 'string', 'in:modern,dark,clean,minimal'],
             'position' => ['required', 'string', 'in:bottom_right,bottom_left'],
             'primary_color' => ['required', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],

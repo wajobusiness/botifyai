@@ -24,6 +24,7 @@ export default function ChatbotWidgetPage({ widget, chatbots = [], embedSnippet,
 
     const { data, setData, post, processing, errors } = useForm({
         chatbot_id: widget?.chatbot_id || (chatbots[0]?.id ?? ''),
+        agent_name: widget?.agent_name || selectedBot?.name || 'AI Assistant',
         theme: widget?.theme || 'modern',
         position: widget?.position || 'bottom_right',
         primary_color: widget?.primary_color || '#0D9488',
@@ -147,6 +148,24 @@ export default function ChatbotWidgetPage({ widget, chatbots = [], embedSnippet,
                                     ))}
                                 </select>
                                 {errors.chatbot_id && <p className="text-xs text-red-500 mt-1">{errors.chatbot_id}</p>}
+                            </div>
+
+                            {/* AI Agent Display Name */}
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 mb-1.5">
+                                    AI Agent Display Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.agent_name}
+                                    onChange={(e) => setData('agent_name', e.target.value)}
+                                    placeholder="e.g. Sarah (Support), Botify AI, Alex..."
+                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                />
+                                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
+                                    This friendly name is shown to visitors in the widget header and chat responses.
+                                </p>
+                                {errors.agent_name && <p className="text-xs text-red-500 mt-1">{errors.agent_name}</p>}
                             </div>
 
                             {/* Status & Position */}
@@ -338,10 +357,10 @@ export default function ChatbotWidgetPage({ widget, chatbots = [], embedSnippet,
                                     >
                                         <div className="flex items-center gap-2.5">
                                             <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
-                                                {selectedBot?.name ? selectedBot.name.charAt(0).toUpperCase() : 'B'}
+                                                {(data.agent_name || selectedBot?.name || 'B').charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <h4 className="text-xs font-bold leading-none">{selectedBot?.name || 'Botify AI'}</h4>
+                                                <h4 className="text-xs font-bold leading-none">{data.agent_name || selectedBot?.name || 'Botify AI'}</h4>
                                                 <p className="text-[10px] opacity-80 mt-1 flex items-center gap-1">
                                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
                                                     Online & Active
@@ -368,7 +387,7 @@ export default function ChatbotWidgetPage({ widget, chatbots = [], embedSnippet,
                                     {/* Body */}
                                     <div className="flex-1 p-3 overflow-y-auto space-y-2.5 bg-neutral-50 dark:bg-neutral-950/50 text-xs">
                                         <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 p-2.5 rounded-xl rounded-bl-xs text-neutral-800 dark:text-neutral-200 max-w-[85%]">
-                                            <span className="text-[9px] font-bold text-teal-600 uppercase block mb-1">🤖 {selectedBot?.name || 'AI Assistant'}</span>
+                                            <span className="text-[9px] font-bold text-teal-600 uppercase block mb-1">🤖 {data.agent_name || selectedBot?.name || 'AI Assistant'}</span>
                                             {data.welcome_message}
                                         </div>
 

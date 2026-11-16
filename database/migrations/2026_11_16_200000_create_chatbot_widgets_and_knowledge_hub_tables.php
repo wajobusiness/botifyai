@@ -44,6 +44,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('workspace_id')->index();
                 $table->unsignedBigInteger('chatbot_id')->index();
                 $table->string('widget_key', 64)->unique();
+                $table->string('agent_name', 64)->nullable();
                 $table->string('theme', 32)->default('modern');
                 $table->string('position', 32)->default('bottom_right');
                 $table->string('primary_color', 32)->default('#0D9488');

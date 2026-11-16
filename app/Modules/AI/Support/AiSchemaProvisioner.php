@@ -18,7 +18,7 @@ class AiSchemaProvisioner
     public static function ensureTablesExist(): void
     {
         try {
-            if (Cache::has('ai_schema_provisioned_v3')) {
+            if (Cache::has('ai_schema_provisioned_v4')) {
                 return;
             }
 
@@ -36,6 +36,7 @@ class AiSchemaProvisioner
                     $table->unsignedBigInteger('workspace_id')->index();
                     $table->unsignedBigInteger('chatbot_id')->index();
                     $table->string('widget_key', 64)->unique();
+                    $table->string('agent_name', 64)->nullable();
                     $table->string('theme', 32)->default('modern');
                     $table->string('position', 32)->default('bottom_right');
                     $table->string('primary_color', 32)->default('#0D9488');
@@ -45,6 +46,12 @@ class AiSchemaProvisioner
                     $table->text('allowed_domains')->nullable();
                     $table->string('status', 16)->default('active');
                     $table->timestamps();
+                });
+            } else {
+                Schema::table('chatbot_widgets', function (Blueprint $table) {
+                    if (! Schema::hasColumn('chatbot_widgets', 'agent_name')) {
+                        $table->string('agent_name', 64)->nullable()->after('widget_key');
+                    }
                 });
             }
 
@@ -134,12 +141,19 @@ class AiSchemaProvisioner
                     $table->char('uuid', 36)->unique();
                     $table->unsignedBigInteger('workspace_id')->index();
                     $table->unsignedBigInteger('chatbot_id')->nullable()->index();
+                    $table->string('session_token', 128)->nullable()->index();
                     $table->string('visitor_token', 64)->nullable()->index();
                     $table->string('ip_address', 45)->nullable();
                     $table->text('user_agent')->nullable();
                     $table->json('metadata')->nullable();
                     $table->timestamp('last_active_at')->nullable();
                     $table->timestamps();
+                });
+            } else {
+                Schema::table('conversation_sessions', function (Blueprint $table) {
+                    if (! Schema::hasColumn('conversation_sessions', 'session_token')) {
+                        $table->string('session_token', 128)->nullable()->index();
+                    }
                 });
             }
 
@@ -159,6 +173,10 @@ class AiSchemaProvisioner
                         $table->string('assigned_to', 32)->default('bot')->nullable();
                     }
                 });
+
+                try {
+                    \Illuminate\Support\Facades\DB::statement('ALTER TABLE conversations MODIFY contact_id BIGINT UNSIGNED NULL');
+                } catch (\Throwable) {}
             }
 
             // 11. Columns on messages table
@@ -194,7 +212,7 @@ class AiSchemaProvisioner
                 });
             }
 
-            Cache::put('ai_schema_provisioned_v3', true, now()->addDays(7));
+            Cache::put('ai_schema_provisioned_v4', true, now()->addDays(7));
         } catch (\Throwable $e) {
             Log::warning('AiSchemaProvisioner failed: ' . $e->getMessage());
         }

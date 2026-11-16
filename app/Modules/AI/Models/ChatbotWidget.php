@@ -25,6 +25,7 @@ class ChatbotWidget extends Model
         'workspace_id',
         'chatbot_id',
         'widget_key',
+        'agent_name',
         'theme',
         'position',
         'primary_color',
