@@ -19,6 +19,28 @@ use Inertia\Inertia;
 // Home / Landing
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
+// Public embeddable AI chat widget client script
+Route::get('/widget.js', function () {
+    $path = public_path('widget.js');
+    if (! file_exists($path)) {
+        $path = base_path('public/widget.js');
+    }
+    if (! file_exists($path)) {
+        $path = base_path('widget.js');
+    }
+
+    if (! file_exists($path)) {
+        return response('/* Botify AI Widget Not Found */', 404, ['Content-Type' => 'application/javascript']);
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'application/javascript; charset=utf-8',
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+        'Cache-Control' => 'public, max-age=300',
+    ]);
+});
+
 // Auth routes
 require __DIR__.'/auth.php';
 

@@ -36,6 +36,10 @@
     RewriteCond %{DOCUMENT_ROOT}/public/images/$1 -f
     RewriteRule ^images/(.*)$ public/images/$1 [L]
 
+    # Map public widget.js directly when root is public_html
+    RewriteCond %{DOCUMENT_ROOT}/public/widget.js -f
+    RewriteRule ^widget\.js$ public/widget.js [L]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f

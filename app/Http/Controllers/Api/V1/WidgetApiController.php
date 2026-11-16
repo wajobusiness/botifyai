@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Modules\AI\Models\AiChatbot;
 use App\Modules\AI\Models\ChatbotWidget;
 use App\Modules\AI\Models\ConversationSession;
 use App\Modules\AI\Services\ChatbotRunner;
@@ -32,11 +33,34 @@ class WidgetApiController extends Controller
         AiSchemaProvisioner::ensureTablesExist();
 
         try {
-            return ChatbotWidget::where('widget_key', $key)
-                ->where('status', 'active')
+            $key = trim($key);
+            $widget = ChatbotWidget::where('widget_key', $key)
                 ->with(['chatbot', 'workspace'])
                 ->first();
-        } catch (\Throwable) {
+
+            if (! $widget) {
+                return null;
+            }
+
+            if ($widget->status === 'inactive') {
+                return null;
+            }
+
+            // Ensure chatbot relationship is bound
+            if (! $widget->chatbot) {
+                $fallbackBot = AiChatbot::where('workspace_id', $widget->workspace_id)
+                    ->where('enabled', true)
+                    ->first()
+                    ?? AiChatbot::where('workspace_id', $widget->workspace_id)->first();
+
+                if ($fallbackBot) {
+                    $widget->setRelation('chatbot', $fallbackBot);
+                }
+            }
+
+            return $widget;
+        } catch (\Throwable $e) {
+            Log::warning('resolveWidget error: '.$e->getMessage());
             return null;
         }
     }
@@ -48,8 +72,8 @@ class WidgetApiController extends Controller
     {
         return $response
             ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+            ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN, Accept, Origin');
     }
 
     /**

@@ -20,6 +20,8 @@ deployment:
     - /bin/cp .htaccess $DEPLOYPATH
     - /bin/cp .branding $DEPLOYPATH 2>/dev/null || true
     - /bin/cp robots.txt $DEPLOYPATH 2>/dev/null || true
+    - /bin/cp public/widget.js $DEPLOYPATH/widget.js 2>/dev/null || true
+    - /bin/cp widget.js $DEPLOYPATH/widget.js 2>/dev/null || true
     - /usr/local/bin/php $DEPLOYPATH/artisan migrate --force 2>/dev/null || php $DEPLOYPATH/artisan migrate --force 2>/dev/null || true
     - /usr/local/bin/php $DEPLOYPATH/artisan optimize:clear 2>/dev/null || php $DEPLOYPATH/artisan optimize:clear 2>/dev/null || true
 

@@ -47,12 +47,21 @@ Route::prefix('v1/public/widget')->middleware(['throttle:60,1'])->group(function
 });
 
 // ─── Public Embeddable Website AI Chat Widget API (CORS enabled & throttled) ──
-Route::prefix('v1/widget')->middleware(['throttle:120,1'])->group(function () {
-    Route::get('/config', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'config']);
-    Route::get('/history', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'history']);
-    Route::post('/message', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'message']);
-    Route::post('/lead', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'lead']);
-    Route::post('/takeover', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'takeover']);
+Route::prefix('v1/widget')->group(function () {
+    Route::options('{any?}', function () {
+        return response('', 204)
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN, Accept, Origin');
+    })->where('any', '.*');
+
+    Route::middleware(['throttle:120,1'])->group(function () {
+        Route::get('/config', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'config']);
+        Route::get('/history', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'history']);
+        Route::post('/message', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'message']);
+        Route::post('/lead', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'lead']);
+        Route::post('/takeover', [\App\Http\Controllers\Api\V1\WidgetApiController::class, 'takeover']);
+    });
 });
 
 Route::prefix('v1/auth')->middleware(['auth:sanctum', 'throttle:api'])->group(function () {
