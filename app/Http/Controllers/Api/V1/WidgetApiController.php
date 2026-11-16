@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Modules\AI\Models\ChatbotWidget;
 use App\Modules\AI\Models\ConversationSession;
 use App\Modules\AI\Services\ChatbotRunner;
+use App\Modules\AI\Support\AiSchemaProvisioner;
 use App\Modules\Inbox\Models\ConversationActivity;
 use App\Modules\Shared\Models\Contact;
 use App\Modules\Shared\Models\Conversation;
@@ -28,10 +29,16 @@ class WidgetApiController extends Controller
      */
     private function resolveWidget(string $key): ?ChatbotWidget
     {
-        return ChatbotWidget::where('widget_key', $key)
-            ->where('status', 'active')
-            ->with(['chatbot', 'workspace'])
-            ->first();
+        AiSchemaProvisioner::ensureTablesExist();
+
+        try {
+            return ChatbotWidget::where('widget_key', $key)
+                ->where('status', 'active')
+                ->with(['chatbot', 'workspace'])
+                ->first();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

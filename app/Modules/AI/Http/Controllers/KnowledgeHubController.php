@@ -7,66 +7,86 @@ use App\Modules\AI\Models\AiKbDocument;
 use App\Modules\AI\Models\AiKnowledgeBase;
 use App\Modules\AI\Models\KnowledgeSource;
 use App\Modules\AI\Services\KnowledgeSyncService;
+use App\Modules\AI\Support\AiSchemaProvisioner;
 use App\Modules\Shared\Models\Contact;
 use App\Modules\Shared\Models\Conversation;
 use App\Modules\Shared\Models\Message;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class KnowledgeHubController extends Controller
 {
-    public function __construct(
-        private KnowledgeSyncService $syncService
-    ) {}
+    private function syncService(): KnowledgeSyncService
+    {
+        return app(KnowledgeSyncService::class);
+    }
 
     /**
      * Display AI Knowledge Hub dashboard with connectors and analytics
      */
     public function index(Request $request): Response
     {
+        AiSchemaProvisioner::ensureTablesExist();
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
 
-        $sources = KnowledgeSource::where('workspace_id', $workspaceId)
-            ->withCount('documents')
-            ->orderByDesc('created_at')
-            ->get();
+        try {
+            $sources = KnowledgeSource::where('workspace_id', $workspaceId)
+                ->withCount('documents')
+                ->orderByDesc('created_at')
+                ->get();
+        } catch (\Throwable $e) {
+            Log::warning('KnowledgeHubController@index failed getting sources', ['error' => $e->getMessage()]);
+            $sources = collect();
+        }
 
         // Native knowledge documents (products, docs, URLs, FAQs)
-        $nativeDocs = AiKbDocument::whereHas('knowledgeBase', fn ($q) => $q->where('workspace_id', $workspaceId))
-            ->orderByDesc('created_at')
-            ->take(15)
-            ->get(['id', 'title', 'source_type', 'source_ref', 'status', 'tokens', 'last_indexed_at']);
+        try {
+            $nativeDocs = AiKbDocument::whereHas('knowledgeBase', fn ($q) => $q->where('workspace_id', $workspaceId))
+                ->orderByDesc('created_at')
+                ->take(15)
+                ->get(['id', 'title', 'source_type', 'source_ref', 'status', 'tokens', 'last_indexed_at']);
+        } catch (\Throwable $e) {
+            $nativeDocs = collect();
+        }
 
         // Real Analytics Metrics
-        $totalConversations = Conversation::where('workspace_id', $workspaceId)
-            ->where(fn ($q) => $q->where('channel_account_id', null)->orWhere('source', 'chatbot'))
-            ->count();
+        $totalConversations = 0;
+        $leadsGenerated = 0;
+        $humanTakeoverCount = 0;
+        $sampleQuestions = [];
 
-        $leadsGenerated = Contact::where('workspace_id', $workspaceId)
-            ->where('source', 'LIKE', '%widget%')
-            ->count();
-
-        $humanTakeoverCount = Conversation::where('workspace_id', $workspaceId)
-            ->where('assigned_to', 'human')
-            ->count();
+        try {
+            $totalConversations = Conversation::where('workspace_id', $workspaceId)->count();
+            $leadsGenerated = Contact::where('workspace_id', $workspaceId)
+                ->where('source', 'LIKE', '%widget%')
+                ->count();
+            $humanTakeoverCount = Conversation::where('workspace_id', $workspaceId)
+                ->where(function ($q) {
+                    $q->where('status', 'human_active')
+                      ->orWhereNotNull('assigned_user_id');
+                })
+                ->count();
+            $sampleQuestions = Message::whereHas('conversation', fn ($q) => $q->where('workspace_id', $workspaceId))
+                ->where('direction', 'in')
+                ->whereNotNull('body')
+                ->orderByDesc('id')
+                ->take(8)
+                ->pluck('body')
+                ->filter(fn ($b) => strlen($b) > 10)
+                ->values()
+                ->toArray();
+        } catch (\Throwable $e) {
+            Log::warning('KnowledgeHubController@index analytics query note', ['error' => $e->getMessage()]);
+        }
 
         // Compute AI response accuracy / resolution rate
         $aiResolvedCount = max(0, $totalConversations - $humanTakeoverCount);
         $resolutionRate = $totalConversations > 0 ? round(($aiResolvedCount / $totalConversations) * 100, 1) : 98.4;
         $conversionRate = $totalConversations > 0 ? round(($leadsGenerated / $totalConversations) * 100, 1) : 14.2;
-
-        // Most asked questions sample
-        $sampleQuestions = Message::whereHas('conversation', fn ($q) => $q->where('workspace_id', $workspaceId))
-            ->where('direction', 'in')
-            ->whereNotNull('body')
-            ->whereRaw('length(body) > 10')
-            ->orderByDesc('id')
-            ->take(8)
-            ->pluck('body')
-            ->toArray();
 
         $analytics = [
             'total_conversations' => $totalConversations,
@@ -95,6 +115,7 @@ class KnowledgeHubController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        AiSchemaProvisioner::ensureTablesExist();
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
 
         $validated = $request->validate([
@@ -113,8 +134,8 @@ class KnowledgeHubController extends Controller
             'status' => 'active',
         ]);
 
-        // Trigger immediate background/sync
-        $this->syncService->sync($source);
+        // Trigger immediate sync
+        $this->syncService()->sync($source);
 
         return back()->with('success', "Knowledge connector '{$source->name}' created and synced successfully!");
     }
@@ -124,12 +145,13 @@ class KnowledgeHubController extends Controller
      */
     public function sync(Request $request, KnowledgeSource $source): RedirectResponse
     {
+        AiSchemaProvisioner::ensureTablesExist();
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
         if ($source->workspace_id !== $workspaceId) {
             abort(403);
         }
 
-        $result = $this->syncService->sync($source);
+        $result = $this->syncService()->sync($source);
 
         if ($result['success']) {
             return back()->with('success', $result['message']);
@@ -148,7 +170,7 @@ class KnowledgeHubController extends Controller
             'connection_details' => ['required', 'array'],
         ]);
 
-        $connector = $this->syncService->getConnector($validated['type']);
+        $connector = $this->syncService()->getConnector($validated['type']);
         if (! $connector) {
             return response()->json(['success' => false, 'message' => 'Unsupported connector type.'], 400);
         }
@@ -163,6 +185,7 @@ class KnowledgeHubController extends Controller
      */
     public function destroy(Request $request, KnowledgeSource $source): RedirectResponse
     {
+        AiSchemaProvisioner::ensureTablesExist();
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
         if ($source->workspace_id !== $workspaceId) {
             abort(403);

@@ -18,6 +18,7 @@ use App\Modules\Whatsapp\Services\CloudApiClient;
 use App\Notifications\ConversationHandoverNotification;
 use App\Services\StorageManager;
 use App\Support\Demo;
+use App\Modules\AI\Support\AiSchemaProvisioner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,6 +38,7 @@ class InboxController extends Controller
 
     public function index(Request $request): Response
     {
+        AiSchemaProvisioner::ensureTablesExist();
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
         $userId = $request->user()->id;
 

@@ -9,12 +9,15 @@ use App\Modules\AI\Models\AiBotToolPermission;
 use App\Modules\AI\Models\AiChatbot;
 use App\Modules\AI\Models\AiKnowledgeBase;
 use App\Modules\AI\Services\ChatbotRunner;
+use App\Modules\AI\Support\AiSchemaProvisioner;
 use App\Modules\Ecommerce\Models\EcommerceProduct;
 use App\Modules\Ecommerce\Models\EcommerceStore;
 use App\Modules\Ecommerce\Services\CommerceToolRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,23 +30,54 @@ class AiChatbotController extends Controller
 
     public function index(Request $request): Response
     {
+        AiSchemaProvisioner::ensureTablesExist();
         $wid = $this->workspaceId($request);
 
-        $chatbots = AiChatbot::where('workspace_id', $wid)
-            ->with([
-                'knowledgeBase',
-                'knowledgeBases',
-                'storeConnections.store',
-                'productAssignments.product',
-                'toolPermissions',
-            ])
-            ->latest()
-            ->get();
+        try {
+            $relations = array_values(array_filter([
+                Schema::hasTable('ai_knowledge_bases') ? 'knowledgeBase' : null,
+                Schema::hasTable('ai_bot_knowledge_sources') ? 'knowledgeBases' : null,
+                Schema::hasTable('ai_bot_store_connections') ? 'storeConnections.store' : null,
+                Schema::hasTable('ai_bot_product_assignments') ? 'productAssignments.product' : null,
+                Schema::hasTable('ai_bot_tool_permissions') ? 'toolPermissions' : null,
+            ]));
 
-        $knowledgeBases = AiKnowledgeBase::where('workspace_id', $wid)->get(['id', 'name']);
-        $stores = EcommerceStore::where('workspace_id', $wid)->get(['id', 'name', 'platform', 'currency', 'status']);
-        $products = EcommerceProduct::where('workspace_id', $wid)->get(['id', 'store_id', 'name', 'price', 'currency', 'product_type', 'slug']);
-        $tools = CommerceToolRegistry::getToolDefinitions();
+            $chatbots = AiChatbot::where('workspace_id', $wid)
+                ->with($relations)
+                ->latest()
+                ->get();
+        } catch (\Throwable $e) {
+            Log::warning('AiChatbotController::index query failed, falling back', ['error' => $e->getMessage()]);
+            try {
+                $chatbots = AiChatbot::where('workspace_id', $wid)->latest()->get();
+            } catch (\Throwable) {
+                $chatbots = collect();
+            }
+        }
+
+        try {
+            $knowledgeBases = AiKnowledgeBase::where('workspace_id', $wid)->get(['id', 'name']);
+        } catch (\Throwable) {
+            $knowledgeBases = collect();
+        }
+
+        try {
+            $stores = EcommerceStore::where('workspace_id', $wid)->get(['id', 'name', 'platform', 'currency', 'status']);
+        } catch (\Throwable) {
+            $stores = collect();
+        }
+
+        try {
+            $products = EcommerceProduct::where('workspace_id', $wid)->get(['id', 'store_id', 'name', 'price', 'currency', 'product_type', 'slug']);
+        } catch (\Throwable) {
+            $products = collect();
+        }
+
+        try {
+            $tools = CommerceToolRegistry::getToolDefinitions();
+        } catch (\Throwable) {
+            $tools = [];
+        }
 
         return Inertia::render('AI/Chatbots/Index', [
             'chatbots' => $chatbots,
@@ -51,8 +85,8 @@ class AiChatbotController extends Controller
             'stores' => $stores,
             'products' => $products,
             'availableTools' => array_map(fn ($t) => [
-                'name' => $t['function']['name'],
-                'description' => $t['function']['description'],
+                'name' => $t['function']['name'] ?? '',
+                'description' => $t['function']['description'] ?? '',
             ], $tools),
         ]);
     }

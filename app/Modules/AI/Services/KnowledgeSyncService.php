@@ -112,10 +112,7 @@ class KnowledgeSyncService
                     try {
                         $embeddings = $this->llm->embed($source->workspace_id, [$chunkText]);
                         if (! empty($embeddings[0])) {
-                            $this->store->upsert($kb->id, $chunk->id, $embeddings[0], [
-                                'document_id' => $kbDoc->id,
-                                'source_type' => $source->type,
-                            ]);
+                            $this->store->storeEmbedding($chunk, $embeddings[0]);
                         }
                     } catch (\Throwable $e) {
                         Log::warning('Embedding generation skipped in sync', ['error' => $e->getMessage()]);
