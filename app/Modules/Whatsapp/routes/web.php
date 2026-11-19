@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Whatsapp\Http\Controllers\WhatsappAutoReplyController;
+use App\Modules\Whatsapp\Http\Controllers\WhatsappDevicePairingController;
 use App\Modules\Whatsapp\Http\Controllers\WhatsappEmbeddedSignupController;
 use App\Modules\Whatsapp\Http\Controllers\WhatsappSetupController;
 use App\Modules\Whatsapp\Http\Controllers\WhatsappTemplateController;
@@ -22,6 +23,13 @@ Route::middleware(['web', 'client-app'])->prefix('app/whatsapp')->name('client.w
     Route::post('/setup/{waba}/sync-phone-numbers', [WhatsappSetupController::class, 'syncPhoneNumbers'])->name('setup.sync-phone-numbers');
     Route::post('/setup/{waba}/phone/{phoneNumberId}/refresh-status', [WhatsappSetupController::class, 'refreshPhoneStatus'])->name('setup.refresh-phone-status');
     Route::post('/setup/{waba}/phone/{phoneNumberId}/change-name', [WhatsappSetupController::class, 'changeDisplayName'])->name('setup.change-display-name');
+
+    // Multi-Device & Linked Phone Connection (Pairing Code & QR Code)
+    Route::get('/devices', [WhatsappDevicePairingController::class, 'index'])->name('devices.index');
+    Route::post('/devices/request-pairing', [WhatsappDevicePairingController::class, 'requestPairing'])->name('devices.request-pairing');
+    Route::get('/devices/{sessionUid}/status', [WhatsappDevicePairingController::class, 'status'])->name('devices.status');
+    Route::post('/devices/{sessionUid}/disconnect', [WhatsappDevicePairingController::class, 'disconnect'])->name('devices.disconnect');
+    Route::post('/devices/{sessionUid}/confirm', [WhatsappDevicePairingController::class, 'confirm'])->name('devices.confirm');
 
     // Templates
     Route::get('/templates', [WhatsappTemplateController::class, 'index'])->name('templates.index');

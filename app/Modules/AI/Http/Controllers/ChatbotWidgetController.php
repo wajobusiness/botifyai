@@ -76,6 +76,11 @@ class ChatbotWidgetController extends Controller
     {
         AiSchemaProvisioner::ensureTablesExist();
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
+        $workspace = $request->user()->currentWorkspace ?? $request->user()->workspaces()->first();
+
+        if ($workspace && ! \App\Services\Entitlements\EntitlementService::canAccess($workspace, 'ai_live_chat_widget')) {
+            return back()->withErrors(['error' => 'Live Chat Widget is not included in your current subscription plan. Please upgrade to deploy website widgets.']);
+        }
 
         $validated = $request->validate([
             'chatbot_id' => ['required', 'exists:ai_chatbots,id'],

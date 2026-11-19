@@ -117,6 +117,16 @@ class KnowledgeHubController extends Controller
     {
         AiSchemaProvisioner::ensureTablesExist();
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
+        $workspace = $request->user()->currentWorkspace ?? $request->user()->workspaces()->first();
+
+        if ($workspace) {
+            if (! \App\Services\Entitlements\EntitlementService::canAccess($workspace, 'ai_knowledge_hub')) {
+                return back()->withErrors(['error' => 'AI Knowledge Hub is not included in your current subscription plan. Please upgrade to connect external knowledge sources.']);
+            }
+            if (\App\Services\Entitlements\EntitlementService::hasReachedLimit($workspace, 'max_knowledge_sources')) {
+                return back()->withErrors(['error' => 'You have reached the maximum allowed Knowledge Sources for your subscription plan. Please upgrade to add more sources.']);
+            }
+        }
 
         $validated = $request->validate([
             'type' => ['required', 'string', 'in:rest_api,mysql,postgres,mongodb,shopify,woocommerce,google_drive,dropbox,hubspot,salesforce,zoho'],

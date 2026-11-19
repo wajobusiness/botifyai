@@ -31,6 +31,21 @@ class WhatsappEmbeddedSignupController extends Controller
         }
 
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
+        $workspace   = $workspaceId ? \App\Models\Workspace::find($workspaceId) : null;
+
+        if ($workspace) {
+            if (! \App\Services\Entitlements\EntitlementService::canAccess($workspace, 'whatsapp_cloud_api')) {
+                return response()->json([
+                    'message' => 'WhatsApp Cloud API is not included in your current subscription plan. Please upgrade to connect.',
+                ], 403);
+            }
+
+            if (\App\Services\Entitlements\EntitlementService::hasReachedLimit($workspace, 'max_whatsapp_accounts')) {
+                return response()->json([
+                    'message' => 'You have reached the maximum allowed WhatsApp accounts for your plan. Please upgrade to connect more numbers.',
+                ], 403);
+            }
+        }
 
         $meta = CredentialResolver::system()->meta();
         if (! $meta || ! $meta->appId() || ! $meta->appSecret()) {
@@ -257,6 +272,21 @@ class WhatsappEmbeddedSignupController extends Controller
         ]);
 
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
+        $workspace   = $workspaceId ? \App\Models\Workspace::find($workspaceId) : null;
+
+        if ($workspace) {
+            if (! \App\Services\Entitlements\EntitlementService::canAccess($workspace, 'whatsapp_cloud_api')) {
+                return response()->json([
+                    'message' => 'WhatsApp Cloud API is not included in your current subscription plan. Please upgrade to connect.',
+                ], 403);
+            }
+
+            if (\App\Services\Entitlements\EntitlementService::hasReachedLimit($workspace, 'max_whatsapp_accounts')) {
+                return response()->json([
+                    'message' => 'You have reached the maximum allowed WhatsApp accounts for your plan. Please upgrade to connect more numbers.',
+                ], 403);
+            }
+        }
         $accessToken = trim($validated['access_token']);
         $wabaId      = trim($validated['waba_id']);
 
@@ -394,6 +424,21 @@ class WhatsappEmbeddedSignupController extends Controller
     public function reregisterWebhook(Request $request, \App\Modules\Whatsapp\Models\WhatsappBusinessAccount $waba): JsonResponse
     {
         $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
+        $workspace   = $workspaceId ? \App\Models\Workspace::find($workspaceId) : null;
+
+        if ($workspace) {
+            if (! \App\Services\Entitlements\EntitlementService::canAccess($workspace, 'whatsapp_cloud_api')) {
+                return response()->json([
+                    'message' => 'WhatsApp Cloud API is not included in your current subscription plan. Please upgrade to connect.',
+                ], 403);
+            }
+
+            if (\App\Services\Entitlements\EntitlementService::hasReachedLimit($workspace, 'max_whatsapp_accounts')) {
+                return response()->json([
+                    'message' => 'You have reached the maximum allowed WhatsApp accounts for your plan. Please upgrade to connect more numbers.',
+                ], 403);
+            }
+        }
         if ($waba->workspace_id !== $workspaceId) {
             abort(403);
         }

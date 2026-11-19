@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import LinkedDevicePairingForm from './LinkedDevicePairingForm';
 
 /* brand logos (accurate official paths) */
 
@@ -551,11 +552,103 @@ function WabaCard({ waba, webhookGlobalUrl, webhookBaseUrl, webhookToken, channe
     );
 }
 
-function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookTokensByWaba, channelAccountsByWaba, chatbots, showForm, setShowForm, metaConfigIdWhatsapp, metaAppId, onConnectClick }) {
+function LinkedDeviceCard({ session }) {
+    const [disconnecting, setDisconnecting] = useState(false);
+    const [confirm, setConfirm] = useState(false);
+
+    const handleDisconnect = async () => {
+        setDisconnecting(true);
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            await fetch(route('client.whatsapp.devices.disconnect', { sessionUid: session.session_uid }), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                    'Accept': 'application/json',
+                },
+            });
+            router.reload({ preserveScroll: true });
+        } catch {
+            // ignore
+        } finally {
+            setDisconnecting(false);
+            setConfirm(false);
+        }
+    };
+
+    return (
+        <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm">
+                            {session.name || 'WhatsApp Phone'}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                            Linked Phone (Baileys Multi-Device)
+                        </span>
+                        <StatusBadge status={session.connection_status === 'connected' ? 'active' : 'inactive'} />
+                    </div>
+                    {session.phone_number && (
+                        <p className="font-mono text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            +{session.phone_number}
+                        </p>
+                    )}
+                </div>
+                <div>
+                    {confirm ? (
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                type="button"
+                                onClick={handleDisconnect}
+                                disabled={disconnecting}
+                                className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                            >
+                                {disconnecting ? '...' : 'Confirm'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setConfirm(false)}
+                                className="rounded border px-2 py-1 text-xs text-neutral-500 hover:bg-neutral-100"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => setConfirm(true)}
+                            className="p-1.5 rounded-lg border border-red-200 dark:border-red-900 text-red-500 hover:bg-red-50 transition"
+                            title="Disconnect WhatsApp Phone"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function WhatsAppSection({
+    wabas,
+    linkedDeviceSessions = [],
+    webhookGlobalUrl,
+    webhookBaseUrl,
+    webhookTokensByWaba,
+    channelAccountsByWaba,
+    chatbots,
+    showForm,
+    setShowForm,
+    metaConfigIdWhatsapp,
+    metaAppId,
+    onConnectClick,
+}) {
     const { t } = useTranslation();
     const [waApiError, setWaApiError] = useState(null);
     const [waSubmitting, setWaSubmitting] = useState(false);
-    const [waMethod, setWaMethod] = useState(metaConfigIdWhatsapp ? 'meta' : 'manual');
+    const [waMethod, setWaMethod] = useState(metaConfigIdWhatsapp ? 'meta' : 'linked_device');
 
     const handleWaEmbeddedCode = useCallback(async (code, wabaId = null, phoneNumberId = null, accessToken = null) => {
         setWaApiError(null);
@@ -591,12 +684,14 @@ function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookToken
         }
     }, [setShowForm, t]);
 
+    const totalAccounts = (wabas?.length ?? 0) + (linkedDeviceSessions?.length ?? 0);
+
     return (
         <ChannelCard
             icon={WhatsAppLogo}
             iconBg="bg-white dark:bg-neutral-800 shadow-sm border border-neutral-100 dark:border-neutral-700"
             title={t('inbox.whatsapp_business')}
-            count={wabas.length}
+            count={totalAccounts}
         >
             {wabas.length > 0 && (
                 <div className="space-y-3">
@@ -614,7 +709,15 @@ function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookToken
                 </div>
             )}
 
-            {!showForm && wabas.length === 0 && (
+            {linkedDeviceSessions.length > 0 && (
+                <div className="space-y-3 mt-3">
+                    {linkedDeviceSessions.map(session => (
+                        <LinkedDeviceCard key={session.id} session={session} />
+                    ))}
+                </div>
+            )}
+
+            {!showForm && totalAccounts === 0 && (
                 <div className="text-center py-8">
                     <div className="mx-auto mb-3 rounded-2xl w-12 h-12 flex items-center justify-center bg-green-100 dark:bg-green-900/30 opacity-60">
                         <WhatsAppLogo className="h-6 w-6" />
@@ -631,9 +734,18 @@ function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookToken
             )}
 
             {showForm && (
-                <div className={`${wabas.length > 0 ? 'mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-800' : ''} space-y-3`}>
+                <div className={`${totalAccounts > 0 ? 'mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-800' : ''} space-y-3`}>
                     <MethodTabs method={waMethod} setMethod={setWaMethod} />
-                    {waMethod === 'meta' ? (
+
+                    {waMethod === 'linked_device' ? (
+                        <LinkedDevicePairingForm
+                            onSuccess={() => {
+                                setShowForm(false);
+                                router.reload({ preserveScroll: true });
+                            }}
+                            onCancel={() => setShowForm(false)}
+                        />
+                    ) : waMethod === 'meta' ? (
                         metaConfigIdWhatsapp ? (
                             <>
                                 <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
@@ -646,6 +758,7 @@ function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookToken
                                     label={t('inbox.continue_meta_whatsapp')}
                                     color="green"
                                     onCode={handleWaEmbeddedCode}
+                                    onConnectClick={onConnectClick}
                                 />
                                 {waSubmitting && <p className="text-xs text-neutral-400">{t('inbox.connecting_whatsapp')}</p>}
                                 {waApiError && (
@@ -663,6 +776,7 @@ function WhatsAppSection({ wabas, webhookGlobalUrl, webhookBaseUrl, webhookToken
                     ) : (
                         <ManualWhatsappForm onSuccess={() => setShowForm(false)} />
                     )}
+
                     <button type="button" onClick={() => setShowForm(false)}
                         className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition">
                         {t('common.cancel')}
@@ -1044,15 +1158,16 @@ function EmbeddedSignupButton({ configId, appId, channel, label, color, onCode, 
 function MethodTabs({ method, setMethod }) {
     const { t } = useTranslation();
     const tabs = [
-        { key: 'meta',   label: t('inbox.method_meta') },
-        { key: 'manual', label: t('inbox.method_manual') },
+        { key: 'meta',          label: 'Meta Cloud API' },
+        { key: 'linked_device', label: 'Link Phone (Code/QR)' },
+        { key: 'manual',        label: 'Manual WABA' },
     ];
     return (
         <div className="flex rounded-lg bg-neutral-100 dark:bg-neutral-800 p-0.5">
             {tabs.map(tab => (
                 <button key={tab.key} type="button" onClick={() => setMethod(tab.key)}
-                    className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition ${method === tab.key
-                        ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm'
+                    className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition text-center ${method === tab.key
+                        ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm font-semibold'
                         : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'}`}>
                     {tab.label}
                 </button>
@@ -1463,6 +1578,7 @@ function ConnectDrawer({ open, onClose, title, icon: Icon, iconBg, children }) {
 export default function ChannelSetup({
     wabas, whatsappWebhookGlobalUrl, whatsappWebhookUrl, webhookTokensByWaba,
     channelAccountsByWaba, instagramAccounts, messengerAccounts, metaWebhookUrl,
+    linkedDeviceSessions = [],
     metaAppId = null, metaConfigIdWhatsapp = null, metaConfigIdSocial = null,
     chatbots = [],
     smsConfiguredCount = 0,
@@ -1546,6 +1662,7 @@ export default function ChannelSetup({
                 {/* WhatsApp */}
                 <WhatsAppSection
                     wabas={wabas}
+                    linkedDeviceSessions={linkedDeviceSessions}
                     webhookGlobalUrl={whatsappWebhookGlobalUrl}
                     webhookBaseUrl={whatsappWebhookUrl}
                     webhookTokensByWaba={webhookTokensByWaba ?? {}}
@@ -1751,6 +1868,7 @@ export default function ChannelSetup({
                 iconBg="bg-white dark:bg-neutral-800 shadow-sm border border-neutral-100 dark:border-neutral-700">
                 <WhatsAppSection
                     wabas={wabas}
+                    linkedDeviceSessions={linkedDeviceSessions}
                     webhookGlobalUrl={whatsappWebhookGlobalUrl}
                     webhookBaseUrl={whatsappWebhookUrl}
                     webhookTokensByWaba={webhookTokensByWaba ?? {}}

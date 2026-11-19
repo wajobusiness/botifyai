@@ -84,8 +84,16 @@ class InboxSetupController extends Controller
                 ->first();
         }
 
+        // Linked device accounts ( Multi-device / Personal WhatsApp / Coexistence )
+        \App\Modules\Whatsapp\Support\WhatsappSchemaProvisioner::ensureTablesExist();
+        $linkedDeviceSessions = \App\Modules\Whatsapp\Models\WhatsappDeviceSession::where('workspace_id', $workspaceId)
+            ->with('channelAccount')
+            ->orderByDesc('updated_at')
+            ->get();
+
         return Inertia::render('Inbox/Setup', [
             'wabas' => $wabas,
+            'linkedDeviceSessions' => $linkedDeviceSessions,
             'whatsappWebhookUrl' => url('/webhooks/whatsapp'),
             'whatsappWebhookGlobalUrl' => route('webhooks.whatsapp.global.receive'),
             'webhookTokensByWaba' => $webhookTokensByWaba,

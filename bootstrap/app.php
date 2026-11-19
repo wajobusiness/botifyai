@@ -131,6 +131,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'client.scope' => EnsureClientScope::class,
             'licensed' => EnsureLicensed::class,
             'limit' => EnforceLimit::class,
+            'entitlement' => \App\Http\Middleware\EnsureFeatureEntitlement::class,
             'api.ability' => CheckApiAbility::class,
         ]);
         // Shared middleware stack for all client module routes (mirrors routes/client.php).

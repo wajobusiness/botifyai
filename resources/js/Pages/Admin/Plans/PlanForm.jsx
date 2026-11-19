@@ -12,6 +12,7 @@ export default function PlanForm({
     onCancel,
     isEdit,
     currencies = [],
+    featureDefinitions = {},
 }) {
     const { t } = useTranslation();
     const yearlyEnabled = data.yearly_price_cents != null && data.yearly_price_cents !== '';
@@ -161,16 +162,24 @@ export default function PlanForm({
                 </div>
             </section>
 
-            {/* Plan Limits */}
+            {/* Dynamic Capabilities & Marketing Highlights */}
             <section>
-                <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">{t('admin.plan_limits')}</h4>
-                <PlanLimits limits={data.limits} onChange={(limits) => setData('limits', limits)} />
+                <PlanFeatures
+                    features={data.features}
+                    featureToggles={data.feature_toggles}
+                    featureDefinitions={featureDefinitions}
+                    onFeaturesChange={(features) => setData('features', features)}
+                    onTogglesChange={(toggles) => setData('feature_toggles', toggles)}
+                />
             </section>
 
-            {/* Feature List */}
+            {/* Plan Limits & Quotas */}
             <section>
-                <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">{t('admin.feature_list')}</h4>
-                <PlanFeatures features={data.features} onChange={(features) => setData('features', features)} />
+                <PlanLimits
+                    limits={data.limits}
+                    featureDefinitions={featureDefinitions}
+                    onChange={(limits) => setData('limits', limits)}
+                />
             </section>
 
             {/* Status toggles */}

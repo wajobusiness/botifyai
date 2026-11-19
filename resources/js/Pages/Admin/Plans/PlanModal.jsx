@@ -14,6 +14,7 @@ const emptyPlan = (currency = 'USD') => ({
     stripe_monthly_id: '',
     stripe_yearly_id: '',
     features: [],
+    feature_toggles: {},
     limits: {},
     enabled: true,
     featured: false,
@@ -21,12 +22,26 @@ const emptyPlan = (currency = 'USD') => ({
     sort_order: 0,
 });
 
-export default function PlanModal({ show, onClose, plan = null, currencies = [], defaultCurrency = 'USD' }) {
+export default function PlanModal({
+    show,
+    onClose,
+    plan = null,
+    currencies = [],
+    defaultCurrency = 'USD',
+    featureDefinitions = {},
+}) {
     const { t } = useTranslation();
     const isEdit = !!plan?.id;
 
     const { data, setData, post, put, processing, errors, reset } = useForm(
-        plan ? { ...plan, limits: plan.limits ?? {}, features: plan.features ?? [] } : emptyPlan(defaultCurrency)
+        plan
+            ? {
+                  ...plan,
+                  limits: plan.limits ?? {},
+                  feature_toggles: plan.feature_toggles ?? {},
+                  features: Array.isArray(plan.features) ? plan.features : [],
+              }
+            : emptyPlan(defaultCurrency)
     );
 
     const handleSubmit = (e) => {
@@ -51,12 +66,12 @@ export default function PlanModal({ show, onClose, plan = null, currencies = [],
     };
 
     return (
-        <Modal show={show} onClose={onClose} maxWidth="3xl">
+        <Modal show={show} onClose={onClose} maxWidth="4xl">
             <Modal.Header
                 title={isEdit ? t('admin.edit_plan') : t('admin.add_plan')}
                 onClose={onClose}
             />
-            <Modal.Body className="max-h-[70vh] overflow-y-auto">
+            <Modal.Body className="max-h-[75vh] overflow-y-auto">
                 <PlanForm
                     data={data}
                     setData={setData}
@@ -66,6 +81,7 @@ export default function PlanModal({ show, onClose, plan = null, currencies = [],
                     onCancel={onClose}
                     isEdit={isEdit}
                     currencies={currencies}
+                    featureDefinitions={featureDefinitions}
                 />
             </Modal.Body>
         </Modal>

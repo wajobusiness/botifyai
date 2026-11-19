@@ -59,4 +59,29 @@ class Workspace extends Model
 
         return $this->members()->where('user_id', $user->id)->exists();
     }
+
+    public function effectivePlan(): ?Plan
+    {
+        return app(\App\Services\Entitlements\EntitlementService::class)->resolvePlan($this);
+    }
+
+    public function canAccess(string $feature): bool
+    {
+        return app(\App\Services\Entitlements\EntitlementService::class)->canAccess($this, $feature);
+    }
+
+    public function getLimit(string $limitKey): ?int
+    {
+        return app(\App\Services\Entitlements\EntitlementService::class)->getLimit($this, $limitKey);
+    }
+
+    public function hasReachedLimit(string $limitKey, ?int $currentCount = null): bool
+    {
+        return app(\App\Services\Entitlements\EntitlementService::class)->hasReachedLimit($this, $limitKey, $currentCount);
+    }
+
+    public function consumeQuota(string $metric, int $amount = 1): bool
+    {
+        return app(\App\Services\Entitlements\EntitlementService::class)->consumeQuota($this, $metric, $amount);
+    }
 }

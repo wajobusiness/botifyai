@@ -70,10 +70,17 @@ class Plan extends Model
 
     public function hasFeature(string $feature): bool
     {
-        return match ($feature) {
-            'white_label' => $this->white_label_enabled,
-            default => false,
-        };
+        if ($feature === 'white_label') {
+            if ($this->white_label_enabled) {
+                return true;
+            }
+        }
+
+        if (is_array($this->features) && array_key_exists($feature, $this->features)) {
+            return (bool) $this->features[$feature];
+        }
+
+        return \App\Services\Entitlements\FeatureRegistry::getDefaultFeature($feature);
     }
 
     /**
@@ -83,7 +90,12 @@ class Plan extends Model
     {
         $limits = $this->limits;
 
-        return is_array($limits) ? ($limits[$key] ?? null) : null;
+        if (is_array($limits) && array_key_exists($key, $limits)) {
+            $val = $limits[$key];
+            return ($val === null || $val === '') ? null : (int) $val;
+        }
+
+        return \App\Services\Entitlements\FeatureRegistry::getDefaultLimit($key);
     }
 
     public function clientSubscriptions(): HasMany

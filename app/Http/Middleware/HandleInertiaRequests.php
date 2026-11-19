@@ -256,13 +256,19 @@ class HandleInertiaRequests extends Middleware
         // throws a TypeError, which crashes share() and drops the page to the
         // fallback props (no translations, empty permissions → blank admin panel).
         // This only surfaced when the session carried a leftover current_workspace_id.
+        $entitlements = null;
         if ($user instanceof User) {
             $workspaceId = $request->session()->get('current_workspace_id') ?? $user->workspace_id;
             if ($workspaceId) {
                 $workspace = Workspace::with('client')->find($workspaceId);
                 if ($workspace && $workspace->isAccessibleBy($user)) {
                     $currentWorkspace = ['id' => $workspace->id, 'name' => $workspace->name];
-                    $plan = $workspace->client?->activePlan();
+                    $plan = $workspace->effectivePlan();
+                    try {
+                        $entitlements = app(\App\Services\Entitlements\EntitlementService::class)->getAllEntitlements($workspace);
+                    } catch (\Throwable) {
+                        $entitlements = null;
+                    }
                 }
             }
             try {
@@ -276,6 +282,7 @@ class HandleInertiaRequests extends Middleware
             'user' => $user,
             'adminUser' => null,
             'permissions' => [],
+            'entitlements' => $entitlements,
         ];
         if ($isAdminRoute && $adminUser) {
             $auth['adminUser'] = [

@@ -29,6 +29,20 @@ class InvitationController extends Controller
             'client_role' => ['required', 'in:administrator,staff'],
         ]);
 
+        // Check team seats limit from Entitlement Engine
+        $workspace = $user->currentWorkspace ?? $user->workspaces()->first();
+        $client = $user->client;
+        $activeUsersCount = $client ? $client->users()->count() : 0;
+        $pendingInvitesCount = Invitation::where('client_id', $user->client_id)
+            ->whereNull('accepted_at')
+            ->where('expires_at', '>', now())
+            ->count();
+        $totalSeatsUsed = $activeUsersCount + $pendingInvitesCount;
+
+        if (\App\Services\Entitlements\EntitlementService::hasReachedLimit($workspace ?? $client, 'users', $totalSeatsUsed)) {
+            return back()->withErrors(['email' => 'You have reached the maximum allowed team members for your subscription plan. Please upgrade to invite more members.']);
+        }
+
         // Check if there's already a pending invite
         $existing = Invitation::where('email', $request->email)
             ->where('client_id', $user->client_id)

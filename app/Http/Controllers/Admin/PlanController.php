@@ -15,10 +15,12 @@ class PlanController extends Controller
 {
     public static function defaultLimits(): array
     {
-        return [
-            'users' => null,
-            'storage' => null,
-        ];
+        $limits = [];
+        foreach (\App\Services\Entitlements\FeatureRegistry::limitKeys() as $key) {
+            $limits[$key] = null;
+        }
+
+        return $limits;
     }
 
     /** Enabled currencies for the plan form dropdown. */
@@ -33,9 +35,28 @@ class PlanController extends Controller
 
     private function planToArray(Plan $p): array
     {
-        $limits = $p->limits;
-        if (! is_array($limits)) {
-            $limits = self::defaultLimits();
+        $rawLimits = is_array($p->limits) ? $p->limits : [];
+        $limits = [];
+        foreach (\App\Services\Entitlements\FeatureRegistry::limitKeys() as $k) {
+            $limits[$k] = array_key_exists($k, $rawLimits) ? $rawLimits[$k] : null;
+        }
+
+        $featureToggles = [];
+        foreach (\App\Services\Entitlements\FeatureRegistry::featureKeys() as $k) {
+            if (array_key_exists($k, $rawLimits)) {
+                $featureToggles[$k] = (bool) $rawLimits[$k];
+            } elseif (is_array($p->features) && array_key_exists($k, $p->features)) {
+                $featureToggles[$k] = (bool) $p->features[$k];
+            } else {
+                $featureToggles[$k] = \App\Services\Entitlements\FeatureRegistry::getDefaultFeature($k);
+            }
+        }
+
+        $marketingFeatures = [];
+        if (is_array($p->features)) {
+            if (array_is_list($p->features)) {
+                $marketingFeatures = $p->features;
+            }
         }
 
         return [
@@ -49,7 +70,8 @@ class PlanController extends Controller
             'trial_days' => (int) ($p->trial_days ?? 0),
             'stripe_monthly_id' => $p->stripe_monthly_id,
             'stripe_yearly_id' => $p->stripe_yearly_id,
-            'features' => is_array($p->features) ? $p->features : [],
+            'features' => $marketingFeatures,
+            'feature_toggles' => $featureToggles,
             'limits' => $limits,
             'enabled' => (bool) $p->enabled,
             'featured' => (bool) ($p->featured ?? false),
@@ -67,6 +89,7 @@ class PlanController extends Controller
             'plans' => $plans,
             'currencies' => $this->currencyOptions(),
             'defaultCurrency' => Currency::defaultCode() ?? 'USD',
+            'featureDefinitions' => \App\Services\Entitlements\FeatureRegistry::categorized(),
         ]);
     }
 
@@ -87,6 +110,7 @@ class PlanController extends Controller
             'plan' => $this->planToArray($plan),
             'currencies' => $this->currencyOptions(),
             'defaultCurrency' => Currency::defaultCode() ?? 'USD',
+            'featureDefinitions' => \App\Services\Entitlements\FeatureRegistry::categorized(),
         ]);
     }
 
@@ -133,7 +157,6 @@ class PlanController extends Controller
     {
         $request->merge(['currency_code' => strtoupper(trim((string) $request->input('currency_code')))]);
 
-        $limitsKeys = array_keys(self::defaultLimits());
         $slugRule = ['nullable', 'string', 'max:64'];
         if ($plan) {
             $slugRule[] = 'unique:plans,slug,'.$plan->id;
@@ -152,16 +175,20 @@ class PlanController extends Controller
             'stripe_monthly_id' => ['nullable', 'string', 'max:255'],
             'stripe_yearly_id' => ['nullable', 'string', 'max:255'],
             'features' => ['nullable', 'array'],
-            'features.*' => ['string', 'max:500'],
+            'feature_toggles' => ['nullable', 'array'],
             'enabled' => ['boolean'],
             'featured' => ['boolean'],
             'popular' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'white_label_enabled' => ['boolean'],
+            'limits' => ['nullable', 'array'],
         ];
 
-        foreach ($limitsKeys as $key) {
-            $rules['limits.'.$key] = ['nullable', 'integer', 'min:0'];
+        foreach (\App\Services\Entitlements\FeatureRegistry::limitKeys() as $key) {
+            $rules['limits.'.$key] = ['nullable', 'numeric', 'min:0'];
+        }
+        foreach (\App\Services\Entitlements\FeatureRegistry::featureKeys() as $key) {
+            $rules['feature_toggles.'.$key] = ['nullable', 'boolean'];
         }
 
         return $request->validate($rules);
@@ -170,6 +197,42 @@ class PlanController extends Controller
     private function mapValidatedToAttributes(array $validated): array
     {
         $monthly = (int) ($validated['monthly_price_cents'] ?? 0);
+
+        // Sanitize limits & feature toggles into the limits json column
+        $rawLimits = $validated['limits'] ?? [];
+        $rawToggles = $validated['feature_toggles'] ?? [];
+        $sanitizedLimits = [];
+
+        foreach (\App\Services\Entitlements\FeatureRegistry::limitKeys() as $key) {
+            if (array_key_exists($key, $rawLimits)) {
+                $v = $rawLimits[$key];
+                $sanitizedLimits[$key] = ($v === null || $v === '') ? null : (int) $v;
+            } else {
+                $sanitizedLimits[$key] = null;
+            }
+        }
+
+        foreach (\App\Services\Entitlements\FeatureRegistry::featureKeys() as $key) {
+            if (array_key_exists($key, $rawToggles)) {
+                $sanitizedLimits[$key] = (bool) $rawToggles[$key];
+            } else {
+                $sanitizedLimits[$key] = \App\Services\Entitlements\FeatureRegistry::getDefaultFeature($key);
+            }
+        }
+
+        $whiteLabel = (bool) ($rawToggles['white_label'] ?? $validated['white_label_enabled'] ?? false);
+        $sanitizedLimits['white_label'] = $whiteLabel;
+
+        // Clean marketing bullet highlights
+        $rawFeatures = $validated['features'] ?? [];
+        $marketingFeatures = [];
+        if (is_array($rawFeatures)) {
+            foreach ($rawFeatures as $feat) {
+                if (is_string($feat) && trim($feat) !== '') {
+                    $marketingFeatures[] = trim($feat);
+                }
+            }
+        }
 
         return [
             'name' => $validated['name'],
@@ -183,13 +246,13 @@ class PlanController extends Controller
             'trial_days' => (int) ($validated['trial_days'] ?? 0),
             'stripe_monthly_id' => $validated['stripe_monthly_id'] ?? null,
             'stripe_yearly_id' => $validated['stripe_yearly_id'] ?? null,
-            'features' => $validated['features'] ?? [],
-            'limits' => $validated['limits'] ?? null,
+            'features' => $marketingFeatures,
+            'limits' => $sanitizedLimits,
             'enabled' => (bool) ($validated['enabled'] ?? true),
             'featured' => (bool) ($validated['featured'] ?? false),
             'popular' => (bool) ($validated['popular'] ?? false),
             'sort_order' => (int) ($validated['sort_order'] ?? 0),
-            'white_label_enabled' => (bool) ($validated['white_label_enabled'] ?? false),
+            'white_label_enabled' => $whiteLabel,
         ];
     }
 }

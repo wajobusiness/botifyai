@@ -94,6 +94,16 @@ class AiChatbotController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $wid = $this->workspaceId($request);
+        $workspace = $request->user()->currentWorkspace ?? $request->user()->workspaces()->first();
+        if ($workspace) {
+            if (! \App\Services\Entitlements\EntitlementService::canAccess($workspace, 'ai_chatbots')) {
+                return back()->withErrors(['error' => 'AI Chatbots Studio is not included in your current subscription plan. Please upgrade to create bots.']);
+            }
+            if (\App\Services\Entitlements\EntitlementService::hasReachedLimit($workspace, 'max_chatbots')) {
+                return back()->withErrors(['error' => 'You have reached the maximum allowed AI Chatbots for your subscription plan. Please upgrade to create more bots.']);
+            }
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:128'],
             'purpose' => ['nullable', 'string', 'in:sales,support,recommendation,general'],

@@ -32,12 +32,14 @@ class EnforceLimit
             return $next($request);
         }
 
-        // Retrieve the current workspace's active plan limits
+        // Retrieve the current workspace's active plan limits via the EntitlementService
         $workspace = Workspace::with('client')->find($workspaceId);
-        $plan = $workspace?->client?->activePlan();
-        $limits = $plan?->limits ?? [];
+        if (! $workspace) {
+            return $next($request);
+        }
 
-        $limit = $limits[$limitKey] ?? null;
+        $entitlementService = app(\App\Services\Entitlements\EntitlementService::class);
+        $limit = $entitlementService->getLimit($workspace, $limitKey);
 
         // null = unlimited
         if ($limit === null) {
@@ -46,7 +48,7 @@ class EnforceLimit
 
         // Check usage meter for this month
         $meterKey = $countKey ?: $limitKey;
-        $usage = UsageMeter::current($workspaceId, $meterKey);
+        $usage = $entitlementService->getUsage($workspace, $meterKey);
 
         if ($usage >= $limit) {
             if ($request->expectsJson()) {
