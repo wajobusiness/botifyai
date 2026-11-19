@@ -30,7 +30,7 @@ class FeatureRegistry
                 'description' => 'Connect via 8-digit Pairing Code or QR Code without losing phone app.',
                 'category' => 'WhatsApp Connectivity',
                 'type' => self::TYPE_BOOLEAN,
-                'default' => false,
+                'default' => true,
             ],
             'max_whatsapp_accounts' => [
                 'name' => 'Max Connected WhatsApp Numbers',

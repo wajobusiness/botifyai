@@ -76,8 +76,53 @@ class Plan extends Model
             }
         }
 
-        if (is_array($this->features) && array_key_exists($feature, $this->features)) {
-            return (bool) $this->features[$feature];
+        // 1. Check if boolean toggle is saved in limits JSON (where PlanController stores admin toggles)
+        if (is_array($this->limits) && array_key_exists($feature, $this->limits)) {
+            $val = $this->limits[$feature];
+            if ($val !== null && $val !== '') {
+                return (bool) $val;
+            }
+        }
+
+        // 2. Check if feature is in features array (assoc map or list)
+        if (is_array($this->features)) {
+            if (array_key_exists($feature, $this->features)) {
+                return (bool) $this->features[$feature];
+            }
+            if (in_array($feature, $this->features, true)) {
+                return true;
+            }
+        }
+
+        // 3. For any paid or Pro plan, default core capabilities to true so customers are not locked out
+        $planSlug = strtolower((string) ($this->slug ?? ''));
+        $planName = strtolower((string) ($this->name ?? ''));
+        $isPaid = ($this->price_cents ?? 0) > 0
+            || ($this->monthly_price_cents ?? 0) > 0
+            || str_contains($planSlug, 'pro')
+            || str_contains($planName, 'pro')
+            || str_contains($planSlug, 'business')
+            || str_contains($planName, 'business');
+
+        if ($isPaid) {
+            $paidAllowed = [
+                'whatsapp_cloud_api',
+                'whatsapp_linked_devices',
+                'whatsapp_ai_replies',
+                'whatsapp_broadcast_campaigns',
+                'ai_chatbots',
+                'ai_knowledge_hub',
+                'ai_live_chat_widget',
+                'shared_inbox',
+                'human_agent_takeover',
+                'broadcast_campaigns',
+                'crm_contacts',
+                'workflow_automations',
+            ];
+
+            if (in_array($feature, $paidAllowed, true)) {
+                return true;
+            }
         }
 
         return \App\Services\Entitlements\FeatureRegistry::getDefaultFeature($feature);

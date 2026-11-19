@@ -7,7 +7,9 @@ export default function LinkedDevicePairingForm({ onSuccess, onCancel }) {
     const { t } = useTranslation();
     const { auth } = usePage().props;
     const entitlements = auth?.entitlements ?? {};
-    const isEntitled = entitlements.features ? entitlements.features.whatsapp_linked_devices !== false : true;
+    const planName = (entitlements.plan?.name || entitlements.plan?.slug || '').toLowerCase();
+    const isPaidOrPro = planName.includes('pro') || planName.includes('business') || planName.includes('starter') || planName.includes('growth');
+    const isEntitled = isPaidOrPro || (entitlements.features ? entitlements.features.whatsapp_linked_devices !== false : true);
 
     const [mode, setMode] = useState('pairing_code'); // 'pairing_code' | 'qr_code'
     const [phoneNumber, setPhoneNumber] = useState('');

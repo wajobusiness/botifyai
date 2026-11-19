@@ -23,13 +23,24 @@ class EntitlementService
 
         $client = null;
         $workspace = null;
+        $user = null;
 
         if ($subject instanceof Workspace) {
             $workspace = $subject;
             $client = $subject->client;
+            // Attempt to resolve workspace owner or primary user
+            if (! $client) {
+                try {
+                    $user = $workspace->users()->first();
+                    $client = $user?->client;
+                } catch (\Throwable) {
+                    $user = null;
+                }
+            }
         } elseif ($subject instanceof Client) {
             $client = $subject;
         } elseif ($subject instanceof User) {
+            $user = $subject;
             $client = $subject->client;
             $workspace = $subject->currentWorkspace ?? Workspace::find($subject->current_workspace_id ?? $subject->workspace_id);
             if (! $client && $workspace) {
@@ -37,37 +48,66 @@ class EntitlementService
             }
         }
 
-        if (! $client) {
-            return null;
+        // 1. Direct user-level active subscription (Stripe, PayPal, Admin assigned)
+        if ($user) {
+            try {
+                $effSub = $user->effectiveSubscription();
+                if ($effSub?->plan && $effSub->plan->enabled) {
+                    return $effSub->plan;
+                }
+            } catch (\Throwable) {
+                // ignore
+            }
         }
 
-        // 1. Check direct active admin-assigned subscription
-        $clientSub = $client->activeSubscription;
-        if ($clientSub?->plan && $clientSub->plan->enabled) {
-            return $clientSub->plan;
-        }
+        // 2. Check direct active admin-assigned client subscription
+        if ($client) {
+            $clientSub = $client->activeSubscription;
+            if ($clientSub?->plan && $clientSub->plan->enabled) {
+                return $clientSub->plan;
+            }
 
-        // 2. Check user-level active subscription (Stripe, PayPal, Paddle, etc.)
-        $userSub = Subscription::whereIn('user_id', $client->users()->select('id'))
-            ->whereIn('status', ['active', 'trialing'])
-            ->with('plan')
-            ->orderByDesc('id')
-            ->first();
-
-        if ($userSub?->plan && $userSub->plan->enabled) {
-            return $userSub->plan;
-        }
-
-        // 3. Fallback to default free plan if configured, or lowest price active plan
-        return Cache::remember('default_free_plan', 3600, function () {
-            return Plan::where('enabled', true)
-                ->where('price_cents', 0)
-                ->orderBy('sort_order')
-                ->first()
-                ?? Plan::where('enabled', true)
-                    ->orderBy('price_cents')
+            // Check client's users for any active gateway subscription
+            try {
+                $userSub = Subscription::whereIn('user_id', $client->users()->select('id'))
+                    ->whereIn('status', ['active', 'trialing'])
+                    ->with('plan')
+                    ->orderByDesc('id')
                     ->first();
-        });
+
+                if ($userSub?->plan && $userSub->plan->enabled) {
+                    return $userSub->plan;
+                }
+            } catch (\Throwable) {
+                // ignore
+            }
+        }
+
+        // 3. If workspace user has a subscription directly
+        if ($workspace && ! $client) {
+            try {
+                $wsUserSub = Subscription::whereIn('user_id', $workspace->users()->select('users.id'))
+                    ->whereIn('status', ['active', 'trialing'])
+                    ->with('plan')
+                    ->orderByDesc('id')
+                    ->first();
+
+                if ($wsUserSub?->plan && $wsUserSub->plan->enabled) {
+                    return $wsUserSub->plan;
+                }
+            } catch (\Throwable) {
+                // ignore
+            }
+        }
+
+        // 4. Fallback to default free plan if configured, or lowest price active plan
+        return Plan::where('enabled', true)
+            ->where('price_cents', 0)
+            ->orderBy('sort_order')
+            ->first()
+            ?? Plan::where('enabled', true)
+                ->orderBy('price_cents')
+                ->first();
     }
 
     /**
