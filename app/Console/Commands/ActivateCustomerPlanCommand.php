@@ -41,6 +41,9 @@ class ActivateCustomerPlanCommand extends Command
             return self::FAILURE;
         }
 
+        // 0. Ensure all required tables exist
+        \App\Modules\Whatsapp\Support\WhatsappSchemaProvisioner::ensureTablesExist();
+
         // 1. Ensure the plan has all WhatsApp and AI features turned on in its limits
         $limits = is_array($plan->limits) ? $plan->limits : (json_decode($plan->limits ?? '{}', true) ?: []);
         $limits['whatsapp_cloud_api'] = true;

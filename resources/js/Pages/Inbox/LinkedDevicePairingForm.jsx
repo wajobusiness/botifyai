@@ -92,9 +92,18 @@ export default function LinkedDevicePairingForm({ onSuccess, onCancel }) {
                 }),
             });
 
-            const data = await res.json();
+            let data = {};
+            try {
+                data = await res.json();
+            } catch {
+                data = { message: `Server returned an error (${res.status}). Please try again or refresh.` };
+            }
+
             if (!res.ok) {
-                setError(data.message || 'Failed to request pairing code. Please check the number and try again.');
+                const msg = data.message && data.message !== 'Server Error'
+                    ? data.message
+                    : 'Server error initializing WhatsApp pairing. Please ensure your database migration is up to date and retry.';
+                setError(msg);
             } else {
                 setSession(data);
                 setSecondsLeft(data.expires_in_seconds || 180);

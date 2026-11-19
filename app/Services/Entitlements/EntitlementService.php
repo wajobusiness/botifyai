@@ -15,7 +15,7 @@ class EntitlementService
     /**
      * Resolve the effective active Plan for a given subject (Workspace, Client, or User).
      */
-    public function resolvePlan(Workspace|Client|User|null $subject): ?Plan
+    public static function resolvePlan(Workspace|Client|User|null $subject): ?Plan
     {
         if (! $subject) {
             return null;
@@ -113,9 +113,9 @@ class EntitlementService
     /**
      * Check if the subject has permission/access to a boolean feature.
      */
-    public function canAccess(Workspace|Client|User|null $subject, string $featureKey): bool
+    public static function canAccess(Workspace|Client|User|null $subject, string $featureKey): bool
     {
-        $plan = $this->resolvePlan($subject);
+        $plan = static::resolvePlan($subject);
         if (! $plan) {
             return FeatureRegistry::getDefaultFeature($featureKey);
         }
@@ -127,9 +127,9 @@ class EntitlementService
      * Get the numeric limit for a persistent resource or monthly meter.
      * Returns null if unlimited.
      */
-    public function getLimit(Workspace|Client|User|null $subject, string $limitKey): ?int
+    public static function getLimit(Workspace|Client|User|null $subject, string $limitKey): ?int
     {
-        $plan = $this->resolvePlan($subject);
+        $plan = static::resolvePlan($subject);
         if (! $plan) {
             return FeatureRegistry::getDefaultLimit($limitKey);
         }
@@ -140,15 +140,15 @@ class EntitlementService
     /**
      * Check if a static resource cap has been reached (e.g. max chatbots, team seats).
      */
-    public function hasReachedLimit(Workspace|Client|User|null $subject, string $limitKey, ?int $currentCount = null): bool
+    public static function hasReachedLimit(Workspace|Client|User|null $subject, string $limitKey, ?int $currentCount = null): bool
     {
-        $limit = $this->getLimit($subject, $limitKey);
+        $limit = static::getLimit($subject, $limitKey);
         if ($limit === null) {
             return false; // Unlimited
         }
 
         if ($currentCount === null) {
-            $currentCount = $this->countCurrentResource($subject, $limitKey);
+            $currentCount = static::countCurrentResource($subject, $limitKey);
         }
 
         return $currentCount >= $limit;
@@ -157,9 +157,9 @@ class EntitlementService
     /**
      * Dynamically count the current live instances of a resource for a workspace.
      */
-    public function countCurrentResource(Workspace|Client|User|null $subject, string $limitKey): int
+    public static function countCurrentResource(Workspace|Client|User|null $subject, string $limitKey): int
     {
-        $workspaceId = $this->extractWorkspaceId($subject);
+        $workspaceId = static::extractWorkspaceId($subject);
         if (! $workspaceId) {
             return 0;
         }
@@ -194,9 +194,9 @@ class EntitlementService
     /**
      * Get current month's usage for a metered metric.
      */
-    public function getUsage(Workspace|Client|User|null $subject, string $metric): int
+    public static function getUsage(Workspace|Client|User|null $subject, string $metric): int
     {
-        $workspaceId = $this->extractWorkspaceId($subject);
+        $workspaceId = static::extractWorkspaceId($subject);
         if (! $workspaceId) {
             return 0;
         }
@@ -208,10 +208,10 @@ class EntitlementService
      * Consume quota for a monthly metered metric.
      * Returns false if the limit is exceeded.
      */
-    public function consumeQuota(Workspace|Client|User|null $subject, string $metric, int $amount = 1): bool
+    public static function consumeQuota(Workspace|Client|User|null $subject, string $metric, int $amount = 1): bool
     {
-        $limit = $this->getLimit($subject, $metric);
-        $workspaceId = $this->extractWorkspaceId($subject);
+        $limit = static::getLimit($subject, $metric);
+        $workspaceId = static::extractWorkspaceId($subject);
 
         if (! $workspaceId) {
             return true;
@@ -232,21 +232,21 @@ class EntitlementService
     /**
      * Export all active entitlements and usage for Inertia / API responses.
      */
-    public function getAllEntitlements(Workspace|Client|User|null $subject): array
+    public static function getAllEntitlements(Workspace|Client|User|null $subject): array
     {
-        $plan = $this->resolvePlan($subject);
+        $plan = static::resolvePlan($subject);
         $features = [];
         $limits = [];
         $usage = [];
 
         foreach (FeatureRegistry::definitions() as $key => $meta) {
             if ($meta['type'] === FeatureRegistry::TYPE_BOOLEAN) {
-                $features[$key] = $this->canAccess($subject, $key);
+                $features[$key] = static::canAccess($subject, $key);
             } else {
-                $limitVal = $this->getLimit($subject, $key);
+                $limitVal = static::getLimit($subject, $key);
                 $limits[$key] = $limitVal;
                 if ($meta['type'] === FeatureRegistry::TYPE_METERED) {
-                    $usage[$key] = $this->getUsage($subject, $key);
+                    $usage[$key] = static::getUsage($subject, $key);
                 }
             }
         }
@@ -263,7 +263,7 @@ class EntitlementService
         ];
     }
 
-    private function extractWorkspaceId(Workspace|Client|User|null $subject): ?int
+    private static function extractWorkspaceId(Workspace|Client|User|null $subject): ?int
     {
         if ($subject instanceof Workspace) {
             return (int) $subject->id;
@@ -276,5 +276,21 @@ class EntitlementService
         }
 
         return null;
+    }
+
+    /**
+     * Support instance calls as well for maximum backwards-compatibility.
+     */
+    public function __call(string $method, array $arguments)
+    {
+        return static::$method(...$arguments);
+    }
+
+    /**
+     * Support static invocation for any dynamically named methods.
+     */
+    public static function __callStatic(string $method, array $arguments)
+    {
+        return static::$method(...$arguments);
     }
 }

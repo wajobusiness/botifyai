@@ -3,7 +3,6 @@
 namespace App\Modules\Whatsapp\Support;
 
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
@@ -15,10 +14,6 @@ class WhatsappSchemaProvisioner
     public static function ensureTablesExist(): void
     {
         try {
-            if (Cache::has('whatsapp_schema_provisioned_v2')) {
-                return;
-            }
-
             if (! Schema::hasTable('whatsapp_device_sessions')) {
                 Schema::create('whatsapp_device_sessions', function (Blueprint $table) {
                     $table->id();
@@ -47,8 +42,6 @@ class WhatsappSchemaProvisioner
                     $table->index('connection_status');
                 });
             }
-
-            Cache::put('whatsapp_schema_provisioned_v2', true, now()->addHours(24));
         } catch (\Throwable $e) {
             Log::warning('WhatsappSchemaProvisioner::ensureTablesExist failed', ['error' => $e->getMessage()]);
         }
