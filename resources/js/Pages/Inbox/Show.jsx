@@ -1670,6 +1670,22 @@ export default function InboxShow({
         return () => { window.Echo.leave(`workspace.${workspaceId}`); };
     }, [workspaceId]);
 
+    // Live update fallback: poll active thread every 5s if tab is visible
+    useEffect(() => {
+        if (!conversation?.id) return;
+        const interval = setInterval(() => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                router.reload({
+                    only: ['messages', 'conversation'],
+                    preserveScroll: true,
+                    preserveState: true,
+                });
+            }
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [conversation?.id]);
+
     const typingTimer = useRef(null);
     const handleTyping = () => {
         // Use server-side broadcast instead of Pusher client events (whispers),

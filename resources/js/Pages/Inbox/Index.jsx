@@ -321,6 +321,21 @@ export default function InboxIndex({ conversations: initialConversations, filter
         return () => { window.Echo.leave(`workspace.${workspaceId}`); };
     }, [workspaceId]);
 
+    // Live update fallback: refresh conversation list every 10s if tab is visible
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                router.reload({
+                    only: ['conversations'],
+                    preserveScroll: true,
+                    preserveState: true,
+                });
+            }
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     const navigate = (params) => {
         setLoading(true);
         router.get(route('client.inbox.index'), { ...filters, ...params }, { preserveState: true, replace: true });

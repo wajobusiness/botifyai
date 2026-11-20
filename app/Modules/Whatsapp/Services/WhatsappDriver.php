@@ -26,8 +26,15 @@ class WhatsappDriver implements ChannelDriverInterface
     public function send(Message $message): string
     {
         $conversation = $message->conversation;
-        $contact = $conversation->contact;
-        $phone = $contact->phone_e164;
+        $contact = $conversation?->contact;
+        $phone = $contact?->phone_e164 ?: ($conversation?->external_thread_id ?: null);
+
+        if (! $phone) {
+            throw new \RuntimeException('Cannot send WhatsApp message: recipient phone number is missing.');
+        }
+
+        // Normalize recipient phone number to E.164 digits without '+'
+        $phone = preg_replace('/[^0-9]/', '', $phone);
 
         // Prefer the phone number tied to this conversation's channel account so
         // outbound replies go from the same number the customer wrote to.
