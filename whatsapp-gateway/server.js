@@ -142,7 +142,7 @@ async function initSessionSocket(sessionUid, { phoneNumber = null, autoReconnect
         },
         printQRInTerminal: false,
         logger: pino({ level: 'fatal' }),
-        browser: Browsers.macOS('Desktop'),
+        browser: Browsers.ubuntu('Chrome'),
         markOnlineOnConnect: false,
         generateHighQualityLinkPreview: false,
         connectTimeoutMs: 60000,
@@ -168,6 +168,10 @@ async function initSessionSocket(sessionUid, { phoneNumber = null, autoReconnect
     // Monitor connection events
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
+
+        if (qr) {
+            sessionObj.qr = qr;
+        }
 
         if (connection === 'open') {
             sessionObj.status = 'connected';
@@ -281,33 +285,33 @@ app.post('/sessions/request-pairing', authenticate, async (req, res) => {
     try {
         const sessionDir = getSessionPath(session_id);
 
-        // Clean stale unauthenticated credentials before generating a new code
+        // Terminate any active socket for this session before creating a fresh one
         if (activeSessions.has(session_id)) {
             const old = activeSessions.get(session_id);
             try { old.sock?.end?.(); } catch {}
             activeSessions.delete(session_id);
         }
 
-        // Only remove session dir if not registered
+        // Always remove non-registered session directory to guarantee a clean cryptographic handshake
         if (fs.existsSync(sessionDir)) {
             const credsPath = path.join(sessionDir, 'creds.json');
+            let isRegistered = false;
             if (fs.existsSync(credsPath)) {
                 try {
                     const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
-                    if (!creds.registered) {
-                        fs.rmSync(sessionDir, { recursive: true, force: true });
-                    }
-                } catch {
-                    fs.rmSync(sessionDir, { recursive: true, force: true });
-                }
+                    isRegistered = !!creds.registered;
+                } catch {}
+            }
+            if (!isRegistered) {
+                fs.rmSync(sessionDir, { recursive: true, force: true });
             }
         }
 
-        // Initialize fresh socket
+        // Initialize fresh socket with canonical Ubuntu Chrome profile
         const session = await initSessionSocket(session_id, { phoneNumber: cleanPhone, autoReconnect: false });
 
-        // Wait a brief moment for socket handshakes
-        await delay(1500);
+        // Wait 3.5 seconds for the WebSocket connection and Noise handshake to reach ready state
+        await delay(3500);
 
         if (session.sock.authState.creds.registered) {
             return res.json({
@@ -319,7 +323,7 @@ app.post('/sessions/request-pairing', authenticate, async (req, res) => {
             });
         }
 
-        // Request real cryptographic pairing code from WhatsApp Web servers
+        // Request genuine cryptographic pairing code from WhatsApp servers
         const rawCode = await session.sock.requestPairingCode(cleanPhone);
         
         // Format as XXXX-XXXX (e.g. ABCD-1234)
@@ -354,6 +358,71 @@ app.post('/sessions/request-pairing', authenticate, async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'WhatsApp pairing code generation failed: ' + (err.message || 'Unknown socket error'),
+        });
+    }
+});
+
+/**
+ * Request real QR code string for desktop QR scanning
+ */
+app.post('/sessions/request-qr', authenticate, async (req, res) => {
+    const { session_id, name } = req.body;
+    if (!session_id) {
+        return res.status(400).json({ success: false, message: 'session_id is required.' });
+    }
+
+    try {
+        const sessionDir = getSessionPath(session_id);
+        if (activeSessions.has(session_id)) {
+            const old = activeSessions.get(session_id);
+            try { old.sock?.end?.(); } catch {}
+            activeSessions.delete(session_id);
+        }
+
+        if (fs.existsSync(sessionDir)) {
+            const credsPath = path.join(sessionDir, 'creds.json');
+            let isRegistered = false;
+            if (fs.existsSync(credsPath)) {
+                try {
+                    const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+                    isRegistered = !!creds.registered;
+                } catch {}
+            }
+            if (!isRegistered) {
+                fs.rmSync(sessionDir, { recursive: true, force: true });
+            }
+        }
+
+        const session = await initSessionSocket(session_id, { autoReconnect: false });
+
+        // Wait up to 6 seconds for QR code emission
+        let waitTime = 0;
+        while (!session.qr && waitTime < 6000) {
+            await delay(400);
+            waitTime += 400;
+            if (session.sock.authState.creds.registered) {
+                return res.json({ success: true, status: 'connected' });
+            }
+        }
+
+        if (session.qr) {
+            return res.json({
+                success: true,
+                session_id,
+                qr_raw: session.qr,
+                expires_in_seconds: 60,
+                expires_at: new Date(Date.now() + 60000).toISOString(),
+            });
+        }
+
+        return res.status(504).json({
+            success: false,
+            message: 'Timed out waiting for QR code from WhatsApp servers. Please retry.',
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: 'QR code generation failed: ' + err.message,
         });
     }
 });

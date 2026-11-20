@@ -208,7 +208,33 @@ class WhatsappDevicePairingController extends Controller
                 ], 503);
             }
 
-            // 4. Request authentic WhatsApp cryptographic pairing code from the Baileys gateway socket
+            // 4. Request authentic WhatsApp cryptographic pairing code or QR code from the Baileys gateway socket
+            if ($connectionType === 'qr_code') {
+                $gatewayResp = WhatsappGatewayClient::requestQr(
+                    $session->session_uid,
+                    $displayName
+                );
+
+                if (! ($gatewayResp['success'] ?? false)) {
+                    $errMsg = $gatewayResp['message'] ?? 'Could not generate QR code from WhatsApp servers.';
+                    return response()->json(['success' => false, 'message' => $errMsg], 502);
+                }
+
+                $qrRaw = $gatewayResp['qr_raw'] ?? null;
+                $session->update([
+                    'qr_raw'            => $qrRaw,
+                    'connection_status' => 'pairing',
+                ]);
+
+                return response()->json([
+                    'success'            => true,
+                    'session_uid'        => $session->session_uid,
+                    'connection_type'    => 'qr_code',
+                    'qr_raw'             => $qrRaw,
+                    'expires_in_seconds' => 60,
+                ]);
+            }
+
             $gatewayResp = WhatsappGatewayClient::requestPairingCode(
                 $session->session_uid,
                 $cleanPhone,

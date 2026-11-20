@@ -66,6 +66,34 @@ class WhatsappGatewayClient
     }
 
     /**
+     * Request a real QR code string from WhatsApp servers through the Baileys socket.
+     */
+    public static function requestQr(string $sessionUid, ?string $name = null): array
+    {
+        try {
+            $response = Http::timeout(20)
+                ->withHeaders([
+                    'X-Gateway-Secret' => self::secret(),
+                    'Accept'           => 'application/json',
+                ])
+                ->post(self::baseUrl() . '/sessions/request-qr', [
+                    'session_id' => $sessionUid,
+                    'name'       => $name,
+                ]);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            $errorMsg = $response->json('message') ?? 'Failed to request QR code from WhatsApp Gateway.';
+            return ['success' => false, 'message' => $errorMsg];
+        } catch (\Throwable $e) {
+            Log::error('WhatsappGatewayClient::requestQr error', ['error' => $e->getMessage()]);
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Fetch live connection status of a session from the Gateway.
      */
     public static function getStatus(string $sessionUid): array
