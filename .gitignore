@@ -36,6 +36,8 @@ database/.DS_Store
 /storage/framework/cache/*
 /storage/framework/sessions/*
 /storage/framework/views/*
+whatsapp-gateway/node_modules/
+storage/app/whatsapp_sessions/
 
 .env
 

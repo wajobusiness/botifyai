@@ -18,6 +18,7 @@ use App\Modules\Ecommerce\Http\Controllers\CommerceWebhookController;
 use App\Modules\Ecommerce\Http\Controllers\EcommerceOAuthController;
 use App\Modules\Ecommerce\Http\Controllers\EcommerceWebhookController;
 use App\Modules\Inbox\Http\Controllers\MetaWebhookController;
+use App\Modules\Whatsapp\Http\Controllers\WhatsappDevicePairingController;
 use App\Modules\Whatsapp\Http\Controllers\WhatsappWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,13 @@ Route::middleware('throttle:webhooks')->group(function () {
         // Main Meta WhatsApp webhook endpoints (supports /webhooks/whatsapp/{token} and /webhooks/whatsapp)
         Route::get('/{token?}', [WhatsappWebhookController::class, 'verify'])->name('verify');
         Route::post('/{token?}', [WhatsappWebhookController::class, 'receive'])->name('receive');
+    });
+
+    // ─── WhatsApp Linked Device Gateway (Baileys Multi-Device) ─────────────────
+    Route::prefix('webhooks/whatsapp-device')->name('webhooks.whatsapp-device.')->group(function () {
+        Route::post('/inbound', [WhatsappDevicePairingController::class, 'inboundWebhook'])->name('inbound');
+        Route::post('/connected', [WhatsappDevicePairingController::class, 'connectedWebhook'])->name('connected');
+        Route::post('/status', [WhatsappDevicePairingController::class, 'statusWebhook'])->name('status');
     });
 
     // ─── Meta (Instagram + Messenger) ───────────────────────────────────────────

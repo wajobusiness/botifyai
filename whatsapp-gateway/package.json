@@ -1,0 +1,18 @@
+{
+  "name": "botifyai-whatsapp-gateway",
+  "version": "1.0.0",
+  "description": "Multi-Tenant WhatsApp Web / Multi-Device Baileys Gateway for BotifyAI",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.19",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pino": "^9.6.0"
+  }
+}

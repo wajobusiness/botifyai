@@ -4,6 +4,8 @@
     "scripts": {
         "build": "(ulimit -n 65535 2>/dev/null || true); vite build && cp -r public/build .",
         "dev": "vite",
+        "whatsapp:gateway": "node whatsapp-gateway/server.js",
+        "whatsapp:gateway:install": "cd whatsapp-gateway && npm install",
         "lint": "eslint resources/js --ext .js,.jsx",
         "lint:fix": "eslint resources/js --ext .js,.jsx --fix",
         "format": "prettier --write resources/js",

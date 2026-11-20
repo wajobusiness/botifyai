@@ -173,6 +173,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'billing/iyzico/callback',
             'webhooks/whatsapp',
             'webhooks/whatsapp/*',
+            'webhooks/whatsapp-device/*',
             'webhooks/meta',
             'webhooks/meta/*',
             'webhooks/sms/*',

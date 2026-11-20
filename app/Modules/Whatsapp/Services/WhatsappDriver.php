@@ -13,9 +13,11 @@ use App\Modules\Shared\Models\Message;
 use App\Modules\Shared\Services\ContactService;
 use App\Modules\Whatsapp\Models\WhatsappPhoneNumber;
 use App\Modules\Whatsapp\Models\WhatsappTemplate;
+use App\Modules\Whatsapp\Services\WhatsappGatewayClient;
 use App\Services\WebhookIdempotencyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class WhatsappDriver implements ChannelDriverInterface
 {
@@ -36,6 +38,18 @@ class WhatsappDriver implements ChannelDriverInterface
         // Normalize recipient phone number to E.164 digits without '+'
         $phone = preg_replace('/[^0-9]/', '', $phone);
 
+        // 1. Check if conversation is using a Linked Device (Baileys) account
+        $channelAccount = $conversation->channelAccount;
+        if ($channelAccount && ($channelAccount->provider === 'linked_device' || str_starts_with($channelAccount->business_account_id ?? '', 'wds_'))) {
+            $sessionUid = $channelAccount->business_account_id;
+            $res = WhatsappGatewayClient::sendMessage($sessionUid, $phone, $message->body ?? '');
+            if (! ($res['success'] ?? false)) {
+                throw new \RuntimeException('Linked device WhatsApp send failed: ' . ($res['message'] ?? 'Gateway connection offline or session disconnected.'));
+            }
+            return $res['message_id'] ?? ('wds_msg_' . Str::random(16));
+        }
+
+        // 2. Meta Cloud API WABA account send
         // Prefer the phone number tied to this conversation's channel account so
         // outbound replies go from the same number the customer wrote to.
         $phoneNumberId = $conversation->channelAccount?->phone_number_id;

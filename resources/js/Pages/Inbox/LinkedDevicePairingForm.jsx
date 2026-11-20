@@ -100,13 +100,16 @@ export default function LinkedDevicePairingForm({ onSuccess, onCancel }) {
             }
 
             if (!res.ok) {
-                const msg = data.message && data.message !== 'Server Error'
-                    ? data.message
-                    : 'Server error initializing WhatsApp pairing. Please ensure your database migration is up to date and retry.';
+                let msg = data.message;
+                if (data.code === 'GATEWAY_OFFLINE') {
+                    msg = data.message || 'WhatsApp Gateway service is offline. Please start it on your server using: php artisan whatsapp:gateway start';
+                } else if (!msg || msg === 'Server Error') {
+                    msg = 'Server error initializing WhatsApp pairing. Please ensure the WhatsApp Gateway service is running on your server (php artisan whatsapp:gateway start).';
+                }
                 setError(msg);
             } else {
                 setSession(data);
-                setSecondsLeft(data.expires_in_seconds || 180);
+                setSecondsLeft(data.expires_in_seconds || 160);
             }
         } catch (err) {
             setError('Network error connecting to WhatsApp pairing server. Please retry.');
