@@ -26,7 +26,7 @@ Schedule::call(function () {
 
 // Automatically process queued background jobs every minute (vital for cPanel / shared hosts)
 // Drains inbound WhatsApp messages, live broadcast events, AI responses, automations.
-Schedule::command('queue:work --queue=whatsapp,broadcast,default,leads,ai,social,automation --stop-when-empty --max-time=50 --tries=3')
+Schedule::command('queue:work --queue=whatsapp,broadcast,default,leads,ai,social,automation,automations --stop-when-empty --max-time=50 --tries=3')
     ->everyMinute()
     ->name('cpanel-queue-worker')
     ->withoutOverlapping();
