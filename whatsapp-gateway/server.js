@@ -14,13 +14,22 @@ import makeWASocket, {
     delay
 } from '@whiskeysockets/baileys';
 
-dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Ensure .env is loaded from Laravel root first, then fallback to local directory
+const rootEnvPath = path.resolve(__dirname, '../.env');
+if (fs.existsSync(rootEnvPath)) {
+    dotenv.config({ path: rootEnvPath });
+}
+dotenv.config();
+
 const PORT = parseInt(process.env.WHATSAPP_GATEWAY_PORT || process.env.PORT || '3100', 10);
-const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://127.0.0.1:8000';
+const LARAVEL_API_URL = (
+    process.env.LARAVEL_API_URL ||
+    process.env.APP_URL ||
+    'https://botifyai.cloud'
+).replace(/\/$/, '');
 const GATEWAY_SECRET = process.env.WHATSAPP_GATEWAY_SECRET || process.env.APP_KEY || 'botifyai-whatsapp-secret-key';
 const SESSIONS_DIR = path.resolve(__dirname, '../storage/app/whatsapp_sessions');
 
@@ -58,6 +67,71 @@ function normalizePhoneNumber(phone) {
 }
 
 /**
+ * Extract human-readable text and message category from any Baileys message structure
+ */
+function extractMessageInfo(msg) {
+    if (!msg || !msg.message) {
+        return { text: '', type: 'text' };
+    }
+
+    let m = msg.message;
+    // Unwrap ephemeral or view once wrappers
+    if (m.ephemeralMessage?.message) m = m.ephemeralMessage.message;
+    if (m.viewOnceMessage?.message) m = m.viewOnceMessage.message;
+    if (m.viewOnceMessageV2?.message) m = m.viewOnceMessageV2.message;
+    if (m.documentWithCaptionMessage?.message) m = m.documentWithCaptionMessage.message;
+
+    // Direct text
+    if (m.conversation) {
+        return { text: m.conversation, type: 'text' };
+    }
+    if (m.extendedTextMessage?.text) {
+        return { text: m.extendedTextMessage.text, type: 'text' };
+    }
+
+    // Media messages
+    if (m.imageMessage) {
+        return { text: m.imageMessage.caption || '📷 [Image]', type: 'image' };
+    }
+    if (m.videoMessage) {
+        return { text: m.videoMessage.caption || '🎥 [Video]', type: 'video' };
+    }
+    if (m.audioMessage) {
+        return { text: '🎵 [Audio / Voice Message]', type: 'audio' };
+    }
+    if (m.documentMessage) {
+        const name = m.documentMessage.fileName || 'file';
+        return { text: m.documentMessage.caption || `📄 [Document: ${name}]`, type: 'document' };
+    }
+    if (m.stickerMessage) {
+        return { text: '🏷️ [Sticker]', type: 'sticker' };
+    }
+    if (m.locationMessage) {
+        const locName = m.locationMessage.name || m.locationMessage.address || '';
+        return { text: `📍 [Location: ${locName}]`, type: 'location' };
+    }
+    if (m.contactMessage) {
+        return { text: `👤 [Contact: ${m.contactMessage.displayName || ''}]`, type: 'contact' };
+    }
+    if (m.buttonsResponseMessage?.selectedDisplayText) {
+        return { text: m.buttonsResponseMessage.selectedDisplayText, type: 'text' };
+    }
+    if (m.listResponseMessage?.title) {
+        return { text: m.listResponseMessage.title, type: 'text' };
+    }
+    if (m.templateButtonReplyMessage?.selectedId) {
+        return { text: m.templateButtonReplyMessage.selectedId, type: 'text' };
+    }
+
+    const keys = Object.keys(m);
+    if (keys.length > 0) {
+        return { text: `[${keys[0]}]`, type: 'text' };
+    }
+
+    return { text: '', type: 'text' };
+}
+
+/**
  * Session storage directory path
  */
 function getSessionPath(sessionUid) {
@@ -69,48 +143,106 @@ function getSessionPath(sessionUid) {
  * Notify Laravel that a session has connected
  */
 async function notifyLaravelConnected(sessionUid, payload) {
-    try {
-        const url = `${LARAVEL_API_URL}/webhooks/whatsapp-device/connected`;
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: {
+    const candidateUrls = [
+        `${LARAVEL_API_URL}/webhooks/whatsapp-device/connected`,
+    ];
+    if (LARAVEL_API_URL.startsWith('https://')) {
+        candidateUrls.push('http://127.0.0.1/webhooks/whatsapp-device/connected');
+    }
+
+    for (const url of candidateUrls) {
+        try {
+            let hostHeader = undefined;
+            try {
+                hostHeader = new URL(LARAVEL_API_URL).host;
+            } catch {}
+
+            const headers = {
                 'Content-Type': 'application/json',
                 'X-Gateway-Secret': GATEWAY_SECRET,
+                'User-Agent': 'BotifyAI-Gateway/1.0',
                 'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                session_uid: sessionUid,
-                ...payload,
-            }),
-        });
-        const data = await res.json().catch(() => ({}));
-        console.log(`[Gateway] Notified Laravel for session ${sessionUid}:`, data);
-    } catch (err) {
-        console.error(`[Gateway] Error notifying Laravel for session ${sessionUid}:`, err.message);
+            };
+            if (url.includes('127.0.0.1') && hostHeader) {
+                headers['Host'] = hostHeader;
+            }
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    session_uid: sessionUid,
+                    ...payload,
+                }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
+                console.log(`[Gateway] ✓ Notified Laravel of connection for session ${sessionUid} (${url}):`, data);
+                return true;
+            } else {
+                console.error(`[Gateway] ✗ Laravel connection webhook returned HTTP ${res.status}:`, data);
+            }
+        } catch (err) {
+            console.error(`[Gateway] Error notifying Laravel for session ${sessionUid} on ${url}:`, err.message);
+        }
     }
+    return false;
 }
 
 /**
  * Forward inbound message to Laravel
  */
 async function notifyLaravelInboundMessage(sessionUid, messageData) {
-    try {
-        const url = `${LARAVEL_API_URL}/webhooks/whatsapp-device/inbound`;
-        await fetch(url, {
-            method: 'POST',
-            headers: {
+    const candidateUrls = [
+        `${LARAVEL_API_URL}/webhooks/whatsapp-device/inbound`,
+    ];
+    if (LARAVEL_API_URL.startsWith('https://')) {
+        candidateUrls.push('http://127.0.0.1/webhooks/whatsapp-device/inbound');
+    }
+
+    for (const url of candidateUrls) {
+        try {
+            let hostHeader = undefined;
+            try {
+                hostHeader = new URL(LARAVEL_API_URL).host;
+            } catch {}
+
+            const headers = {
                 'Content-Type': 'application/json',
                 'X-Gateway-Secret': GATEWAY_SECRET,
+                'User-Agent': 'BotifyAI-Gateway/1.0',
                 'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                session_uid: sessionUid,
-                ...messageData,
-            }),
-        });
-    } catch (err) {
-        console.error(`[Gateway] Inbound message dispatch error:`, err.message);
+            };
+            if (url.includes('127.0.0.1') && hostHeader) {
+                headers['Host'] = hostHeader;
+            }
+
+            console.log(`[Gateway] Dispatching inbound message from +${messageData.from} to ${url}...`);
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    session_uid: sessionUid,
+                    ...messageData,
+                }),
+            });
+
+            const status = res.status;
+            const resText = await res.text().catch(() => '');
+
+            if (res.ok) {
+                console.log(`[Gateway] ✓ Successfully dispatched inbound message to Laravel (${url}) - HTTP ${status}`);
+                return true;
+            } else {
+                console.error(`[Gateway] ✗ Laravel returned HTTP ${status} for inbound webhook (${url}): ${resText.substring(0, 200)}`);
+            }
+        } catch (err) {
+            console.error(`[Gateway] Inbound dispatch network error (${url}):`, err.message);
+        }
     }
+
+    return false;
 }
 
 /**
@@ -217,26 +349,43 @@ async function initSessionSocket(sessionUid, { phoneNumber = null, autoReconnect
     });
 
     // Inbound messages handler
-    sock.ev.on('messages.upsert', async ({ messages, type }) => {
-        if (type !== 'notify') return;
+    const seenMessageIds = new Set();
 
+    sock.ev.on('messages.upsert', async ({ messages, type }) => {
         for (const msg of messages) {
             // Ignore messages sent by ourselves
-            if (msg.key.fromMe) continue;
+            if (msg.key?.fromMe) continue;
 
-            const remoteJid = msg.key.remoteJid || '';
-            // Only process individual or standard group chats
+            const msgId = msg.key?.id;
+            if (msgId) {
+                if (seenMessageIds.has(msgId)) continue;
+                seenMessageIds.add(msgId);
+                if (seenMessageIds.size > 1000) {
+                    const first = seenMessageIds.values().next().value;
+                    seenMessageIds.delete(first);
+                }
+            }
+
+            const remoteJid = msg.key?.remoteJid || '';
+            // Ignore status broadcast updates
+            if (remoteJid === 'status@broadcast' || remoteJid.includes('broadcast')) {
+                continue;
+            }
+
+            // Process individual direct WhatsApp chats
             if (remoteJid.endsWith('@s.whatsapp.net')) {
-                const fromPhone = remoteJid.split('@')[0];
-                const text = msg.message?.conversation ||
-                             msg.message?.extendedTextMessage?.text ||
-                             msg.message?.imageMessage?.caption ||
-                             msg.message?.videoMessage?.caption || '';
+                const fromPhone = remoteJid.split('@')[0].split(':')[0].replace(/[^0-9]/g, '');
+                if (!fromPhone) continue;
+
+                const { text, type: msgType } = extractMessageInfo(msg);
+
+                console.log(`[Gateway] Inbound message received from +${fromPhone} on session ${sessionUid} (${msgType}): "${text.substring(0, 60)}"`);
 
                 await notifyLaravelInboundMessage(sessionUid, {
-                    message_id: msg.key.id,
+                    message_id: msgId || ('wds_msg_' + Date.now()),
                     from: fromPhone,
                     text: text,
+                    type: msgType,
                     timestamp: msg.messageTimestamp,
                     push_name: msg.pushName || null,
                     raw: msg,
@@ -539,6 +688,35 @@ app.delete('/sessions/:sessionId', authenticate, async (req, res) => {
     });
 });
 
+/**
+ * Automatically scan SESSIONS_DIR on gateway startup and restore any existing linked sessions
+ */
+async function autoRestoreSavedSessions() {
+    try {
+        if (!fs.existsSync(SESSIONS_DIR)) return;
+        const entries = fs.readdirSync(SESSIONS_DIR, { withFileTypes: true });
+        for (const entry of entries) {
+            if (entry.isDirectory()) {
+                const sessionUid = entry.name;
+                const credsPath = path.join(SESSIONS_DIR, sessionUid, 'creds.json');
+                if (fs.existsSync(credsPath)) {
+                    console.log(`[Gateway] Found existing session folder: ${sessionUid}. Restoring Baileys socket...`);
+                    try {
+                        await initSessionSocket(sessionUid, { autoReconnect: true });
+                        console.log(`[Gateway] ✓ Restored active socket for session ${sessionUid}`);
+                    } catch (err) {
+                        console.error(`[Gateway] Failed to restore session ${sessionUid}:`, err.message);
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.error(`[Gateway] Error during autoRestoreSavedSessions:`, err.message);
+    }
+}
+
 app.listen(PORT, '127.0.0.1', () => {
     console.log(`[BotifyAI] WhatsApp Multi-Device Gateway running on http://127.0.0.1:${PORT}`);
+    console.log(`[BotifyAI] Laravel webhook target: ${LARAVEL_API_URL}`);
+    autoRestoreSavedSessions();
 });

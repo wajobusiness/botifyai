@@ -61,7 +61,11 @@ class WhatsappGatewayCommand extends Command
         $logPath = storage_path('logs/whatsapp-gateway.log');
         $this->info("Starting WhatsApp Gateway on port {$port} using {$nodeBin}...");
 
-        $envVars = "PORT={$port} LARAVEL_API_URL=" . escapeshellarg(config('app.url', 'http://127.0.0.1:8000'));
+        $appUrl = rtrim((string) config('app.url', 'https://botifyai.cloud'), '/');
+        $secret = (string) config('services.whatsapp_gateway.secret', env('WHATSAPP_GATEWAY_SECRET', config('app.key', 'botifyai-whatsapp-secret-key')));
+        $appKey = (string) config('app.key', '');
+
+        $envVars = "PORT={$port} LARAVEL_API_URL=" . escapeshellarg($appUrl) . " WHATSAPP_GATEWAY_SECRET=" . escapeshellarg($secret) . " APP_KEY=" . escapeshellarg($appKey);
         $cmd = "nohup env {$envVars} {$nodeBin} " . escapeshellarg($serverPath) . " >> " . escapeshellarg($logPath) . " 2>&1 &";
 
         shell_exec($cmd);
