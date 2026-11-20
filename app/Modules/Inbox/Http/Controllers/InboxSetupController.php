@@ -87,6 +87,7 @@ class InboxSetupController extends Controller
         // Linked device accounts ( Multi-device / Personal WhatsApp / Coexistence )
         \App\Modules\Whatsapp\Support\WhatsappSchemaProvisioner::ensureTablesExist();
         $linkedDeviceSessions = \App\Modules\Whatsapp\Models\WhatsappDeviceSession::where('workspace_id', $workspaceId)
+            ->where('connection_status', '!=', 'disconnected')
             ->with('channelAccount')
             ->orderByDesc('updated_at')
             ->get();
@@ -764,13 +765,60 @@ class InboxSetupController extends Controller
 
     public function destroy(Request $request, ChannelAccount $channelAccount): RedirectResponse
     {
-        $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
+        $user = $request->user();
+        if (! $user) {
+            abort(401);
+        }
 
-        abort_unless((int) $channelAccount->workspace_id === (int) $workspaceId, 403);
-        abort_unless(in_array($channelAccount->channel, ['instagram', 'messenger'], true), 403);
+        $workspaceId = (int) ($user->current_workspace_id ?? $user->workspace_id ?? 0);
+        $authorized = ((int) $channelAccount->workspace_id === $workspaceId);
 
+        if (! $authorized) {
+            try {
+                $authorized = $user->workspaces()->where('workspaces.id', $channelAccount->workspace_id)->exists()
+                    || (! empty($user->client_id) && \App\Models\Workspace::where('client_id', $user->client_id)->where('id', $channelAccount->workspace_id)->exists());
+            } catch (\Throwable) {
+                // ignore
+            }
+        }
+
+        abort_unless($authorized, 403);
+
+        // 1. Detach associated conversations so no foreign key constraint prevents deletion
+        \App\Modules\Shared\Models\Conversation::where('channel_account_id', $channelAccount->id)
+            ->update(['channel_account_id' => null]);
+
+        // 2. Clean up any linked WhatsApp Device Sessions
+        if (\Illuminate\Support\Facades\Schema::hasTable('whatsapp_device_sessions')) {
+            \App\Modules\Whatsapp\Models\WhatsappDeviceSession::where('channel_account_id', $channelAccount->id)
+                ->orWhere(function ($q) use ($channelAccount) {
+                    if (! empty($channelAccount->phone_number_id)) {
+                        $clean = preg_replace('/[^0-9]/', '', $channelAccount->phone_number_id);
+                        $q->where('phone_number', $clean);
+                    }
+                    if (! empty($channelAccount->business_account_id)) {
+                        $q->orWhere('session_uid', $channelAccount->business_account_id);
+                    }
+                })
+                ->delete();
+        }
+
+        // 3. Clean up associated auto-replies
+        if (\Illuminate\Support\Facades\Schema::hasTable('whatsapp_auto_replies')) {
+            \App\Modules\Whatsapp\Models\WhatsappAutoReply::where('channel_account_id', $channelAccount->id)
+                ->delete();
+        }
+
+        // 4. Clean up any bot sessions
+        if (\Illuminate\Support\Facades\Schema::hasTable('conversation_sessions')) {
+            \Illuminate\Support\Facades\DB::table('conversation_sessions')
+                ->where('channel_account_id', $channelAccount->id)
+                ->delete();
+        }
+
+        // 5. Delete the ChannelAccount
         $channelAccount->delete();
 
-        return back()->with('success', 'Account disconnected.');
+        return back()->with('success', 'Account disconnected and removed from system.');
     }
 }

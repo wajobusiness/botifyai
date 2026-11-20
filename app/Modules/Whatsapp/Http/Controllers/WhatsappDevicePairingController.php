@@ -288,34 +288,76 @@ class WhatsappDevicePairingController extends Controller
     }
 
     /**
-     * Disconnect a linked device session.
+     * Delete / permanently remove a linked device session and its ChannelAccount from system.
      */
-    public function disconnect(Request $request, string $sessionUid): JsonResponse
+    public function destroy(Request $request, string $sessionUid): JsonResponse
     {
         try {
             WhatsappSchemaProvisioner::ensureTablesExist();
             $workspace = $this->getWorkspace($request);
-            if (! $workspace) {
-                return response()->json(['message' => 'Unauthorized.'], 401);
-            }
 
-            $session = WhatsappDeviceSession::where('workspace_id', $workspace->id)
-                ->where('session_uid', $sessionUid)
-                ->first();
-
+            $session = WhatsappDeviceSession::where('session_uid', $sessionUid)->first();
             if (! $session) {
-                return response()->json(['message' => 'Device session not found.'], 404);
+                return response()->json(['success' => true, 'message' => 'Device session already removed.']);
             }
 
-            $session->markDisconnected('User initiated disconnect');
+            // Verify access
+            $user = $request->user();
+            $authorized = ($workspace && (int) $session->workspace_id === (int) $workspace->id);
+            if (! $authorized && $user) {
+                try {
+                    $authorized = $user->workspaces()->where('workspaces.id', $session->workspace_id)->exists()
+                        || (! empty($user->client_id) && Workspace::where('client_id', $user->client_id)->where('id', $session->workspace_id)->exists());
+                } catch (\Throwable) {}
+            }
+
+            if (! $authorized) {
+                return response()->json(['message' => 'Unauthorized for this workspace session.'], 403);
+            }
+
+            // 1. Detach conversations and delete associated ChannelAccount
+            if ($session->channel_account_id) {
+                \App\Modules\Shared\Models\Conversation::where('channel_account_id', $session->channel_account_id)
+                    ->update(['channel_account_id' => null]);
+                ChannelAccount::where('id', $session->channel_account_id)->delete();
+            }
+
+            if ($session->phone_number) {
+                $cleanPhone = preg_replace('/[^0-9]/', '', $session->phone_number);
+                $cas = ChannelAccount::where('workspace_id', $session->workspace_id)
+                    ->where('channel', 'whatsapp')
+                    ->where(function ($q) use ($cleanPhone, $sessionUid) {
+                        $q->where('phone_number_id', $cleanPhone)
+                          ->orWhere('business_account_id', $sessionUid);
+                    })
+                    ->get();
+
+                foreach ($cas as $ca) {
+                    \App\Modules\Shared\Models\Conversation::where('channel_account_id', $ca->id)
+                        ->update(['channel_account_id' => null]);
+                    $ca->delete();
+                }
+            }
+
+            // 2. Permanently delete the session
+            $session->delete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Device disconnected successfully.',
+                'message' => 'WhatsApp device permanently removed from system.',
             ]);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('WhatsappDevicePairingController::disconnect error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('WhatsappDevicePairingController::destroy error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Disconnect / remove a linked device session.
+     */
+    public function disconnect(Request $request, string $sessionUid): JsonResponse
+    {
+        // When disconnected from the UI trash action, permanently remove the session from the system
+        return $this->destroy($request, $sessionUid);
     }
 }

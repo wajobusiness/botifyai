@@ -29,6 +29,7 @@ Route::middleware(['web', 'client-app'])->prefix('app/whatsapp')->name('client.w
     Route::post('/devices/request-pairing', [WhatsappDevicePairingController::class, 'requestPairing'])->name('devices.request-pairing');
     Route::get('/devices/{sessionUid}/status', [WhatsappDevicePairingController::class, 'status'])->name('devices.status');
     Route::post('/devices/{sessionUid}/disconnect', [WhatsappDevicePairingController::class, 'disconnect'])->name('devices.disconnect');
+    Route::delete('/devices/{sessionUid}', [WhatsappDevicePairingController::class, 'destroy'])->name('devices.destroy');
     Route::post('/devices/{sessionUid}/confirm', [WhatsappDevicePairingController::class, 'confirm'])->name('devices.confirm');
 
     // Templates

@@ -56,19 +56,45 @@ class WhatsappSetupController extends Controller
 
     public function destroy(Request $request, WhatsappBusinessAccount $waba): RedirectResponse
     {
-        $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
-        $this->authorizeWaba($waba, $workspaceId);
+        $this->authorizeWaba($waba, $request);
 
-        ChannelAccount::where('workspace_id', $workspaceId)
+        $wabaId = $waba->waba_id;
+        $wabaDbId = $waba->id;
+        $workspaceId = $waba->workspace_id;
+
+        // Find all phone number IDs belonging to this WABA
+        $phoneIds = WhatsappPhoneNumber::where('waba_id_fk', $wabaDbId)->pluck('phone_number_id')->all();
+
+        // Nullify conversation references before deleting channel accounts
+        $cas = ChannelAccount::where('workspace_id', $workspaceId)
             ->where('channel', 'whatsapp')
-            ->where('business_account_id', $waba->waba_id)
-            ->delete();
+            ->where(function ($q) use ($wabaId, $phoneIds) {
+                $q->where('business_account_id', $wabaId);
+                if (! empty($phoneIds)) {
+                    $q->orWhereIn('phone_number_id', $phoneIds);
+                }
+            })
+            ->get();
 
-        WhatsappPhoneNumber::where('waba_id_fk', $waba->id)->delete();
+        foreach ($cas as $ca) {
+            \App\Modules\Shared\Models\Conversation::where('channel_account_id', $ca->id)
+                ->update(['channel_account_id' => null]);
+            $ca->delete();
+        }
+
+        // Delete phone numbers
+        WhatsappPhoneNumber::where('waba_id_fk', $wabaDbId)->delete();
+
+        // Delete templates if table exists
+        if (\Illuminate\Support\Facades\Schema::hasTable('whatsapp_templates')) {
+            \App\Modules\Whatsapp\Models\WhatsappTemplate::where('waba_id', $wabaId)
+                ->orWhere('workspace_id', $workspaceId)
+                ->delete();
+        }
 
         $waba->delete();
 
-        return back()->with('success', 'WhatsApp Business Account disconnected.');
+        return back()->with('success', 'WhatsApp Business Account disconnected and removed.');
     }
 
     public function refreshPhoneStatus(Request $request, WhatsappBusinessAccount $waba, string $phoneNumberId): JsonResponse
@@ -150,9 +176,37 @@ class WhatsappSetupController extends Controller
         ]);
     }
 
-    private function authorizeWaba(WhatsappBusinessAccount $waba, int|string $workspaceId): void
+    private function authorizeWaba(WhatsappBusinessAccount $waba, Request|int|string $requestOrWorkspaceId): void
     {
-        abort_unless((int) $waba->workspace_id === (int) $workspaceId, 403);
+        if (is_int($requestOrWorkspaceId) || is_string($requestOrWorkspaceId)) {
+            if ((int) $waba->workspace_id === (int) $requestOrWorkspaceId) {
+                return;
+            }
+        }
+
+        $user = $requestOrWorkspaceId instanceof Request ? $requestOrWorkspaceId->user() : request()->user();
+        if (! $user) {
+            abort(401);
+        }
+
+        $workspaceId = (int) ($user->current_workspace_id ?? $user->workspace_id ?? 0);
+        if ($workspaceId === (int) $waba->workspace_id) {
+            return;
+        }
+
+        try {
+            if ($user->workspaces()->where('workspaces.id', $waba->workspace_id)->exists()) {
+                return;
+            }
+        } catch (\Throwable) {}
+
+        if (! empty($user->client_id)) {
+            if (\App\Models\Workspace::where('client_id', $user->client_id)->where('id', $waba->workspace_id)->exists()) {
+                return;
+            }
+        }
+
+        abort(403);
     }
 
     private function importPhoneNumbersFromMeta(WhatsappBusinessAccount $waba): int

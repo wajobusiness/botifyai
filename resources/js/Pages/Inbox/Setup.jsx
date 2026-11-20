@@ -553,15 +553,15 @@ function WabaCard({ waba, webhookGlobalUrl, webhookBaseUrl, webhookToken, channe
 }
 
 function LinkedDeviceCard({ session }) {
-    const [disconnecting, setDisconnecting] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const [confirm, setConfirm] = useState(false);
 
-    const handleDisconnect = async () => {
-        setDisconnecting(true);
+    const handleDelete = async () => {
+        setDeleting(true);
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-            await fetch(route('client.whatsapp.devices.disconnect', { sessionUid: session.session_uid }), {
-                method: 'POST',
+            await fetch(route('client.whatsapp.devices.destroy', { sessionUid: session.session_uid }), {
+                method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken || '',
@@ -570,9 +570,20 @@ function LinkedDeviceCard({ session }) {
             });
             router.reload({ preserveScroll: true });
         } catch {
-            // ignore
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                await fetch(route('client.whatsapp.devices.disconnect', { sessionUid: session.session_uid }), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken || '',
+                        'Accept': 'application/json',
+                    },
+                });
+                router.reload({ preserveScroll: true });
+            } catch {}
         } finally {
-            setDisconnecting(false);
+            setDeleting(false);
             setConfirm(false);
         }
     };
@@ -601,11 +612,11 @@ function LinkedDeviceCard({ session }) {
                         <div className="flex items-center gap-1.5">
                             <button
                                 type="button"
-                                onClick={handleDisconnect}
-                                disabled={disconnecting}
+                                onClick={handleDelete}
+                                disabled={deleting}
                                 className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-50"
                             >
-                                {disconnecting ? '...' : 'Confirm'}
+                                {deleting ? '...' : 'Confirm'}
                             </button>
                             <button
                                 type="button"
@@ -620,7 +631,7 @@ function LinkedDeviceCard({ session }) {
                             type="button"
                             onClick={() => setConfirm(true)}
                             className="p-1.5 rounded-lg border border-red-200 dark:border-red-900 text-red-500 hover:bg-red-50 transition"
-                            title="Disconnect WhatsApp Phone"
+                            title="Delete / Remove WhatsApp Phone"
                         >
                             <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -803,7 +814,18 @@ function AccountRow({ account, channel, chatbots }) {
         setDeleting(true);
         router.delete(route('client.inbox.setup.destroy', { channelAccount: account.id }), {
             preserveScroll: true,
-            onFinish: () => { setDeleting(false); setConfirmDelete(false); },
+            onSuccess: () => {
+                setDeleting(false);
+                setConfirmDelete(false);
+            },
+            onError: () => {
+                setDeleting(false);
+                setConfirmDelete(false);
+            },
+            onFinish: () => {
+                setDeleting(false);
+                setConfirmDelete(false);
+            },
         });
     };
 
